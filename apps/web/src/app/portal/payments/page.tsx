@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,10 +43,6 @@ const pendingPayments = [
   { id: "pending-1", dueDate: "01/01/2026", label: "Appel de fonds T1 2026", amount: 450, reference: "AF-2026-T1" },
 ];
 
-const ownerInfo = {
-  name: "M. Jean Dupont",
-};
-
 export default function PaymentsHistoryPage() {
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [isPayOpen, setIsPayOpen] = useState(false);
@@ -70,163 +65,129 @@ export default function PaymentsHistoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="space-y-6">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/portal" className="flex items-center gap-2">
-              <span className="text-xl font-bold">🏠 Le Copropriétaire</span>
-            </Link>
-          </div>
-          <nav className="flex items-center gap-4">
-            <Link href="/portal">
-              <Button variant="ghost" size="sm">Dashboard</Button>
-            </Link>
-            <Link href="/portal/payments">
-              <Button variant="default" size="sm">Paiements</Button>
-            </Link>
-            <Link href="/portal/documents">
-              <Button variant="ghost" size="sm">Documents</Button>
-            </Link>
-            <Link href="/portal/sepa">
-              <Button variant="ghost" size="sm">Mandat SEPA</Button>
-            </Link>
-            <div className="h-6 w-px bg-border" />
-            <span className="text-sm text-muted-foreground">{ownerInfo.name}</span>
-            <Link href="/login">
-              <Button variant="outline" size="sm">Déconnexion</Button>
-            </Link>
-          </nav>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">💳 Mes paiements</h1>
+          <p className="text-muted-foreground">
+            Historique et suivi de vos paiements
+          </p>
         </div>
-      </header>
+      </div>
 
-      <main className="container py-8">
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">💳 Mes paiements</h1>
-              <p className="text-muted-foreground">
-                Historique et suivi de vos paiements
-              </p>
-            </div>
-          </div>
+      {/* Stats */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-2xl font-bold text-green-600">{stats.totalPaid.toLocaleString('fr-FR')} €</p>
+            <p className="text-sm text-muted-foreground">Total payé</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-2xl font-bold">{stats.paymentsCount}</p>
+            <p className="text-sm text-muted-foreground">Paiements effectués</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <p className={`text-2xl font-bold ${stats.pending > 0 ? "text-yellow-600" : "text-green-600"}`}>
+              {stats.pending > 0 ? `${stats.pending} €` : "À jour"}
+            </p>
+            <p className="text-sm text-muted-foreground">En attente</p>
+          </CardContent>
+        </Card>
+      </div>
 
-          {/* Stats */}
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-2xl font-bold text-green-600">{stats.totalPaid.toLocaleString('fr-FR')} €</p>
-                <p className="text-sm text-muted-foreground">Total payé</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <p className="text-2xl font-bold">{stats.paymentsCount}</p>
-                <p className="text-sm text-muted-foreground">Paiements effectués</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <p className={`text-2xl font-bold ${stats.pending > 0 ? "text-yellow-600" : "text-green-600"}`}>
-                  {stats.pending > 0 ? `${stats.pending} €` : "À jour"}
-                </p>
-                <p className="text-sm text-muted-foreground">En attente</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Pending Payments */}
-          {pendingPayments.length > 0 && (
-            <Card className="border-yellow-500/50 bg-yellow-500/5">
-              <CardHeader>
-                <CardTitle className="text-base">⏳ Paiements à venir</CardTitle>
-                <CardDescription>Appels de fonds en attente de paiement</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {pendingPayments.map((payment) => (
-                    <div key={payment.id} className="flex items-center justify-between p-4 rounded-lg border bg-background">
-                      <div>
-                        <p className="font-medium">{payment.label}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Échéance: {payment.dueDate} • Réf: {payment.reference}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className="text-xl font-bold">{payment.amount} €</span>
-                        <Button onClick={() => openPayDialog(payment)}>
-                          💳 Payer par CB
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+      {/* Pending Payments */}
+      {pendingPayments.length > 0 && (
+        <Card className="border-yellow-500/50 bg-yellow-500/5">
+          <CardHeader>
+            <CardTitle className="text-base">⏳ Paiements à venir</CardTitle>
+            <CardDescription>Appels de fonds en attente de paiement</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {pendingPayments.map((payment) => (
+                <div key={payment.id} className="flex items-center justify-between p-4 rounded-lg border bg-background">
+                  <div>
+                    <p className="font-medium">{payment.label}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Échéance: {payment.dueDate} • Réf: {payment.reference}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-xl font-bold">{payment.amount} €</span>
+                    <Button onClick={() => openPayDialog(payment)}>
+                      💳 Payer par CB
+                    </Button>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-          {/* Filters */}
-          <div className="flex gap-4">
-            <Select value={yearFilter} onValueChange={setYearFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Année" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les années</SelectItem>
-                <SelectItem value="2025">2025</SelectItem>
-                <SelectItem value="2024">2024</SelectItem>
-                <SelectItem value="2023">2023</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline">📥 Exporter CSV</Button>
-          </div>
+      {/* Filters */}
+      <div className="flex gap-4">
+        <Select value={yearFilter} onValueChange={setYearFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Année" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Toutes les années</SelectItem>
+            <SelectItem value="2025">2025</SelectItem>
+            <SelectItem value="2024">2024</SelectItem>
+            <SelectItem value="2023">2023</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button variant="outline">📥 Exporter CSV</Button>
+      </div>
 
-          {/* Payments History */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Historique des paiements</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Référence</TableHead>
-                    <TableHead>Libellé</TableHead>
-                    <TableHead>Méthode</TableHead>
-                    <TableHead className="text-right">Montant</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredPayments.map((payment) => (
-                    <TableRow key={payment.id}>
-                      <TableCell>{payment.date}</TableCell>
-                      <TableCell className="font-mono text-sm">{payment.reference}</TableCell>
-                      <TableCell className="font-medium">{payment.label}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{payment.method}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-medium">{payment.amount} €</TableCell>
-                      <TableCell>
-                        <Badge variant={payment.status === "paid" ? "default" : "destructive"}>
-                          {payment.status === "paid" ? "✓ Payé" : "Impayé"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm">📄 Reçu</Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+      {/* Payments History */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Historique des paiements</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Référence</TableHead>
+                <TableHead>Libellé</TableHead>
+                <TableHead>Méthode</TableHead>
+                <TableHead className="text-right">Montant</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredPayments.map((payment) => (
+                <TableRow key={payment.id}>
+                  <TableCell>{payment.date}</TableCell>
+                  <TableCell className="font-mono text-sm">{payment.reference}</TableCell>
+                  <TableCell className="font-medium">{payment.label}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{payment.method}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right font-medium">{payment.amount} €</TableCell>
+                  <TableCell>
+                    <Badge variant={payment.status === "paid" ? "default" : "destructive"}>
+                      {payment.status === "paid" ? "✓ Payé" : "Impayé"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="sm">📄 Reçu</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       {/* Pay Dialog */}
       <Dialog open={isPayOpen} onOpenChange={setIsPayOpen}>
@@ -275,13 +236,6 @@ export default function PaymentsHistoryPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Footer */}
-      <footer className="border-t py-6 mt-8">
-        <div className="container text-center text-sm text-muted-foreground">
-          <p>© 2025 Le Copropriétaire. Tous droits réservés.</p>
-        </div>
-      </footer>
     </div>
   );
 }
