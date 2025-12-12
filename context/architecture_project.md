@@ -23,11 +23,18 @@ Le produit comprend :
 ### Backend métier
 - **NestJS + TypeScript**
 - API: REST + OpenAPI (Swagger)
-- ORM: Prisma (ou TypeORM)
-- DB: PostgreSQL
+- ORM: **Drizzle ORM** (TypeScript-first, SQL explicite)
+- DB: **PostgreSQL** (hébergé sur Supabase)
 - Cache / Queue: Redis + BullMQ (ou SQS / PubSub managé)
 - Storage: S3 (AWS) / Cloud Storage (GCP)
 - Observabilité: OpenTelemetry + Sentry + logs structurés
+
+#### Choix Drizzle vs Prisma
+- **Schema natif TypeScript** (pas de DSL propriétaire)
+- **SQL explicite** → meilleur contrôle pour le multi-tenant
+- **Coût zéro garanti** (aucun service payant)
+- **Compatible** Next.js + NestJS
+- **Migrations flexibles** (générées ou manuelles)
 
 ---
 

@@ -16,7 +16,7 @@
 | ✅ | Setup projet NestJS (API métier) | 🔴 Haute | TypeScript, structure modulaire | [#2](https://github.com/vMarc64/Le-Copropri-taire/issues/2) |
 | ⬜ | Configurer Tailwind + shadcn/ui | 🔴 Haute | Design system tokens | [#3](https://github.com/vMarc64/Le-Copropri-taire/issues/3) |
 | ⬜ | Configurer next-themes (dark mode) | 🟡 Moyenne | | [#4](https://github.com/vMarc64/Le-Copropri-taire/issues/4) |
-| ⬜ | Setup PostgreSQL + Prisma | 🔴 Haute | Schema multi-tenant | [#5](https://github.com/vMarc64/Le-Copropri-taire/issues/5) |
+| ⬜ | Setup PostgreSQL + Drizzle ORM | 🔴 Haute | Schema multi-tenant, Supabase | [#5](https://github.com/vMarc64/Le-Copropri-taire/issues/5) |
 | ⬜ | Setup Redis + BullMQ | 🟡 Moyenne | Workers async | [#6](https://github.com/vMarc64/Le-Copropri-taire/issues/6) |
 | ⬜ | Configurer authentification | 🔴 Haute | JWT / Sessions | [#7](https://github.com/vMarc64/Le-Copropri-taire/issues/7) |
 | ⬜ | Setup CI/CD | 🟢 Basse | GitHub Actions | [#8](https://github.com/vMarc64/Le-Copropri-taire/issues/8) |
