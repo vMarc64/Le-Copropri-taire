@@ -25,7 +25,7 @@ Le produit comprend :
 - API: REST + OpenAPI (Swagger)
 - ORM: **Drizzle ORM** (TypeScript-first, SQL explicite)
 - DB: **PostgreSQL** (hébergé sur Supabase)
-- Cache / Queue: Redis + BullMQ (ou SQS / PubSub managé)
+- Cache / Queue: Redis + BullMQ (jobs critiques métier)
 - Storage: S3 (AWS) / Cloud Storage (GCP)
 - Observabilité: OpenTelemetry + Sentry + logs structurés
 
@@ -35,6 +35,32 @@ Le produit comprend :
 - **Coût zéro garanti** (aucun service payant)
 - **Compatible** Next.js + NestJS
 - **Migrations flexibles** (générées ou manuelles)
+
+### Automatisation & IA
+- **N8N** (self-hosted, open-source)
+- Rôles :
+  - Workflows d'automatisation (emails, notifications)
+  - Rapprochement bancaire assisté par IA
+  - Détection d'anomalies (paiements en double, montants inhabituels)
+  - OCR et extraction de données (factures PDF)
+  - Orchestration de tâches complexes
+- Intégrations :
+  - Webhooks depuis/vers NestJS API
+  - LLMs (OpenAI, Anthropic, Mistral) pour matching intelligent
+  - Services emails (SMTP, SendGrid, etc.)
+  - Services SMS/Slack (notifications)
+
+#### Répartition Workers NestJS vs N8N
+| Responsabilité | NestJS Workers (BullMQ) | N8N + IA |
+|----------------|------------------------|----------|
+| Génération batch SEPA | ✅ | ❌ |
+| Calculs charges/balances | ✅ | ❌ |
+| Sync transactions bancaires | ✅ (insertion DB) | 🔄 Déclenche workflows |
+| Rapprochement auto transactions | ❌ | ✅ IA + règles |
+| Emails/notifications | ❌ | ✅ |
+| Relances impayés | ❌ | ✅ Workflows conditionnels |
+| OCR factures | ❌ | ✅ IA extraction |
+| Détection anomalies | ❌ | ✅ IA analyse |
 
 ---
 
@@ -54,9 +80,17 @@ flowchart LR
   API --> PSP[PSP Paiement SEPA / CB]
   API --> OB[Open Banking Provider]
 
-  API --> Q[Queue]
+  API --> Q[Queue BullMQ]
   Q --> W[Workers NestJS]
   W --> DB
   W --> PSP
   W --> OB
   W --> OBJ
+
+  API <--> N8N[N8N Workflows + IA]
+  N8N --> DB
+  N8N --> MAIL[Email Service]
+  N8N --> SMS[SMS / Slack]
+  N8N --> AI[LLM APIs]
+  N8N --> PSP
+  N8N --> OB

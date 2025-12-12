@@ -96,7 +96,29 @@
 - Failed payments list
 - Relaunch payment action
 
-### 3.7 Owners List (Modal / Panel)
+### 3.7 AI Assistant (Onglet IA)
+- AI suggestions list:
+  - Type (rapprochement / anomalie / OCR)
+  - Date
+  - Description
+  - Confidence score
+  - Status (pending / validated / rejected)
+- Filters:
+  - Type
+  - Status
+  - Date range
+  - Condominium
+- Actions per suggestion:
+  - View details
+  - Validate
+  - Reject
+  - Mark as false positive
+- Suggestion detail modal:
+  - Full context (transaction, owner, amount)
+  - AI reasoning
+  - Validate / reject buttons
+
+### 3.8 Owners List (Modal / Panel)
 - Owners table:
   - Name
   - Lots

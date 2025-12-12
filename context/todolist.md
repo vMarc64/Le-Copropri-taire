@@ -94,7 +94,8 @@
 | ⬜ | Intégration PSP (CB) | 🟡 Moyenne | Paiement rattrapage | [#38](https://github.com/vMarc64/Le-Copropri-taire/issues/38) |
 | ⬜ | Intégration Open Banking | 🟡 Moyenne | Sync comptes bancaires | [#39](https://github.com/vMarc64/Le-Copropri-taire/issues/39) |
 | ⬜ | Webhooks PSP | 🔴 Haute | Notifications paiements | [#40](https://github.com/vMarc64/Le-Copropri-taire/issues/40) |
-| ⬜ | Workers async (jobs) | 🟡 Moyenne | SEPA batch, sync bank, notifs | [#41](https://github.com/vMarc64/Le-Copropri-taire/issues/41) |
+| ⬜ | Workers async (jobs critiques) | 🟡 Moyenne | SEPA batch, sync bank (BullMQ) | [#41](https://github.com/vMarc64/Le-Copropri-taire/issues/41) |
+| ⬜ | Setup N8N + workflows IA | 🔴 Haute | Rapprochement IA, emails, OCR | [#48](https://github.com/vMarc64/Le-Copropri-taire/issues/48) |
 
 ---
 

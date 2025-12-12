@@ -61,9 +61,17 @@
 - /app/coproprietes/[coproId]/lots/new
 - /app/coproprietes/[coproId]/lots/[lotId]
 
-### 3.7 Property Manager Settings
+### 3.7 AI Assistant
+- /app/ai                             # AI suggestions dashboard
+- /app/ai/suggestions
+- /app/ai/suggestions/[suggestionId]  # suggestion detail
+- /app/ai/anomalies
+- /app/ai/history
+
+### 3.8 Property Manager Settings
 - /app/settings/company
 - /app/settings/users
+- /app/settings/ai                    # AI configuration (auto-match threshold, etc.)
 - /app/profile
 - /app/support
 

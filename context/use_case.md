@@ -81,6 +81,35 @@
 - Send mandate reminders
 - Send incident notifications (failed payment)
 
+### 3.10 AI Assistant (Onglet IA)
+- View AI suggestions (rapprochement automatique)
+- View detected anomalies (paiements en double, montants inhabituels)
+- Validate / reject AI suggestions
+- View confidence score per suggestion
+- Mark anomaly as resolved / false positive
+- View AI activity log
+
+#### 3.10.1 Rapprochement bancaire assisté par IA
+- AI analyzes bank transactions (name, amount, reference)
+- AI suggests matches: transaction → owner + invoice/due
+- Confidence score displayed (0-100%)
+- Manager validates or rejects suggestion
+- Auto-match if confidence > 95% (optional setting)
+
+#### 3.10.2 Détection d'anomalies
+- Duplicate payments detected
+- Unusual amounts (compared to history)
+- Late payment from usually punctual owner
+- Missing expected payment
+- Manager reviews anomaly
+- Mark as resolved or create action
+
+#### 3.10.3 Extraction automatique factures (OCR)
+- Upload PDF invoice
+- AI extracts: amount, date, supplier, type
+- Pre-fills form with extracted data
+- Manager validates and saves
+
 ---
 
 ## 4. Owner (Copropriétaire) – Use Cases
