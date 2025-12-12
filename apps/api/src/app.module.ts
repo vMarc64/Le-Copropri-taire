@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { QueueModule } from './queue';
 import { AuthModule, JwtAuthGuard, RolesGuard, PermissionsGuard } from './auth';
 import { TenantModule, TenantGuard } from './tenant';
+import { ZoneGuard } from './guards';
 
 @Module({
   imports: [QueueModule, AuthModule, TenantModule],
@@ -15,6 +16,11 @@ import { TenantModule, TenantGuard } from './tenant';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    // Enable zone-based access control globally
+    {
+      provide: APP_GUARD,
+      useClass: ZoneGuard,
     },
     // Enable role-based access control globally
     {
@@ -34,4 +40,5 @@ import { TenantModule, TenantGuard } from './tenant';
   ],
 })
 export class AppModule {}
+
 
