@@ -53,7 +53,20 @@ import {
   Loader2,
   ListChecks,
   CreditCard,
+  Plus,
+  Building2,
+  ShieldCheck,
 } from "lucide-react";
+
+interface BankAccount {
+  id: string;
+  bankName: string;
+  accountName: string;
+  iban: string;
+  balance: number;
+  lastSyncAt: string | null;
+  status: string;
+}
 
 interface Transaction {
   id: string;
@@ -74,33 +87,33 @@ interface PendingPayment {
   type: string;
 }
 
-interface BankInfo {
-  bankName: string;
-  iban: string;
-  bic: string;
-  balance: number;
-  lastSync: string;
-}
-
 export default function BankPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: condoId } = use(params);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isMatchOpen, setIsMatchOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [showConnectModal, setShowConnectModal] = useState(false);
 
-  const [bankInfo, setBankInfo] = useState<BankInfo | null>(null);
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [pendingPayments, setPendingPayments] = useState<PendingPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const hasBankAccount = bankAccounts.length > 0;
+  const mainAccount = bankAccounts.find(a => a.status === 'active') || bankAccounts[0];
+
   useEffect(() => {
     async function fetchData() {
       try {
         setLoading(true);
-        // TODO: Fetch from API
-        setBankInfo(null);
+        const response = await fetch(`/api/condominiums/${condoId}/bank`);
+        if (!response.ok) {
+          throw new Error("Erreur lors du chargement");
+        }
+        const accounts = await response.json();
+        setBankAccounts(accounts);
         setTransactions([]);
         setPendingPayments([]);
         setError(null);
@@ -121,7 +134,7 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
   });
 
   const stats = {
-    balance: bankInfo?.balance ?? 0,
+    balance: mainAccount?.balance ?? 0,
     pending: transactions.filter(t => t.status === "pending").length,
     matched: transactions.filter(t => t.status === "matched").length,
     credits: transactions.filter(t => t.type === "credit").reduce((sum, t) => sum + t.amount, 0),
@@ -149,6 +162,75 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
     );
   }
 
+  // Empty state - no bank account connected
+  if (!hasBankAccount) {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <Link href={`/app/condominiums/${condoId}`}>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Suivi bancaire</h1>
+            <p className="text-sm text-muted-foreground">Aucun compte connecté</p>
+          </div>
+        </div>
+
+        {/* Empty State Card */}
+        <Card className="mx-auto max-w-lg">
+          <CardContent className="flex flex-col items-center py-12 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-6">
+              <Landmark className="h-8 w-8 text-primary" />
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Connectez votre compte bancaire</h2>
+            <p className="text-muted-foreground mb-6 max-w-sm">
+              Aucun compte bancaire n'est rattaché à cette copropriété. 
+              Connectez-en un pour suivre les transactions et automatiser le rapprochement.
+            </p>
+            <div className="flex flex-col gap-3 w-full max-w-xs">
+              <Button onClick={() => setShowConnectModal(true)} className="w-full">
+                <Plus className="mr-2 h-4 w-4" />
+                Connecter une banque
+              </Button>
+            </div>
+            <div className="flex items-center gap-2 mt-6 text-xs text-muted-foreground">
+              <ShieldCheck className="h-4 w-4" />
+              <span>Connexion sécurisée via agrégation bancaire DSP2</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Connect Bank Modal - Placeholder for issue #109 */}
+        <Dialog open={showConnectModal} onOpenChange={setShowConnectModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Connecter un compte bancaire</DialogTitle>
+              <DialogDescription>
+                Vous allez être redirigé vers notre partenaire bancaire sécurisé pour connecter votre compte.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-6 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mx-auto mb-4">
+                <Building2 className="h-6 w-6 text-primary" />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                L'intégration Powens sera disponible prochainement.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowConnectModal(false)}>
+                Fermer
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -162,7 +244,7 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Suivi bancaire</h1>
             <p className="text-sm text-muted-foreground">
-              {bankInfo ? `${bankInfo.bankName} • Dernière synchro: ${bankInfo.lastSync}` : "Aucun compte connecté"}
+              {mainAccount ? `${mainAccount.bankName} • Dernière synchro: ${mainAccount.lastSyncAt ? new Date(mainAccount.lastSyncAt).toLocaleDateString('fr-FR') : 'Jamais'}` : "Aucun compte connecté"}
             </p>
           </div>
         </div>
