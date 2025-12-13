@@ -121,21 +121,19 @@ export default function CondominiumsListPage() {
 
       {/* Table View */}
       {viewMode === "table" && (
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-[180px]">Nom</TableHead>
-                    <TableHead className="min-w-[200px]">Adresse</TableHead>
-                    <TableHead className="w-[80px] text-center">Lots</TableHead>
-                    <TableHead className="w-[100px] text-center">Propriétaires</TableHead>
-                    <TableHead className="w-[100px] text-right">Solde</TableHead>
-                    <TableHead className="w-[80px] text-center">SEPA</TableHead>
-                    <TableHead className="w-[60px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
+        <Card className="overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>Nom</TableHead>
+                <TableHead>Adresse</TableHead>
+                <TableHead className="w-24 text-center">Lots</TableHead>
+                <TableHead className="w-32 text-center">Propriétaires</TableHead>
+                <TableHead className="w-28 text-right">Solde</TableHead>
+                <TableHead className="w-24 text-center">SEPA</TableHead>
+                <TableHead className="w-12"></TableHead>
+              </TableRow>
+            </TableHeader>
                 <TableBody>
                   {filteredCondos.length === 0 ? (
                     <TableRow>
@@ -218,8 +216,6 @@ export default function CondominiumsListPage() {
                   )}
                 </TableBody>
               </Table>
-            </div>
-          </CardContent>
         </Card>
       )}
 
