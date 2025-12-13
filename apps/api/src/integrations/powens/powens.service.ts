@@ -105,7 +105,9 @@ export class PowensService {
     this.clientId = this.configService.get<string>('POWENS_CLIENT_ID', '');
     this.clientSecret = this.configService.get<string>('POWENS_CLIENT_SECRET', '');
     this.domain = this.configService.get<string>('POWENS_DOMAIN', 'demo');
-    this.redirectUri = this.configService.get<string>('POWENS_REDIRECT_URI', 'http://localhost:3002/powens/callback');
+    const apiUrl = this.configService.get<string>('API_URL', 'http://localhost:3002');
+    const redirectPath = this.configService.get<string>('POWENS_REDIRECT_URI', '/powens/callback');
+    this.redirectUri = `${apiUrl}${redirectPath}`;
     
     if (!this.clientId || !this.clientSecret) {
       this.logger.warn('Powens credentials not configured. Set POWENS_CLIENT_ID and POWENS_CLIENT_SECRET in .env');

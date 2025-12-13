@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -102,5 +104,40 @@ export class CondominiumsController {
       throw new ForbiddenException('Tenant context is required');
     }
     return this.condominiumsService.createLot(condoId, tenantId, data);
+  }
+
+  @Patch('lots/:lotId')
+  async updateLot(
+    @Param('lotId', ParseUUIDPipe) lotId: string,
+    @Body() data: Partial<CreateLotDto>,
+    @CurrentTenantId() tenantId: string,
+  ) {
+    if (!tenantId) {
+      throw new ForbiddenException('Tenant context is required');
+    }
+    return this.condominiumsService.updateLot(lotId, tenantId, data);
+  }
+
+  @Delete('lots/:lotId')
+  async deleteLot(
+    @Param('lotId', ParseUUIDPipe) lotId: string,
+    @CurrentTenantId() tenantId: string,
+  ) {
+    if (!tenantId) {
+      throw new ForbiddenException('Tenant context is required');
+    }
+    return this.condominiumsService.deleteLot(lotId, tenantId);
+  }
+
+  @Patch('lots/:lotId/assign')
+  async assignLot(
+    @Param('lotId', ParseUUIDPipe) lotId: string,
+    @Body() body: { ownerId: string | null },
+    @CurrentTenantId() tenantId: string,
+  ) {
+    if (!tenantId) {
+      throw new ForbiddenException('Tenant context is required');
+    }
+    return this.condominiumsService.assignLot(lotId, body.ownerId, tenantId);
   }
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import { 
   Clock, 
@@ -12,7 +13,8 @@ import {
   TrendingDown,
   Plus,
   Building2,
-  Loader2
+  Loader2,
+  CheckCircle2
 } from "lucide-react";
 import { 
   getDashboardStats, 
@@ -57,6 +59,14 @@ export default function ManagerDashboardPage() {
   const [condominiums, setCondominiums] = useState<CondominiumWithUnpaid[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "up-to-date" | "late">("late");
+
+  const filteredCondominiums = condominiums.filter((condo) => {
+    if (filter === "all") return true;
+    if (filter === "up-to-date") return condo.unpaidAmount === 0 && condo.ownersInArrears === 0;
+    if (filter === "late") return condo.unpaidAmount > 0 || condo.ownersInArrears > 0;
+    return true;
+  });
 
   useEffect(() => {
     async function fetchData() {
@@ -98,7 +108,7 @@ export default function ManagerDashboardPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto max-w-7xl space-y-10 px-6 py-8 lg:px-8">
+      <div className="mx-auto space-y-8 px-6 py-8 lg:px-8">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard</h1>
@@ -168,71 +178,121 @@ export default function ManagerDashboardPage() {
           </Card>
         </div>
 
-        {/* Condominiums Section */}
-        <div className="space-y-5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-foreground">Copropriétés avec impayés</h2>
-            <Button size="sm" className="h-9 gap-2 rounded-lg px-4 text-[13px] font-medium" asChild>
-              <Link href="/app/condominiums/new">
-                <Plus className="h-4 w-4" />
-                Créer une copropriété
-              </Link>
-            </Button>
+        {/* Main Content Grid - Responsive 2 columns on 2xl+ */}
+        <div className="grid gap-8 2xl:grid-cols-2">
+          {/* Condominiums Section */}
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-foreground">Copropriétés</h2>
+              <Button size="sm" className="h-9 gap-2 rounded-lg px-4 text-[13px] font-medium" asChild>
+                <Link href="/app/condominiums/new">
+                  <Plus className="h-4 w-4" />
+                  Nouvelle copropriété
+                </Link>
+              </Button>
+            </div>
+
+            {/* Filter Tabs */}
+            <Tabs value={filter} onValueChange={(v) => setFilter(v as "all" | "up-to-date" | "late")} defaultValue="late">
+              <TabsList>
+                <TabsTrigger value="late" className="gap-2 data-[state=active]:!text-destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  En retard ({condominiums.filter(c => c.unpaidAmount > 0 || c.ownersInArrears > 0).length})
+                </TabsTrigger>
+                <TabsTrigger value="all" className="gap-2">
+                  <Building2 className="h-4 w-4" />
+                  Toutes ({condominiums.length})
+                </TabsTrigger>
+                <TabsTrigger value="up-to-date" className="gap-2 data-[state=active]:!text-emerald-600">
+                  <CheckCircle2 className="h-4 w-4" />
+                  À jour ({condominiums.filter(c => c.unpaidAmount === 0 && c.ownersInArrears === 0).length})
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            <Card className="overflow-hidden p-0">
+              <div className="overflow-x-auto">
+                {/* Table Header */}
+                <div className="grid min-w-[600px] grid-cols-12 gap-4 border-b border-border bg-muted/50 px-6 py-3">
+                  <div className="col-span-4 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Copropriété
+                  </div>
+                  <div className="col-span-3 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Montant impayé
+                  </div>
+                  <div className="col-span-3 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Propriétaires en retard
+                  </div>
+                  <div className="col-span-2 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Prélèv. échoués
+                  </div>
+                </div>
+                
+                {/* Table Rows */}
+                <div className="divide-y divide-border">
+                  {filteredCondominiums.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <Building2 className="h-12 w-12 text-muted-foreground/50" />
+                      <p className="mt-4 text-sm text-muted-foreground">
+                        {filter === "all" && "Aucune copropriété"}
+                        {filter === "up-to-date" && "Aucune copropriété à jour"}
+                        {filter === "late" && "Aucune copropriété en retard"}
+                      </p>
+                    </div>
+                  ) : (
+                    filteredCondominiums.map((condo) => (
+                    <Link
+                      key={condo.id}
+                      href={`/app/condominiums/${condo.id}`}
+                      className="grid min-w-[600px] grid-cols-12 gap-4 px-6 py-4 transition-colors hover:bg-muted/50"
+                    >
+                      <div className="col-span-4 flex items-center gap-4">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary">
+                          <Building2 className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-[14px] font-medium text-foreground">{condo.name}</p>
+                          <p className="truncate text-[13px] text-muted-foreground">{condo.address}</p>
+                        </div>
+                      </div>
+                      <div className="col-span-3 flex items-center justify-center">
+                        <span className={`text-[14px] font-semibold ${condo.unpaidAmount > 0 ? 'text-destructive' : 'text-emerald-600'}`}>
+                          {condo.unpaidAmount.toLocaleString("fr-FR")} €
+                        </span>
+                      </div>
+                      <div className="col-span-3 flex items-center justify-center">
+                        <span className={`inline-flex h-7 min-w-[28px] items-center justify-center rounded-full px-2.5 text-[13px] font-medium ${condo.ownersInArrears > 0 ? 'bg-destructive/10 text-destructive' : 'bg-secondary text-secondary-foreground'}`}>
+                          {condo.ownersInArrears}
+                        </span>
+                      </div>
+                      <div className="col-span-2 flex items-center justify-center">
+                        <span className={`inline-flex h-7 min-w-[28px] items-center justify-center rounded-full px-2.5 text-[13px] font-medium ${condo.failedDirectDebits > 0 ? 'bg-destructive/10 text-destructive' : 'bg-secondary text-secondary-foreground'}`}>
+                          {condo.failedDirectDebits}
+                        </span>
+                      </div>
+                    </Link>
+                  ))
+                  )}
+                </div>
+              </div>
+            </Card>
           </div>
 
-          <Card className="overflow-hidden p-0">
-            <div className="overflow-x-auto">
-              {/* Table Header */}
-              <div className="grid min-w-[600px] grid-cols-12 gap-4 border-b border-border bg-muted/50 px-6 py-3">
-                <div className="col-span-5 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Copropriété
-                </div>
-                <div className="col-span-2 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Retards
-                </div>
-                <div className="col-span-3 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Montant impayé
-                </div>
-                <div className="col-span-2 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Propriétaires en retard
-                </div>
-              </div>
-              
-              {/* Table Rows */}
-              <div className="divide-y divide-border">
-                {condominiums.map((condo) => (
-                  <Link
-                    key={condo.id}
-                    href={`/app/condominiums/${condo.id}`}
-                    className="grid min-w-[600px] grid-cols-12 gap-4 px-6 py-4 transition-colors hover:bg-muted/50"
-                  >
-                    <div className="col-span-5 flex items-center gap-4">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary">
-                        <Building2 className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-[14px] font-medium text-foreground">{condo.name}</p>
-                        <p className="truncate text-[13px] text-muted-foreground">{condo.address}</p>
-                      </div>
-                    </div>
-                    <div className="col-span-2 flex items-center justify-center">
-                      <span className="inline-flex h-7 min-w-[28px] items-center justify-center rounded-full bg-secondary px-2.5 text-[13px] font-medium text-secondary-foreground">
-                        {condo.latePayments}
-                      </span>
-                    </div>
-                    <div className="col-span-3 flex items-center justify-center">
-                      <span className="text-[14px] font-semibold text-destructive">
-                        {condo.unpaidAmount.toLocaleString("fr-FR")} €
-                      </span>
-                    </div>
-                    <div className="col-span-2 flex items-center justify-center">
-                      <span className="text-[14px] text-muted-foreground">{condo.ownersInArrears}</span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+          {/* Bank Analysis Section - Placeholder */}
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-foreground">Transactions à analyser</h2>
             </div>
-          </Card>
+            <Card className="p-6">
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                  <Euro className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <p className="mt-4 text-sm font-medium text-foreground">Aucune transaction à analyser</p>
+                <p className="mt-1 text-sm text-muted-foreground">Les transactions non associées apparaîtront ici</p>
+              </div>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

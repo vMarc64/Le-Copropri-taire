@@ -25,7 +25,7 @@ export class CreateLotDto {
 
   @IsOptional()
   @Type(() => Number)
-  @IsInt()
+  @IsNumber()
   @Min(0)
   tantiemes?: number;
 

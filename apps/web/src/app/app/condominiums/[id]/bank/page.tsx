@@ -114,6 +114,7 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
   // Powens connect state
   const [connectLoading, setConnectLoading] = useState(false);
   const [powensConfigured, setPowensConfigured] = useState(true);
+  const [powensUrl, setPowensUrl] = useState<string | null>(null);
   
   // Check for callback params
   const callbackSuccess = searchParams.get('success');
@@ -121,6 +122,21 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
 
   const hasBankAccount = bankAccounts.length > 0;
   const mainAccount = bankAccounts.find(a => a.status === 'active') || bankAccounts[0];
+
+  // Listen for iframe messages (Powens callback)
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'powens-callback') {
+        setPowensUrl(null);
+        setShowConnectModal(false);
+        // Reload to fetch new bank accounts
+        window.location.href = `/app/condominiums/${condoId}/bank?${event.data.status}=true`;
+      }
+    };
+    
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [condoId]);
 
   useEffect(() => {
     async function fetchData() {
@@ -162,14 +178,22 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
         return;
       }
       
-      // Redirect to Powens webview
-      window.location.href = data.url;
+      // Set Powens URL for iframe display
+      setPowensUrl(data.url);
     } catch (err) {
       console.error("Connect bank error:", err);
       setError("Impossible de démarrer la connexion bancaire");
     } finally {
       setConnectLoading(false);
     }
+  };
+  
+  // Handle iframe close
+  const handleCloseIframe = () => {
+    setPowensUrl(null);
+    setShowConnectModal(false);
+    // Refresh data in case connection was successful
+    window.location.reload();
   };
 
   const filteredTransactions = transactions.filter((tx) => {
@@ -274,68 +298,93 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
         </Card>
 
         {/* Connect Bank Modal */}
-        <Dialog open={showConnectModal} onOpenChange={setShowConnectModal}>
-          <DialogContent>
+        <Dialog open={showConnectModal} onOpenChange={(open) => {
+          if (!open) {
+            setPowensUrl(null);
+          }
+          setShowConnectModal(open);
+        }}>
+          <DialogContent className={powensUrl ? "max-w-4xl h-[80vh]" : ""}>
             <DialogHeader>
-              <DialogTitle>Connecter un compte bancaire</DialogTitle>
+              <DialogTitle>
+                {powensUrl ? "Connexion bancaire en cours" : "Connecter un compte bancaire"}
+              </DialogTitle>
               <DialogDescription>
-                Vous allez être redirigé vers notre partenaire bancaire sécurisé pour connecter votre compte.
+                {powensUrl 
+                  ? "Sélectionnez votre banque et autorisez l'accès à vos comptes."
+                  : "Vous allez être redirigé vers notre partenaire bancaire sécurisé pour connecter votre compte."}
               </DialogDescription>
             </DialogHeader>
-            <div className="py-6 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mx-auto mb-4">
-                <Building2 className="h-6 w-6 text-primary" />
+            
+            {powensUrl ? (
+              // Iframe mode
+              <div className="flex-1 min-h-0 -mx-6 -mb-6">
+                <iframe
+                  src={powensUrl}
+                  className="w-full h-full min-h-[500px] border-0 rounded-b-lg"
+                  title="Connexion bancaire Powens"
+                  allow="camera"
+                />
               </div>
-              
-              {!powensConfigured ? (
-                <div className="space-y-4">
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Configuration requise</AlertTitle>
-                    <AlertDescription>
-                      L'intégration Powens n'est pas configurée. Veuillez contacter l'administrateur.
-                    </AlertDescription>
-                  </Alert>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Vous allez être redirigé vers la plateforme sécurisée Powens pour sélectionner votre banque et autoriser l'accès.
-                  </p>
-                  <div className="text-xs text-muted-foreground space-y-1">
-                    <p className="flex items-center justify-center gap-2">
-                      <ShieldCheck className="h-3 w-3" /> Connexion DSP2 sécurisée
-                    </p>
-                    <p className="flex items-center justify-center gap-2">
-                      <CheckCircle className="h-3 w-3" /> Données chiffrées de bout en bout
-                    </p>
-                    <p className="flex items-center justify-center gap-2">
-                      <Landmark className="h-3 w-3" /> Compatible avec toutes les banques françaises
-                    </p>
+            ) : (
+              // Initial state
+              <>
+                <div className="py-6 text-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mx-auto mb-4">
+                    <Building2 className="h-6 w-6 text-primary" />
                   </div>
-                </div>
-              )}
-            </div>
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button variant="outline" onClick={() => setShowConnectModal(false)}>
-                Annuler
-              </Button>
-              {powensConfigured && (
-                <Button onClick={handleConnectBank} disabled={connectLoading}>
-                  {connectLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Redirection...
-                    </>
+                  
+                  {!powensConfigured ? (
+                    <div className="space-y-4">
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Configuration requise</AlertTitle>
+                        <AlertDescription>
+                          L'intégration Powens n'est pas configurée. Veuillez contacter l'administrateur.
+                        </AlertDescription>
+                      </Alert>
+                    </div>
                   ) : (
-                    <>
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      Continuer vers Powens
-                    </>
+                    <div className="space-y-4">
+                      <p className="text-sm text-muted-foreground">
+                        Sélectionnez votre banque et autorisez l'accès à vos comptes en toute sécurité.
+                      </p>
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <p className="flex items-center justify-center gap-2">
+                          <ShieldCheck className="h-3 w-3" /> Connexion DSP2 sécurisée
+                        </p>
+                        <p className="flex items-center justify-center gap-2">
+                          <CheckCircle className="h-3 w-3" /> Données chiffrées de bout en bout
+                        </p>
+                        <p className="flex items-center justify-center gap-2">
+                          <Landmark className="h-3 w-3" /> Compatible avec toutes les banques françaises
+                        </p>
+                      </div>
+                    </div>
                   )}
-                </Button>
-              )}
-            </DialogFooter>
+                </div>
+                <DialogFooter className="gap-2 sm:gap-0">
+                  <Button variant="outline" onClick={() => setShowConnectModal(false)}>
+                    Annuler
+                  </Button>
+                  {powensConfigured && (
+                    <Button onClick={handleConnectBank} disabled={connectLoading}>
+                      {connectLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Chargement...
+                        </>
+                      ) : (
+                        <>
+                          <Landmark className="mr-2 h-4 w-4" />
+                          Continuer
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </DialogFooter>
+              </>
+            )}
           </DialogContent>
         </Dialog>
       </div>

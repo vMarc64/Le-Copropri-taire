@@ -74,8 +74,10 @@ export class BankController {
     // Create state with condominiumId and tenantId (will be passed back in callback)
     const state = Buffer.from(JSON.stringify({ condominiumId, tenantId })).toString('base64');
     
-    // Custom redirect URI that includes state handling
-    const callbackUrl = `${this.configService.get<string>('API_URL', 'http://localhost:3002')}/bank/connect/callback`;
+    // Build callback URL from API_URL + POWENS_REDIRECT_URI path
+    const apiUrl = this.configService.get<string>('API_URL', 'http://localhost:3002');
+    const redirectPath = this.configService.get<string>('POWENS_REDIRECT_URI', '/powens/callback');
+    const callbackUrl = `${apiUrl}${redirectPath}`;
     
     const url = this.powensService.getWebviewConnectUrlWithState(callbackUrl, state);
 
@@ -157,6 +159,73 @@ export class BankController {
     } catch (tokenError) {
       console.error('Token exchange failed:', tokenError);
       return res?.redirect(`${this.frontendUrl}/app/condominiums/${condominiumId}/bank?error=token_exchange_failed`);
+    }
+  }
+
+  /**
+   * Finalize Powens connection (called from frontend callback)
+   * This endpoint is used when the callback is handled by the frontend (iframe mode)
+   */
+  @SkipTenantCheck()
+  @Post('connect/finalize')
+  async finalizeConnection(
+    @Body() body: { code: string; state: string; connectionId?: string },
+  ) {
+    const { code, state, connectionId } = body;
+
+    // Decode state to get condominiumId and tenantId
+    let condominiumId: string;
+    let tenantId: string;
+    
+    try {
+      const stateData = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
+      condominiumId = stateData.condominiumId;
+      tenantId = stateData.tenantId;
+    } catch {
+      return { success: false, error: 'invalid_state' };
+    }
+
+    try {
+      // Exchange code for permanent token
+      const tokenResult = await this.powensService.exchangeCode(code);
+      
+      // Create Powens connection in database
+      const connection = await this.bankService.createPowensConnection({
+        tenantId,
+        condominiumId,
+        accessToken: tokenResult.access_token,
+        powensUserId: tokenResult.id_user,
+        powensConnectionId: connectionId ? parseInt(connectionId, 10) : undefined,
+      });
+
+      // Fetch accounts from Powens and store them
+      try {
+        const { accounts } = await this.powensService.getAccounts(tokenResult.access_token);
+        
+        for (const powensAccount of accounts) {
+          await this.bankService.createBankAccount({
+            tenantId,
+            condominiumId,
+            powensConnectionId: connection.id,
+            powensAccountId: powensAccount.id,
+            bankName: powensAccount.company_name || powensAccount.original_name,
+            accountName: powensAccount.name,
+            accountType: powensAccount.type,
+            iban: powensAccount.iban || undefined,
+            bic: powensAccount.bic || undefined,
+            balance: powensAccount.balance,
+            currency: powensAccount.currency?.id || 'EUR',
+          });
+        }
+      } catch (accountError) {
+        console.error('Failed to fetch/store accounts:', accountError);
+        // Connection is still valid, accounts can be synced later
+      }
+
+      return { success: true, condominiumId };
+    } catch (tokenError) {
+      console.error('Token exchange failed:', tokenError);
+      return { success: false, error: 'token_exchange_failed' };
     }
   }
 }

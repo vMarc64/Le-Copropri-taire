@@ -61,7 +61,7 @@ export const lots = pgTable('lots', {
   type: varchar('type', { length: 50 }).notNull(), // appartement, parking, cave
   floor: integer('floor'),
   surface: decimal('surface', { precision: 10, scale: 2 }), // in m²
-  tantiemes: integer('tantiemes'), // Quote-part (millièmes)
+  tantiemes: decimal('tantiemes', { precision: 10, scale: 3 }), // Quote-part (millièmes) - peut être décimal
   ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'set null' }),
   tenantId_occupant: uuid('tenant_id_occupant').references(() => users.id, { onDelete: 'set null' }), // Locataire
   createdAt: timestamp('created_at').notNull().defaultNow(),

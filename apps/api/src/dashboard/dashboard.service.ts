@@ -85,18 +85,27 @@ export class DashboardService {
             sql`${payments.ownerId} IS NOT NULL`
           ));
 
+        // Count failed direct debits
+        const [failedDirectDebitsResult] = await db
+          .select({ count: count() })
+          .from(payments)
+          .where(and(
+            eq(payments.condominiumId, condo.id),
+            eq(payments.status, 'failed')
+          ));
+
         return {
           id: condo.id,
           name: condo.name,
           address: condo.address,
-          latePayments: latePaymentsResult?.count || 0,
           unpaidAmount: parseFloat(unpaidAmountResult?.total?.toString() || '0'),
           ownersInArrears: ownersInArrearsResult?.count || 0,
+          failedDirectDebits: failedDirectDebitsResult?.count || 0,
         };
       })
     );
 
-    // Filter to only show condos with unpaid
-    return condosWithUnpaid.filter(c => c.unpaidAmount > 0 || c.latePayments > 0);
+    // Return all condominiums (filtering done on frontend)
+    return condosWithUnpaid;
   }
 }

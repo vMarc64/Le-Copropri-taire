@@ -19,6 +19,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -29,6 +30,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -46,13 +57,14 @@ import {
   Plus,
   Search,
   MoreVertical,
-  Eye,
   User,
   Edit,
   Loader2,
   AlertTriangle,
   Building2,
   Box,
+  Trash2,
+  UserX,
 } from "lucide-react";
 
 interface Lot {
@@ -64,6 +76,12 @@ interface Lot {
   tantiemes: number | null;
   owner: { id: string; name: string } | null;
   createdAt: string;
+}
+
+interface Owner {
+  id: string;
+  name: string;
+  email: string;
 }
 
 const lotTypeConfig: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
@@ -86,10 +104,16 @@ const LOT_TYPES = [
   { value: "autre", label: "Autre" },
 ];
 
+// Format tantiemes with dot separator (e.g., 1.234)
+const formatTantiemes = (value: number): string => {
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
+
 export default function LotsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: condoId } = use(params);
   const [search, setSearch] = useState("");
   const [lots, setLots] = useState<Lot[]>([]);
+  const [owners, setOwners] = useState<Owner[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -103,6 +127,28 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
     surface: "",
     tantiemes: "",
   });
+
+  // Edit lot modal state
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingLot, setEditingLot] = useState<Lot | null>(null);
+  const [editForm, setEditForm] = useState({
+    type: "appartement",
+    floor: "",
+    surface: "",
+    tantiemes: "",
+  });
+
+  // Assign lot modal state
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [assigningLot, setAssigningLot] = useState<Lot | null>(null);
+  const [selectedOwnerId, setSelectedOwnerId] = useState<string>("");
+
+  // Delete confirmation state
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingLot, setDeletingLot] = useState<Lot | null>(null);
 
   const fetchLots = async () => {
     try {
@@ -122,8 +168,21 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
     }
   };
 
+  const fetchOwners = async () => {
+    try {
+      const response = await fetch(`/api/condominiums/${condoId}/owners`);
+      if (response.ok) {
+        const data = await response.json();
+        setOwners(data);
+      }
+    } catch (err) {
+      console.error("Error fetching owners:", err);
+    }
+  };
+
   useEffect(() => {
     fetchLots();
+    fetchOwners();
   }, [condoId]);
 
   const handleCreateLot = async () => {
@@ -139,7 +198,7 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
           type: newLot.type,
           floor: newLot.floor ? parseInt(newLot.floor) : undefined,
           surface: newLot.surface ? parseFloat(newLot.surface) : undefined,
-          tantiemes: newLot.tantiemes ? parseInt(newLot.tantiemes) : undefined,
+          tantiemes: newLot.tantiemes ? parseFloat(newLot.tantiemes) : undefined,
         }),
       });
 
@@ -158,6 +217,102 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
       console.error("Error creating lot:", error);
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const openEditDialog = (lot: Lot) => {
+    setEditingLot(lot);
+    setEditForm({
+      type: lot.type,
+      floor: lot.floor?.toString() || "",
+      surface: lot.surface?.toString() || "",
+      tantiemes: lot.tantiemes?.toString() || "",
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleEditLot = async () => {
+    if (!editingLot) return;
+
+    setIsEditing(true);
+    try {
+      const response = await fetch(`/api/lots/${editingLot.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: editForm.type,
+          floor: editForm.floor ? parseInt(editForm.floor) : null,
+          surface: editForm.surface ? parseFloat(editForm.surface) : null,
+          tantiemes: editForm.tantiemes ? parseFloat(editForm.tantiemes) : null,
+        }),
+      });
+
+      if (response.ok) {
+        setShowEditDialog(false);
+        setEditingLot(null);
+        fetchLots();
+      }
+    } catch (error) {
+      console.error("Error updating lot:", error);
+    } finally {
+      setIsEditing(false);
+    }
+  };
+
+  const openAssignDialog = (lot: Lot) => {
+    setAssigningLot(lot);
+    setSelectedOwnerId(lot.owner?.id || "");
+    setShowAssignDialog(true);
+  };
+
+  const handleAssignLot = async () => {
+    if (!assigningLot) return;
+
+    setIsAssigning(true);
+    try {
+      const response = await fetch(`/api/lots/${assigningLot.id}/assign`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ownerId: selectedOwnerId || null,
+        }),
+      });
+
+      if (response.ok) {
+        setShowAssignDialog(false);
+        setAssigningLot(null);
+        fetchLots();
+      }
+    } catch (error) {
+      console.error("Error assigning lot:", error);
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const openDeleteDialog = (lot: Lot) => {
+    setDeletingLot(lot);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteLot = async () => {
+    if (!deletingLot) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/lots/${deletingLot.id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setShowDeleteDialog(false);
+        setDeletingLot(null);
+        fetchLots();
+      }
+    } catch (error) {
+      console.error("Error deleting lot:", error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -264,7 +419,7 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
                 <span className="text-xl font-bold text-amber-500">‰</span>
               </div>
               <div>
-                <p className="text-3xl font-bold">{stats.totalTantiemes.toLocaleString("fr-FR")}</p>
+                <p className="text-3xl font-bold">{formatTantiemes(stats.totalTantiemes)}</p>
                 <p className="text-sm text-muted-foreground">Tantièmes</p>
               </div>
             </div>
@@ -317,12 +472,12 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
                     className="group border-b transition-colors hover:bg-muted/50"
                   >
                     <TableCell className="h-12 px-4 font-medium">
-                      <Link
-                        href={`/app/condominiums/${condoId}/lots/${lot.id}`}
-                        className="hover:text-primary hover:underline"
+                      <button
+                        onClick={() => openEditDialog(lot)}
+                        className="hover:text-primary hover:underline text-left"
                       >
                         {lot.reference}
-                      </Link>
+                      </button>
                     </TableCell>
                     <TableCell className="h-12 px-4">
                       <Badge variant="outline" className={`gap-1.5 ${typeConfig.color}`}>
@@ -337,16 +492,13 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
                       {lot.surface ? `${lot.surface} m²` : "-"}
                     </TableCell>
                     <TableCell className="h-12 px-4 text-center tabular-nums">
-                      {lot.tantiemes ? lot.tantiemes.toLocaleString("fr-FR") : "-"}
+                      {lot.tantiemes ? formatTantiemes(lot.tantiemes) : "-"}
                     </TableCell>
                     <TableCell className="h-12 px-4">
                       {lot.owner ? (
-                        <Link
-                          href={`/app/owners`}
-                          className="text-sm hover:text-primary hover:underline"
-                        >
+                        <span className="text-sm">
                           {lot.owner.name}
-                        </Link>
+                        </span>
                       ) : (
                         <span className="text-sm text-muted-foreground italic">Non assigné</span>
                       )}
@@ -364,22 +516,21 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem asChild>
-                            <Link
-                              href={`/app/condominiums/${condoId}/lots/${lot.id}`}
-                              className="flex items-center"
-                            >
-                              <Eye className="mr-2 h-4 w-4" />
-                              Voir
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openEditDialog(lot)}>
                             <Edit className="mr-2 h-4 w-4" />
                             Modifier
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openAssignDialog(lot)}>
                             <User className="mr-2 h-4 w-4" />
                             Assigner
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={() => openDeleteDialog(lot)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Supprimer
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -468,10 +619,11 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
               <Input
                 id="tantiemes"
                 type="number"
+                step="0.001"
                 value={newLot.tantiemes}
                 onChange={(e) => setNewLot({ ...newLot, tantiemes: e.target.value })}
                 className="col-span-3"
-                placeholder="Ex: 150"
+                placeholder="Ex: 1.234"
               />
             </div>
           </div>
@@ -493,6 +645,179 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Lot Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Modifier le lot {editingLot?.reference}</DialogTitle>
+            <DialogDescription>
+              Modifiez les informations du lot.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-type" className="text-right">
+                Type *
+              </Label>
+              <Select
+                value={editForm.type}
+                onValueChange={(value) => setEditForm({ ...editForm, type: value })}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Sélectionner un type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LOT_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-floor" className="text-right">
+                Étage
+              </Label>
+              <Input
+                id="edit-floor"
+                type="number"
+                value={editForm.floor}
+                onChange={(e) => setEditForm({ ...editForm, floor: e.target.value })}
+                className="col-span-3"
+                placeholder="Ex: 0, 1, -1"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-surface" className="text-right">
+                Surface (m²)
+              </Label>
+              <Input
+                id="edit-surface"
+                type="number"
+                step="0.01"
+                value={editForm.surface}
+                onChange={(e) => setEditForm({ ...editForm, surface: e.target.value })}
+                className="col-span-3"
+                placeholder="Ex: 65.50"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-tantiemes" className="text-right">
+                Tantièmes
+              </Label>
+              <Input
+                id="edit-tantiemes"
+                type="number"
+                step="0.001"
+                value={editForm.tantiemes}
+                onChange={(e) => setEditForm({ ...editForm, tantiemes: e.target.value })}
+                className="col-span-3"
+                placeholder="Ex: 1.234"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowEditDialog(false)}
+              disabled={isEditing}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={handleEditLot}
+              disabled={!editForm.type || isEditing}
+            >
+              {isEditing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Lot Dialog */}
+      <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Assigner le lot {assigningLot?.reference}</DialogTitle>
+            <DialogDescription>
+              Sélectionnez un propriétaire pour ce lot.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Select
+              value={selectedOwnerId}
+              onValueChange={setSelectedOwnerId}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un propriétaire" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <UserX className="h-4 w-4" />
+                    Aucun (retirer l'assignation)
+                  </div>
+                </SelectItem>
+                {owners.map((owner) => (
+                  <SelectItem key={owner.id} value={owner.id}>
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      {owner.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {owners.length === 0 && (
+              <p className="mt-3 text-sm text-muted-foreground text-center">
+                Aucun propriétaire dans cette copropriété.
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowAssignDialog(false)}
+              disabled={isAssigning}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={handleAssignLot}
+              disabled={isAssigning}
+            >
+              {isAssigning && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Assigner
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer le lot {deletingLot?.reference} ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Le lot sera définitivement supprimé.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteLot}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

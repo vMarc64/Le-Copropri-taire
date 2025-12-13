@@ -1,0 +1,1 @@
+ALTER TABLE "lots" ALTER COLUMN "tantiemes" SET DATA TYPE numeric(10, 3);

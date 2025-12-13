@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { db } from '../database';
-import { bankAccounts, bankTransactions, condominiums } from '../database/schema';
+import { bankAccounts, bankTransactions, condominiums, powensConnections } from '../database/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
 @Injectable()
@@ -132,5 +132,87 @@ export class BankService {
       .limit(1);
 
     return account[0] || null;
+  }
+
+  // ============ POWENS CONNECTION MANAGEMENT ============
+
+  async createPowensConnection(data: {
+    tenantId: string;
+    condominiumId: string;
+    accessToken: string;
+    powensUserId?: number;
+    powensConnectionId?: number;
+    powensConnectorId?: number;
+    bankName?: string;
+  }) {
+    const [connection] = await db
+      .insert(powensConnections)
+      .values({
+        tenantId: data.tenantId,
+        condominiumId: data.condominiumId,
+        accessToken: data.accessToken,
+        powensUserId: data.powensUserId,
+        powensConnectionId: data.powensConnectionId,
+        powensConnectorId: data.powensConnectorId,
+        bankName: data.bankName,
+        status: 'active',
+      })
+      .returning();
+
+    return connection;
+  }
+
+  async createBankAccount(data: {
+    tenantId: string;
+    condominiumId: string;
+    powensConnectionId: string;
+    powensAccountId?: number;
+    bankName?: string;
+    accountName?: string;
+    accountType?: string;
+    accountNumber?: string;
+    iban?: string;
+    bic?: string;
+    balance?: number;
+    currency?: string;
+  }) {
+    const [account] = await db
+      .insert(bankAccounts)
+      .values({
+        tenantId: data.tenantId,
+        condominiumId: data.condominiumId,
+        powensConnectionId: data.powensConnectionId,
+        powensAccountId: data.powensAccountId,
+        bankName: data.bankName,
+        accountName: data.accountName,
+        accountType: data.accountType,
+        accountNumber: data.accountNumber,
+        iban: data.iban,
+        bic: data.bic,
+        balance: data.balance?.toString(),
+        currency: data.currency || 'EUR',
+        isMain: true, // First account is main by default
+        status: 'active',
+        lastSyncAt: new Date(),
+      })
+      .returning();
+
+    return account;
+  }
+
+  async findPowensConnectionByCondominiumId(condominiumId: string, tenantId: string) {
+    const connection = await db
+      .select()
+      .from(powensConnections)
+      .where(
+        and(
+          eq(powensConnections.condominiumId, condominiumId),
+          eq(powensConnections.tenantId, tenantId),
+          eq(powensConnections.status, 'active')
+        )
+      )
+      .limit(1);
+
+    return connection[0] || null;
   }
 }
