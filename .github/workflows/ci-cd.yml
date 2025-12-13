@@ -174,7 +174,7 @@ jobs:
             cd /opt/lecopro
             
             # Create .env from GitHub secrets
-            cat > .env << 'EOF'
+            cat > .env << EOF
             NODE_ENV=production
             DATABASE_URL=$DATABASE_URL
             JWT_SECRET=$JWT_SECRET
