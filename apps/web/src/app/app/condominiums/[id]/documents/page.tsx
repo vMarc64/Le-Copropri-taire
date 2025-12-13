@@ -4,7 +4,6 @@ import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -24,6 +23,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -31,7 +36,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  Files,
+  ClipboardList,
+  Receipt,
+  FolderOpen,
+  Search,
+  Upload,
+  MoreHorizontal,
+  Eye,
+  Download,
+  Trash2,
+  Loader2,
+  FileSpreadsheet,
+  FileCheck,
+  Scale,
+  Shield,
+  Wallet,
+} from "lucide-react";
 
 interface Document {
   id: string;
@@ -42,15 +66,15 @@ interface Document {
   uploadedBy: string;
 }
 
-const categories: Record<string, { label: string; icon: string; color: string }> = {
-  ag: { label: "Assemblée Générale", icon: "📋", color: "bg-blue-100 text-blue-800" },
-  budget: { label: "Budget", icon: "💰", color: "bg-green-100 text-green-800" },
-  contract: { label: "Contrat", icon: "📝", color: "bg-purple-100 text-purple-800" },
-  legal: { label: "Juridique", icon: "⚖️", color: "bg-gray-100 text-gray-800" },
-  insurance: { label: "Assurance", icon: "🛡️", color: "bg-yellow-100 text-yellow-800" },
-  quote: { label: "Devis", icon: "📊", color: "bg-orange-100 text-orange-800" },
-  invoice: { label: "Facture", icon: "🧾", color: "bg-red-100 text-red-800" },
-  other: { label: "Autre", icon: "📁", color: "bg-gray-100 text-gray-800" },
+const categories: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; bgColor: string; textColor: string }> = {
+  ag: { label: "Assemblée Générale", icon: ClipboardList, bgColor: "bg-blue-100 dark:bg-blue-950", textColor: "text-blue-600 dark:text-blue-400" },
+  budget: { label: "Budget", icon: Wallet, bgColor: "bg-green-100 dark:bg-green-950", textColor: "text-green-600 dark:text-green-400" },
+  contract: { label: "Contrat", icon: FileCheck, bgColor: "bg-purple-100 dark:bg-purple-950", textColor: "text-purple-600 dark:text-purple-400" },
+  legal: { label: "Juridique", icon: Scale, bgColor: "bg-gray-100 dark:bg-gray-800", textColor: "text-gray-600 dark:text-gray-400" },
+  insurance: { label: "Assurance", icon: Shield, bgColor: "bg-yellow-100 dark:bg-yellow-950", textColor: "text-yellow-600 dark:text-yellow-400" },
+  quote: { label: "Devis", icon: FileSpreadsheet, bgColor: "bg-orange-100 dark:bg-orange-950", textColor: "text-orange-600 dark:text-orange-400" },
+  invoice: { label: "Facture", icon: Receipt, bgColor: "bg-red-100 dark:bg-red-950", textColor: "text-red-600 dark:text-red-400" },
+  other: { label: "Autre", icon: FolderOpen, bgColor: "bg-gray-100 dark:bg-gray-800", textColor: "text-gray-600 dark:text-gray-400" },
 };
 
 export default function DocumentsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -58,7 +82,6 @@ export default function DocumentsPage({ params }: { params: Promise<{ id: string
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -90,6 +113,7 @@ export default function DocumentsPage({ params }: { params: Promise<{ id: string
     total: documents.length,
     ag: documents.filter(d => d.category === "ag").length,
     invoices: documents.filter(d => d.category === "invoice").length,
+    contracts: documents.filter(d => d.category === "contract").length,
   };
 
   if (loading) {
@@ -115,18 +139,23 @@ export default function DocumentsPage({ params }: { params: Promise<{ id: string
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href={`/app/condominiums/${condoId}`}>
-            <Button variant="ghost" size="sm">← Retour</Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold">📁 Documents</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl font-semibold tracking-tight">Documents</h1>
+            <p className="text-sm text-muted-foreground">
               Gérez les documents de la copropriété
             </p>
           </div>
         </div>
         <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
           <DialogTrigger asChild>
-            <Button>📤 Ajouter un document</Button>
+            <Button size="sm">
+              <Upload className="mr-2 h-4 w-4" />
+              Ajouter
+            </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -151,9 +180,12 @@ export default function DocumentsPage({ params }: { params: Promise<{ id: string
                     <SelectValue placeholder="Sélectionner une catégorie" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(categories).map(([key, { label, icon }]) => (
+                    {Object.entries(categories).map(([key, { label, icon: Icon }]) => (
                       <SelectItem key={key} value={key}>
-                        {icon} {label}
+                        <span className="flex items-center gap-2">
+                          <Icon className="h-4 w-4" />
+                          {label}
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -174,143 +206,175 @@ export default function DocumentsPage({ params }: { params: Promise<{ id: string
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-2xl font-bold">{stats.total}</p>
-            <p className="text-sm text-muted-foreground">Total documents</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-2xl font-bold">{stats.ag}</p>
-            <p className="text-sm text-muted-foreground">PV d'AG</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-2xl font-bold">{stats.invoices}</p>
-            <p className="text-sm text-muted-foreground">Factures</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-2xl font-bold">{Object.keys(categories).length}</p>
-            <p className="text-sm text-muted-foreground">Catégories</p>
-          </CardContent>
-        </Card>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10">
+              <Files className="h-5 w-5 text-blue-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{stats.total}</p>
+              <p className="text-xs text-muted-foreground">Total documents</p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/10">
+              <ClipboardList className="h-5 w-5 text-purple-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{stats.ag}</p>
+              <p className="text-xs text-muted-foreground">PV d'AG</p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10">
+              <Receipt className="h-5 w-5 text-red-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{stats.invoices}</p>
+              <p className="text-xs text-muted-foreground">Factures</p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/10">
+              <FileCheck className="h-5 w-5 text-green-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{stats.contracts}</p>
+              <p className="text-xs text-muted-foreground">Contrats</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
       <div className="flex gap-4 items-center">
-        <Input
-          placeholder="Rechercher un document..."
-          className="max-w-sm"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="relative max-w-sm flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher un document..."
+            className="pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Catégorie" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Toutes les catégories</SelectItem>
-            {Object.entries(categories).map(([key, { label }]) => (
-              <SelectItem key={key} value={key}>{label}</SelectItem>
+            {Object.entries(categories).map(([key, { label, icon: Icon }]) => (
+              <SelectItem key={key} value={key}>
+                <span className="flex items-center gap-2">
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </span>
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <div className="flex gap-1 ml-auto">
-          <Button 
-            variant={viewMode === "list" ? "default" : "outline"} 
-            size="sm"
-            onClick={() => setViewMode("list")}
-          >
-            ☰
-          </Button>
-          <Button 
-            variant={viewMode === "grid" ? "default" : "outline"} 
-            size="sm"
-            onClick={() => setViewMode("grid")}
-          >
-            ▦
-          </Button>
-        </div>
       </div>
 
-      {/* Documents */}
-      {viewMode === "list" ? (
-        <Card>
-          <Table>
-            <TableHeader>
+      {/* Documents Table */}
+      <div className="rounded-md border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b bg-muted/50 hover:bg-muted/50">
+              <TableHead className="font-medium">Nom</TableHead>
+              <TableHead className="font-medium">Catégorie</TableHead>
+              <TableHead className="font-medium">Taille</TableHead>
+              <TableHead className="font-medium">Date</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredDocuments.length === 0 ? (
               <TableRow>
-                <TableHead>Nom</TableHead>
-                <TableHead>Catégorie</TableHead>
-                <TableHead>Taille</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableCell colSpan={5} className="h-32 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <FileText className="h-8 w-8 text-muted-foreground/50" />
+                    <p className="text-muted-foreground">Aucun document trouvé</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsUploadOpen(true)}
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      Ajouter un document
+                    </Button>
+                  </div>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredDocuments.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                    Aucun document trouvé
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredDocuments.map((doc) => (
-                  <TableRow key={doc.id}>
-                    <TableCell className="font-medium">
-                      <span className="flex items-center gap-2">
-                        📄 {doc.name}
-                      </span>
-                    </TableCell>
+            ) : (
+              filteredDocuments.map((doc) => {
+                const category = categories[doc.category] || categories.other;
+                const CategoryIcon = category.icon;
+                
+                return (
+                  <TableRow
+                    key={doc.id}
+                    className="group border-b transition-colors hover:bg-muted/50"
+                  >
                     <TableCell>
-                      <Badge className={categories[doc.category]?.color}>
-                        {categories[doc.category]?.icon} {categories[doc.category]?.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{doc.size}</TableCell>
-                    <TableCell className="text-muted-foreground">{doc.date}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="sm">👁️ Voir</Button>
-                        <Button variant="ghost" size="sm">⬇️</Button>
-                        <Button variant="ghost" size="sm" className="text-destructive">🗑️</Button>
+                      <div className="flex items-center gap-3">
+                        <div className={`flex h-8 w-8 items-center justify-center rounded ${category.bgColor}`}>
+                          <FileText className={`h-4 w-4 ${category.textColor}`} />
+                        </div>
+                        <span className="font-medium">{doc.name}</span>
                       </div>
                     </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className={`${category.bgColor} ${category.textColor} border-0`}>
+                        <CategoryIcon className="mr-1 h-3 w-3" />
+                        {category.label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {doc.size}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {doc.date}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Eye className="mr-2 h-4 w-4" />
+                            Voir
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Download className="mr-2 h-4 w-4" />
+                            Télécharger
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Supprimer
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {filteredDocuments.length === 0 ? (
-            <Card className="col-span-full">
-              <CardContent className="py-8 text-center text-muted-foreground">
-                Aucun document trouvé
-              </CardContent>
-            </Card>
-          ) : (
-            filteredDocuments.map((doc) => (
-              <Card key={doc.id} className="cursor-pointer hover:bg-muted/50 transition-colors">
-                <CardContent className="pt-6">
-                  <div className="flex flex-col items-center text-center">
-                    <span className="text-4xl mb-2">📄</span>
-                    <p className="font-medium text-sm truncate w-full">{doc.name}</p>
-                    <Badge className={`mt-2 ${categories[doc.category]?.color}`}>
-                      {categories[doc.category]?.label}
-                    </Badge>
-                    <p className="text-xs text-muted-foreground mt-2">{doc.date}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
-      )}
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
