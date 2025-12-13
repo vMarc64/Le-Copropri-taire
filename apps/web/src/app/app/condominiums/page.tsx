@@ -121,64 +121,67 @@ export default function CondominiumsListPage() {
 
       {/* Table View */}
       {viewMode === "table" && (
-        <Card className="overflow-hidden">
+        <div className="rounded-md border bg-card">
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead>Nom</TableHead>
-                <TableHead>Adresse</TableHead>
-                <TableHead className="w-24 text-center">Lots</TableHead>
-                <TableHead className="w-32 text-center">Propriétaires</TableHead>
-                <TableHead className="w-28 text-right">Solde</TableHead>
-                <TableHead className="w-24 text-center">SEPA</TableHead>
-                <TableHead className="w-12"></TableHead>
+              <TableRow className="border-b bg-muted/50 hover:bg-muted/50">
+                <TableHead className="h-10 px-4 font-medium">Nom</TableHead>
+                <TableHead className="h-10 px-4 font-medium">Adresse</TableHead>
+                <TableHead className="h-10 w-20 px-4 text-center font-medium">Lots</TableHead>
+                <TableHead className="h-10 w-28 px-4 text-center font-medium">Propriétaires</TableHead>
+                <TableHead className="h-10 w-24 px-4 text-right font-medium">Solde</TableHead>
+                <TableHead className="h-10 w-20 px-4 text-center font-medium">SEPA</TableHead>
+                <TableHead className="h-10 w-10 px-2"></TableHead>
               </TableRow>
             </TableHeader>
-                <TableBody>
-                  {filteredCondos.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                        Aucune copropriété trouvée
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredCondos.map((condo) => (
-                      <TableRow key={condo.id} className="group">
-                        <TableCell className="font-medium">
-                          <Link
-                            href={`/app/condominiums/${condo.id}`}
-                            className="hover:text-primary hover:underline"
+            <TableBody>
+              {filteredCondos.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                    Aucune copropriété trouvée
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredCondos.map((condo) => (
+                  <TableRow 
+                    key={condo.id} 
+                    className="group border-b transition-colors hover:bg-muted/50"
+                  >
+                    <TableCell className="h-12 px-4 font-medium">
+                      <Link
+                        href={`/app/condominiums/${condo.id}`}
+                        className="hover:text-primary hover:underline"
+                      >
+                        {condo.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="h-12 px-4 text-muted-foreground">
+                      {condo.address}, {condo.postalCode} {condo.city}
+                    </TableCell>
+                    <TableCell className="h-12 px-4 text-center tabular-nums">{condo.lots}</TableCell>
+                    <TableCell className="h-12 px-4 text-center tabular-nums">{condo.owners}</TableCell>
+                    <TableCell className={`h-12 px-4 text-right font-medium tabular-nums ${condo.balance < 0 ? "text-destructive" : "text-emerald-600"}`}>
+                      {condo.balance.toLocaleString('fr-FR')} €
+                    </TableCell>
+                    <TableCell className="h-12 px-4 text-center">
+                      <Badge 
+                        variant="outline" 
+                        className={condo.sepaEnabled 
+                          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
+                          : "border-muted-foreground/30 bg-muted text-muted-foreground"
+                        }
+                      >
+                        {condo.sepaEnabled ? "Actif" : "Inactif"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="h-12 px-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100 transition-opacity"
                           >
-                            {condo.name}
-                          </Link>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {condo.address}, {condo.postalCode} {condo.city}
-                        </TableCell>
-                        <TableCell className="text-center tabular-nums">{condo.lots}</TableCell>
-                        <TableCell className="text-center tabular-nums">{condo.owners}</TableCell>
-                        <TableCell className={`text-right font-medium tabular-nums ${condo.balance < 0 ? "text-destructive" : "text-emerald-600"}`}>
-                          {condo.balance.toLocaleString('fr-FR')} €
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {condo.sepaEnabled ? (
-                            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                              Actif
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary" className="text-muted-foreground">
-                              Inactif
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
                                 <span className="sr-only">Actions</span>
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
@@ -210,13 +213,29 @@ export default function CondominiumsListPage() {
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-        </Card>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+          
+          {/* Table Footer */}
+          <div className="flex items-center justify-between border-t px-4 py-3">
+            <p className="text-sm text-muted-foreground">
+              {filteredCondos.length} copropriété{filteredCondos.length > 1 ? 's' : ''}
+            </p>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <span>
+                {filteredCondos.reduce((acc, c) => acc + c.lots, 0)} lots
+              </span>
+              <span>•</span>
+              <span>
+                {filteredCondos.reduce((acc, c) => acc + c.owners, 0)} propriétaires
+              </span>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Cards View */}
@@ -257,15 +276,6 @@ export default function CondominiumsListPage() {
           ))}
         </div>
       )}
-
-      {/* Stats Footer */}
-      <div className="flex justify-between text-sm text-muted-foreground">
-        <span>{filteredCondos.length} copropriété(s) affichée(s)</span>
-        <span>
-          Total: {filteredCondos.reduce((acc, c) => acc + c.lots, 0)} lots,{" "}
-          {filteredCondos.reduce((acc, c) => acc + c.owners, 0)} propriétaires
-        </span>
-      </div>
     </div>
   );
 }
