@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,30 +13,37 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Loader2 } from "lucide-react";
 
-// Mock data - will be replaced with API call
-const mockTenant = {
-  id: "1",
-  name: "Syndic ABC",
-  email: "contact@syndicabc.fr",
-  siret: "12345678901234",
-  phone: "01 23 45 67 89",
-  address: "123 rue de Paris",
-  city: "Paris",
-  postalCode: "75001",
-  status: "active" as const,
-  createdAt: "2025-10-15",
-  condominiums: [
-    { id: "c1", name: "Résidence Les Lilas", address: "12 rue des Lilas, 75020 Paris", lots: 24, owners: 18 },
-    { id: "c2", name: "Immeuble Haussmann", address: "45 bd Haussmann, 75009 Paris", lots: 36, owners: 28 },
-    { id: "c3", name: "Le Parc des Roses", address: "8 allée des Roses, 92100 Boulogne", lots: 48, owners: 42 },
-  ],
-  users: [
-    { id: "u1", name: "Jean Dupont", email: "jean.dupont@syndicabc.fr", role: "admin" },
-    { id: "u2", name: "Marie Martin", email: "marie.martin@syndicabc.fr", role: "manager" },
-    { id: "u3", name: "Pierre Durand", email: "pierre.durand@syndicabc.fr", role: "manager" },
-  ],
-};
+interface Condominium {
+  id: string;
+  name: string;
+  address: string;
+  lots: number;
+  owners: number;
+}
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+interface Tenant {
+  id: string;
+  name: string;
+  email: string;
+  siret: string;
+  phone: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  status: "active" | "pending" | "suspended";
+  createdAt: string;
+  condominiums: Condominium[];
+  users: User[];
+}
 
 const statusConfig = {
   active: { label: "Actif", variant: "default" as const },
@@ -51,7 +58,47 @@ const roleLabels: Record<string, string> = {
 
 export default function TenantDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const tenant = mockTenant; // TODO: Fetch from API
+  const [tenant, setTenant] = useState<Tenant | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchTenant() {
+      try {
+        setLoading(true);
+        // TODO: Fetch from API
+        setTenant(null);
+        setError(null);
+      } catch (err) {
+        setError("Erreur lors du chargement du gestionnaire");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTenant();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error || !tenant) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <p className="text-muted-foreground mb-4">
+          {error || "Gestionnaire non trouvé"}
+        </p>
+        <Link href="/platform/tenants">
+          <Button variant="outline">← Retour à la liste</Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -156,14 +203,22 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tenant.condominiums.map((condo) => (
-                <TableRow key={condo.id}>
-                  <TableCell className="font-medium">{condo.name}</TableCell>
-                  <TableCell>{condo.address}</TableCell>
-                  <TableCell className="text-center">{condo.lots}</TableCell>
-                  <TableCell className="text-center">{condo.owners}</TableCell>
+              {tenant.condominiums.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                    Aucune copropriété
+                  </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                tenant.condominiums.map((condo) => (
+                  <TableRow key={condo.id}>
+                    <TableCell className="font-medium">{condo.name}</TableCell>
+                    <TableCell>{condo.address}</TableCell>
+                    <TableCell className="text-center">{condo.lots}</TableCell>
+                    <TableCell className="text-center">{condo.owners}</TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -187,15 +242,23 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tenant.users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{roleLabels[user.role] || user.role}</Badge>
+              {tenant.users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
+                    Aucun utilisateur
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                tenant.users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{roleLabels[user.role] || user.role}</Badge>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>

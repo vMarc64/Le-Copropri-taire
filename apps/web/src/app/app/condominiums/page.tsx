@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,65 +20,56 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-// Mock data
-const mockCondominiums = [
-  {
-    id: "1",
-    name: "Résidence Les Lilas",
-    address: "12 rue des Lilas",
-    city: "Paris",
-    postalCode: "75020",
-    lots: 24,
-    owners: 18,
-    balance: 12500,
-    sepaEnabled: true,
-  },
-  {
-    id: "2",
-    name: "Immeuble Haussmann",
-    address: "45 bd Haussmann",
-    city: "Paris",
-    postalCode: "75009",
-    lots: 36,
-    owners: 28,
-    balance: -2300,
-    sepaEnabled: true,
-  },
-  {
-    id: "3",
-    name: "Le Parc des Roses",
-    address: "8 allée des Roses",
-    city: "Boulogne",
-    postalCode: "92100",
-    lots: 48,
-    owners: 42,
-    balance: 45600,
-    sepaEnabled: false,
-  },
-  {
-    id: "4",
-    name: "Villa Montmartre",
-    address: "3 rue Lepic",
-    city: "Paris",
-    postalCode: "75018",
-    lots: 12,
-    owners: 10,
-    balance: 8900,
-    sepaEnabled: true,
-  },
-];
+import { Loader2 } from "lucide-react";
+import { getCondominiums, type Condominium } from "@/lib/api";
 
 export default function CondominiumsListPage() {
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
+  const [condominiums, setCondominiums] = useState<Condominium[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredCondos = mockCondominiums.filter(
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const data = await getCondominiums();
+        setCondominiums(data);
+        setError(null);
+      } catch (err) {
+        setError("Erreur lors du chargement des copropriétés");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const filteredCondos = condominiums.filter(
     (condo) =>
       condo.name.toLowerCase().includes(search.toLowerCase()) ||
       condo.address.toLowerCase().includes(search.toLowerCase()) ||
       condo.city.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
+        <p className="text-destructive">{error}</p>
+        <Button onClick={() => window.location.reload()}>Réessayer</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -87,7 +78,7 @@ export default function CondominiumsListPage() {
         <div>
           <h1 className="text-3xl font-bold">Copropriétés</h1>
           <p className="text-muted-foreground">
-            Gérez vos {mockCondominiums.length} copropriétés
+            Gérez vos {condominiums.length} copropriété{condominiums.length > 1 ? 's' : ''}
           </p>
         </div>
         <Button asChild>

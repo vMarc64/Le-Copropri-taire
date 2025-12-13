@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,62 +31,47 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
-// Mock data
-const mockOwners = [
-  { 
-    id: "1", 
-    name: "M. Jean Dupont", 
-    email: "jean.dupont@email.com",
-    phone: "06 12 34 56 78",
-    lots: ["A12", "P01"],
-    tantiemes: 135,
-    balance: 0,
-    status: "up-to-date",
-    sepaMandate: true,
-  },
-  { 
-    id: "2", 
-    name: "Mme Marie Martin", 
-    email: "marie.martin@email.com",
-    phone: "06 98 76 54 32",
-    lots: ["A13", "C05"],
-    tantiemes: 98,
-    balance: -380,
-    status: "pending",
-    sepaMandate: true,
-  },
-  { 
-    id: "3", 
-    name: "M. Pierre Bernard", 
-    email: "pierre.bernard@email.com",
-    phone: "07 11 22 33 44",
-    lots: ["B03"],
-    tantiemes: 140,
-    balance: -520,
-    status: "overdue",
-    sepaMandate: false,
-  },
-  { 
-    id: "4", 
-    name: "Mme Sophie Petit", 
-    email: "sophie.petit@email.com",
-    phone: "06 55 44 33 22",
-    lots: ["B04", "P02"],
-    tantiemes: 110,
-    balance: 0,
-    status: "up-to-date",
-    sepaMandate: true,
-  },
-];
+interface Owner {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  lots: string[];
+  tantiemes: number;
+  balance: number;
+  status: string;
+  sepaMandate: boolean;
+}
 
 export default function OwnersPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: condoId } = use(params);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [owners, setOwners] = useState<Owner[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredOwners = mockOwners.filter((owner) => {
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        // TODO: Fetch from API
+        setOwners([]);
+        setError(null);
+      } catch (err) {
+        setError("Erreur lors du chargement des propriétaires");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [condoId]);
+
+  const filteredOwners = owners.filter((owner) => {
     const matchesSearch = 
       owner.name.toLowerCase().includes(search.toLowerCase()) ||
       owner.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -96,11 +81,28 @@ export default function OwnersPage({ params }: { params: Promise<{ id: string }>
   });
 
   const stats = {
-    total: mockOwners.length,
-    upToDate: mockOwners.filter(o => o.status === "up-to-date").length,
-    overdue: mockOwners.filter(o => o.status === "overdue").length,
-    sepaActive: mockOwners.filter(o => o.sepaMandate).length,
+    total: owners.length,
+    upToDate: owners.filter(o => o.status === "up-to-date").length,
+    overdue: owners.filter(o => o.status === "overdue").length,
+    sepaActive: owners.filter(o => o.sepaMandate).length,
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
+        <p className="text-destructive">{error}</p>
+        <Button onClick={() => window.location.reload()}>Réessayer</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -201,25 +203,6 @@ export default function OwnersPage({ params }: { params: Promise<{ id: string }>
         </Card>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex gap-2 border-b pb-2">
-        <Link href={`/app/condominiums/${condoId}`}>
-          <Button variant="ghost" size="sm">📊 Dashboard</Button>
-        </Link>
-        <Link href={`/app/condominiums/${condoId}/lots`}>
-          <Button variant="ghost" size="sm">🚪 Lots</Button>
-        </Link>
-        <Link href={`/app/condominiums/${condoId}/owners`}>
-          <Button variant="default" size="sm">👥 Propriétaires</Button>
-        </Link>
-        <Link href={`/app/condominiums/${condoId}/bank`}>
-          <Button variant="ghost" size="sm">🏦 Banque</Button>
-        </Link>
-        <Link href={`/app/condominiums/${condoId}/documents`}>
-          <Button variant="ghost" size="sm">📁 Documents</Button>
-        </Link>
-      </div>
-
       {/* Filters */}
       <div className="flex gap-4">
         <Input
@@ -256,42 +239,50 @@ export default function OwnersPage({ params }: { params: Promise<{ id: string }>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredOwners.map((owner) => (
-              <TableRow key={owner.id}>
-                <TableCell className="font-medium">{owner.name}</TableCell>
-                <TableCell>
-                  <div className="text-sm">
-                    <p>{owner.email}</p>
-                    <p className="text-muted-foreground">{owner.phone}</p>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-1 flex-wrap">
-                    {owner.lots.map(lot => (
-                      <Badge key={lot} variant="outline">{lot}</Badge>
-                    ))}
-                  </div>
-                </TableCell>
-                <TableCell>{owner.tantiemes}</TableCell>
-                <TableCell className="text-right">
-                  <Badge variant={owner.status === "up-to-date" ? "default" : owner.status === "pending" ? "secondary" : "destructive"}>
-                    {owner.balance === 0 ? "À jour" : `${owner.balance} €`}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {owner.sepaMandate ? (
-                    <Badge variant="default">✓ Actif</Badge>
-                  ) : (
-                    <Badge variant="outline">Non configuré</Badge>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Link href={`/app/condominiums/${condoId}/owners/${owner.id}`}>
-                    <Button variant="ghost" size="sm">Voir</Button>
-                  </Link>
+            {filteredOwners.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                  Aucun propriétaire trouvé
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filteredOwners.map((owner) => (
+                <TableRow key={owner.id}>
+                  <TableCell className="font-medium">{owner.name}</TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      <p>{owner.email}</p>
+                      <p className="text-muted-foreground">{owner.phone}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1 flex-wrap">
+                      {owner.lots.map(lot => (
+                        <Badge key={lot} variant="outline">{lot}</Badge>
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell>{owner.tantiemes}</TableCell>
+                  <TableCell className="text-right">
+                    <Badge variant={owner.status === "up-to-date" ? "default" : owner.status === "pending" ? "secondary" : "destructive"}>
+                      {owner.balance === 0 ? "À jour" : `${owner.balance} €`}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {owner.sepaMandate ? (
+                      <Badge variant="default">✓ Actif</Badge>
+                    ) : (
+                      <Badge variant="outline">Non configuré</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Link href={`/app/condominiums/${condoId}/owners/${owner.id}`}>
+                      <Button variant="ghost" size="sm">Voir</Button>
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </Card>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,57 +29,119 @@ import {
   Megaphone,
   Key,
   Building2,
+  Loader2,
 } from "lucide-react";
 
-// Mock data for tenant portal
-const tenantInfo = {
-  firstName: "Marie",
-  name: "Mme Marie Martin",
-  email: "marie.martin@email.com",
-  condominium: "Résidence Les Lilas",
-  address: "12 rue des Lilas, 75020 Paris",
-  lot: { reference: "B12", type: "Appartement T3", floor: 2, surface: "65 m²" },
-  owner: "M. Jean Dupont",
-  leaseStart: "01/09/2024",
-  rent: 950,
-  charges: 120,
-};
+interface TenantInfo {
+  firstName: string;
+  name: string;
+  email: string;
+  condominium: string;
+  address: string;
+  lot: { reference: string; type: string; floor: number; surface: string };
+  owner: string;
+  leaseStart: string;
+  rent: number;
+  charges: number;
+}
 
-const balanceInfo = {
-  total: 0,
-  nextRent: { amount: 1070, dueDate: "01/01/2026", label: "Loyer + charges Janvier 2026" },
-};
+interface BalanceInfo {
+  total: number;
+  nextRent: { amount: number; dueDate: string; label: string };
+}
 
-const recentPayments = [
-  { id: "1", date: "01/12/2025", label: "Loyer + charges Décembre", amount: 1070, status: "paid" as const },
-  { id: "2", date: "01/11/2025", label: "Loyer + charges Novembre", amount: 1070, status: "paid" as const },
-  { id: "3", date: "01/10/2025", label: "Loyer + charges Octobre", amount: 1070, status: "paid" as const },
-];
+interface Payment {
+  id: string;
+  date: string;
+  label: string;
+  amount: number;
+  status: "paid" | "pending" | "overdue";
+}
 
-const consumptions = {
-  water: { current: 12, previous: 11, unit: "m³" },
-  heating: { current: 320, previous: 280, unit: "kWh" },
-};
+interface Consumption {
+  water: { current: number; previous: number; unit: string };
+  heating: { current: number; previous: number; unit: string };
+}
 
-const recentDocuments = [
-  { id: "1", name: "Quittance Décembre 2025", date: "01/12/2025", type: "quittance" },
-  { id: "2", name: "Quittance Novembre 2025", date: "01/11/2025", type: "quittance" },
-  { id: "3", name: "Avis d'échéance Janvier 2026", date: "15/12/2025", type: "avis" },
-];
+interface Document {
+  id: string;
+  name: string;
+  date: string;
+  type: string;
+}
 
-const announcements = [
-  { id: "1", title: "Travaux ascenseur", date: "10/12/2025", content: "L'ascenseur sera en maintenance du 15 au 17 décembre.", priority: "info" as const },
-  { id: "2", title: "Collecte des encombrants", date: "08/12/2025", content: "Prochaine collecte le 20 décembre. Déposez vos encombrants la veille au soir.", priority: "info" as const },
-];
+interface Announcement {
+  id: string;
+  title: string;
+  date: string;
+  content: string;
+  priority: "info" | "warning" | "urgent";
+}
 
 export default function TenantDashboardPage() {
+  const [tenantInfo, setTenantInfo] = useState<TenantInfo | null>(null);
+  const [balanceInfo, setBalanceInfo] = useState<BalanceInfo | null>(null);
+  const [recentPayments, setRecentPayments] = useState<Payment[]>([]);
+  const [consumptions, setConsumptions] = useState<Consumption | null>(null);
+  const [recentDocuments, setRecentDocuments] = useState<Document[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        // TODO: Fetch from API
+        setTenantInfo(null);
+        setBalanceInfo(null);
+        setRecentPayments([]);
+        setConsumptions(null);
+        setRecentDocuments([]);
+        setAnnouncements([]);
+        setError(null);
+      } catch (err) {
+        setError("Erreur lors du chargement des données");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
+        <p className="text-destructive">{error}</p>
+        <Button onClick={() => window.location.reload()}>Réessayer</Button>
+      </div>
+    );
+  }
+
+  if (!tenantInfo || !balanceInfo) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
+        <p className="text-muted-foreground">Aucune donnée disponible</p>
+      </div>
+    );
+  }
+
   const getVariation = (current: number, previous: number) => {
     if (previous === 0) return 0;
     return ((current - previous) / previous) * 100;
   };
 
-  const waterVariation = getVariation(consumptions.water.current, consumptions.water.previous);
-  const heatingVariation = getVariation(consumptions.heating.current, consumptions.heating.previous);
+  const waterVariation = consumptions ? getVariation(consumptions.water.current, consumptions.water.previous) : 0;
+  const heatingVariation = consumptions ? getVariation(consumptions.heating.current, consumptions.heating.previous) : 0;
 
   return (
     <div className="space-y-6">

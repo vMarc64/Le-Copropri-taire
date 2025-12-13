@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -8,53 +11,15 @@ import {
   TrendingUp, 
   TrendingDown,
   Plus,
-  Building2
+  Building2,
+  Loader2
 } from "lucide-react";
-
-// Mock data - will be replaced with API calls
-const stats = {
-  latePayments: 11,
-  latePaymentsTrend: 12,
-  totalUnpaid: 17250,
-  totalUnpaidTrend: -5,
-  failedDirectDebits: 8,
-  failedDirectDebitsTrend: 3,
-};
-
-const condominiums = [
-  {
-    id: "1",
-    name: "Résidence Les Lilas",
-    address: "123 rue des Lilas, Paris 75011",
-    latePayments: 4,
-    unpaidAmount: 5200,
-    ownersInArrears: 3,
-  },
-  {
-    id: "2",
-    name: "Immeuble Haussmann",
-    address: "45 boulevard Haussmann, Paris 75009",
-    latePayments: 3,
-    unpaidAmount: 4800,
-    ownersInArrears: 2,
-  },
-  {
-    id: "3",
-    name: "Le Parc des Roses",
-    address: "78 avenue du Parc, Lyon 69003",
-    latePayments: 2,
-    unpaidAmount: 3200,
-    ownersInArrears: 2,
-  },
-  {
-    id: "4",
-    name: "Les Jardins du Sud",
-    address: "12 chemin des Jardins, Marseille 13008",
-    latePayments: 2,
-    unpaidAmount: 4050,
-    ownersInArrears: 1,
-  },
-];
+import { 
+  getDashboardStats, 
+  getCondominiumsWithUnpaid, 
+  type DashboardStats, 
+  type CondominiumWithUnpaid 
+} from "@/lib/api";
 
 function TrendBadge({ value, inverted = false }: { value: number; inverted?: boolean }) {
   const isPositive = inverted ? value < 0 : value > 0;
@@ -81,6 +46,56 @@ function TrendBadge({ value, inverted = false }: { value: number; inverted?: boo
 }
 
 export default function ManagerDashboardPage() {
+  const [stats, setStats] = useState<DashboardStats>({
+    latePayments: 0,
+    latePaymentsTrend: 0,
+    totalUnpaid: 0,
+    totalUnpaidTrend: 0,
+    failedDirectDebits: 0,
+    failedDirectDebitsTrend: 0,
+  });
+  const [condominiums, setCondominiums] = useState<CondominiumWithUnpaid[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const [statsData, condosData] = await Promise.all([
+          getDashboardStats(),
+          getCondominiumsWithUnpaid(),
+        ]);
+        setStats(statsData);
+        setCondominiums(condosData);
+        setError(null);
+      } catch (err) {
+        setError("Erreur lors du chargement des données");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
+        <p className="text-destructive">{error}</p>
+        <Button onClick={() => window.location.reload()}>Réessayer</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       <div className="mx-auto max-w-7xl space-y-10 px-6 py-8 lg:px-8">

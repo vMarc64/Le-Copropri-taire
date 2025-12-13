@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,60 +20,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
-// Mock data - will be replaced with API calls
-const mockTenants = [
-  {
-    id: "1",
-    name: "Syndic ABC",
-    email: "contact@syndicabc.fr",
-    siret: "12345678901234",
-    status: "active",
-    condominiums: 12,
-    users: 45,
-    createdAt: "2025-10-15",
-  },
-  {
-    id: "2",
-    name: "Gestion Immo Plus",
-    email: "info@gestionimmo.fr",
-    siret: "98765432109876",
-    status: "active",
-    condominiums: 8,
-    users: 32,
-    createdAt: "2025-11-02",
-  },
-  {
-    id: "3",
-    name: "Copro Expert",
-    email: "admin@coproexpert.fr",
-    siret: "45678901234567",
-    status: "pending",
-    condominiums: 0,
-    users: 1,
-    createdAt: "2025-12-05",
-  },
-  {
-    id: "4",
-    name: "Immo Gestion 360",
-    email: "contact@immogestion360.fr",
-    siret: "78901234567890",
-    status: "suspended",
-    condominiums: 5,
-    users: 18,
-    createdAt: "2025-08-20",
-  },
-  {
-    id: "5",
-    name: "Syndic Pro France",
-    email: "hello@syndicpro.fr",
-    siret: "23456789012345",
-    status: "active",
-    condominiums: 25,
-    users: 89,
-    createdAt: "2025-06-10",
-  },
-];
+interface Tenant {
+  id: string;
+  name: string;
+  email: string;
+  siret: string;
+  status: string;
+  condominiums: number;
+  users: number;
+  createdAt: string;
+}
 
 type TenantStatus = "active" | "pending" | "suspended";
 
@@ -86,8 +44,28 @@ const statusConfig: Record<TenantStatus, { label: string; variant: "default" | "
 export default function TenantsListPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<TenantStatus | "all">("all");
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredTenants = mockTenants.filter((tenant) => {
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        // TODO: Fetch from API
+        setTenants([]);
+        setError(null);
+      } catch (err) {
+        setError("Erreur lors du chargement des gestionnaires");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const filteredTenants = tenants.filter((tenant) => {
     const matchesSearch =
       tenant.name.toLowerCase().includes(search.toLowerCase()) ||
       tenant.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -95,6 +73,23 @@ export default function TenantsListPage() {
     const matchesStatus = statusFilter === "all" || tenant.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
+        <p className="text-destructive">{error}</p>
+        <Button onClick={() => window.location.reload()}>Réessayer</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -241,10 +236,10 @@ export default function TenantsListPage() {
       {/* Stats */}
       <div className="flex justify-between text-sm text-muted-foreground">
         <span>
-          {filteredTenants.length} gestionnaire(s) affiché(s) sur {mockTenants.length}
+          {filteredTenants.length} gestionnaire(s) affiché(s) sur {tenants.length}
         </span>
         <span>
-          Total : {mockTenants.reduce((acc, t) => acc + t.condominiums, 0)} copropriétés, {mockTenants.reduce((acc, t) => acc + t.users, 0)} utilisateurs
+          Total : {tenants.reduce((acc, t) => acc + t.condominiums, 0)} copropriétés, {tenants.reduce((acc, t) => acc + t.users, 0)} utilisateurs
         </span>
       </div>
     </div>

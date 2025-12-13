@@ -1,24 +1,83 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 
-// Mock data - will be replaced with API calls
-const stats = {
-  totalTenants: 42,
-  activeTenants: 38,
-  suspendedTenants: 4,
-  totalUsers: 1250,
-  totalCondominiums: 156,
-  monthlyRevenue: 12500,
-};
+interface Stats {
+  totalTenants: number;
+  activeTenants: number;
+  suspendedTenants: number;
+  totalUsers: number;
+  totalCondominiums: number;
+  monthlyRevenue: number;
+}
 
-const recentTenants = [
-  { id: "1", name: "Syndic ABC", email: "contact@syndicabc.fr", status: "active", createdAt: "2025-12-10" },
-  { id: "2", name: "Gestion Immo Plus", email: "info@gestionimmo.fr", status: "active", createdAt: "2025-12-08" },
-  { id: "3", name: "Copro Expert", email: "admin@coproexpert.fr", status: "pending", createdAt: "2025-12-05" },
-];
+interface Tenant {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+  createdAt: string;
+}
 
 export default function PlatformAdminDashboard() {
+  const [stats, setStats] = useState<Stats>({
+    totalTenants: 0,
+    activeTenants: 0,
+    suspendedTenants: 0,
+    totalUsers: 0,
+    totalCondominiums: 0,
+    monthlyRevenue: 0,
+  });
+  const [recentTenants, setRecentTenants] = useState<Tenant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        // TODO: Fetch from API
+        setStats({
+          totalTenants: 0,
+          activeTenants: 0,
+          suspendedTenants: 0,
+          totalUsers: 0,
+          totalCondominiums: 0,
+          monthlyRevenue: 0,
+        });
+        setRecentTenants([]);
+        setError(null);
+      } catch (err) {
+        setError("Erreur lors du chargement des données");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
+        <p className="text-destructive">{error}</p>
+        <Button onClick={() => window.location.reload()}>Réessayer</Button>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -152,23 +211,27 @@ export default function PlatformAdminDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {recentTenants.map((tenant) => (
-              <div
-                key={tenant.id}
-                className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
-              >
-                <div className="space-y-1">
-                  <p className="font-medium">{tenant.name}</p>
-                  <p className="text-sm text-muted-foreground">{tenant.email}</p>
+            {recentTenants.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">Aucun gestionnaire trouvé</p>
+            ) : (
+              recentTenants.map((tenant) => (
+                <div
+                  key={tenant.id}
+                  className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
+                >
+                  <div className="space-y-1">
+                    <p className="font-medium">{tenant.name}</p>
+                    <p className="text-sm text-muted-foreground">{tenant.email}</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm text-muted-foreground">{tenant.createdAt}</span>
+                    <Badge variant={tenant.status === "active" ? "default" : "secondary"}>
+                      {tenant.status === "active" ? "Actif" : "En attente"}
+                    </Badge>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-muted-foreground">{tenant.createdAt}</span>
-                  <Badge variant={tenant.status === "active" ? "default" : "secondary"}>
-                    {tenant.status === "active" ? "Actif" : "En attente"}
-                  </Badge>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </CardContent>
       </Card>

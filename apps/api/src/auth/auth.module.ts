@@ -14,7 +14,7 @@ import { PermissionsGuard } from './guards/permissions.guard';
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
       signOptions: {
-        expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+        expiresIn: '7d',
       },
     }),
   ],

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -21,74 +21,59 @@ import {
   Info,
   Lightbulb,
   ThermometerSun,
+  Loader2,
 } from "lucide-react";
 
-// Mock data - Consommations locataire (simplifiées par rapport au copropriétaire)
-const consumptions = {
-  water: {
-    current: 12,
-    previous: 10,
-    average: 11,
-    unit: "m³",
-    icon: Droplets,
-    color: "cyan",
-    label: "Eau",
-    description: "Consommation d'eau froide individuelle",
-    costPerUnit: 4.50,
-    history: [
-      { month: "Déc 2025", value: 12 },
-      { month: "Nov 2025", value: 10 },
-      { month: "Oct 2025", value: 9 },
-      { month: "Sep 2025", value: 8 },
-      { month: "Août 2025", value: 14 },
-      { month: "Juil 2025", value: 16 },
-      { month: "Juin 2025", value: 13 },
-      { month: "Mai 2025", value: 11 },
-      { month: "Avr 2025", value: 10 },
-      { month: "Mar 2025", value: 9 },
-      { month: "Fév 2025", value: 8 },
-      { month: "Jan 2025", value: 9 },
-    ],
-  },
-  heating: {
-    current: 320,
-    previous: 280,
-    average: 250,
-    unit: "kWh",
-    icon: Flame,
-    color: "orange",
-    label: "Chauffage",
-    description: "Quote-part chauffage collectif",
-    costPerUnit: 0.15,
-    history: [
-      { month: "Déc 2025", value: 320 },
-      { month: "Nov 2025", value: 280 },
-      { month: "Oct 2025", value: 180 },
-      { month: "Sep 2025", value: 50 },
-      { month: "Août 2025", value: 0 },
-      { month: "Juil 2025", value: 0 },
-      { month: "Juin 2025", value: 0 },
-      { month: "Mai 2025", value: 40 },
-      { month: "Avr 2025", value: 120 },
-      { month: "Mar 2025", value: 260 },
-      { month: "Fév 2025", value: 340 },
-      { month: "Jan 2025", value: 380 },
-    ],
-  },
-};
+interface ConsumptionHistory {
+  month: string;
+  value: number;
+}
 
-type ConsumptionType = keyof typeof consumptions;
+interface ConsumptionData {
+  current: number;
+  previous: number;
+  average: number;
+  unit: string;
+  icon: typeof Droplets;
+  color: string;
+  label: string;
+  description: string;
+  costPerUnit: number;
+  history: ConsumptionHistory[];
+}
+
+type ConsumptionType = "water" | "heating";
 
 export default function TenantConsumptionsPage() {
   const [period, setPeriod] = useState<string>("6");
   const [activeTab, setActiveTab] = useState<ConsumptionType>("water");
+  const [consumptions, setConsumptions] = useState<Record<ConsumptionType, ConsumptionData> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchConsumptions() {
+      try {
+        setLoading(true);
+        // TODO: Fetch from API
+        setConsumptions(null);
+        setError(null);
+      } catch (err) {
+        setError("Erreur lors du chargement des consommations");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchConsumptions();
+  }, []);
 
   const getVariation = (current: number, previous: number) => {
     if (previous === 0) return 0;
     return ((current - previous) / previous) * 100;
   };
 
-  const getHistoryByPeriod = (history: typeof consumptions.water.history) => {
+  const getHistoryByPeriod = (history: ConsumptionHistory[]) => {
     const months = parseInt(period);
     return history.slice(0, months);
   };
@@ -100,6 +85,35 @@ export default function TenantConsumptionsPage() {
     };
     return colors[color] || colors.cyan;
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!consumptions) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <BarChart3 className="h-8 w-8" />
+            Mes consommations
+          </h1>
+          <p className="text-muted-foreground">
+            Suivez vos consommations d&apos;eau et de chauffage
+          </p>
+        </div>
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <p className="text-muted-foreground">Aucune donnée de consommation disponible</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Calcul du coût estimé
   const estimatedCosts = {

@@ -16,9 +16,9 @@
 | ✅ | Setup projet NestJS (API métier) | 🔴 Haute | TypeScript, structure modulaire | [#2](https://github.com/vMarc64/Le-Copropri-taire/issues/2) |
 | ✅ | Configurer Tailwind + shadcn/ui | 🔴 Haute | Design system tokens, thème Neutral | [#3](https://github.com/vMarc64/Le-Copropri-taire/issues/3) |
 | ✅ | Configurer next-themes (dark mode) | 🟡 Moyenne | Dark par défaut + 8 couleurs d'accent | [#4](https://github.com/vMarc64/Le-Copropri-taire/issues/4) |
-| ⬜ | Setup PostgreSQL + Drizzle ORM | 🔴 Haute | Schema multi-tenant, Supabase | [#5](https://github.com/vMarc64/Le-Copropri-taire/issues/5) |
-| ⬜ | Setup Redis + BullMQ | 🟡 Moyenne | Workers async | [#6](https://github.com/vMarc64/Le-Copropri-taire/issues/6) |
-| ⬜ | Configurer authentification | 🔴 Haute | JWT / Sessions | [#7](https://github.com/vMarc64/Le-Copropri-taire/issues/7) |
+| ✅ | Setup PostgreSQL + Drizzle ORM | 🔴 Haute | Schema multi-tenant, Supabase | [#5](https://github.com/vMarc64/Le-Copropri-taire/issues/5) |
+| ⬜ | Setup Redis + BullMQ | 🟡 Moyenne | Workers async (désactivé pour l'instant) | [#6](https://github.com/vMarc64/Le-Copropri-taire/issues/6) |
+| ✅ | Configurer authentification | 🔴 Haute | JWT avec Passport | [#7](https://github.com/vMarc64/Le-Copropri-taire/issues/7) |
 | ⬜ | Setup CI/CD | 🟢 Basse | GitHub Actions | [#8](https://github.com/vMarc64/Le-Copropri-taire/issues/8) |
 
 ---
@@ -90,9 +90,9 @@
 
 | Statut | Tâche | Priorité | Notes | Issue |
 |--------|-------|----------|-------|-------|
-| ⬜ | Intégration PSP (SEPA) | 🔴 Haute | Prélèvements automatiques | [#37](https://github.com/vMarc64/Le-Copropri-taire/issues/37) |
+| ⬜ | Intégration PSP (SEPA) | 🔴 Haute | Prélèvements automatiques - Stripe SEPA mock prêt | [#37](https://github.com/vMarc64/Le-Copropri-taire/issues/37) |
 | ⬜ | Intégration PSP (CB) | 🟡 Moyenne | Paiement rattrapage | [#38](https://github.com/vMarc64/Le-Copropri-taire/issues/38) |
-| ⬜ | Intégration Open Banking | 🟡 Moyenne | Sync comptes bancaires | [#39](https://github.com/vMarc64/Le-Copropri-taire/issues/39) |
+| ✅ | Intégration Open Banking | 🟡 Moyenne | Powens sandbox intégré, token exchange fonctionnel | [#39](https://github.com/vMarc64/Le-Copropri-taire/issues/39) |
 | ⬜ | Webhooks PSP | 🔴 Haute | Notifications paiements | [#40](https://github.com/vMarc64/Le-Copropri-taire/issues/40) |
 | ⬜ | Workers async (jobs critiques) | 🟡 Moyenne | SEPA batch, sync bank (BullMQ) | [#41](https://github.com/vMarc64/Le-Copropri-taire/issues/41) |
 | ⬜ | Setup N8N + workflows IA | 🔴 Haute | Rapprochement IA, emails, OCR | [#48](https://github.com/vMarc64/Le-Copropri-taire/issues/48) |

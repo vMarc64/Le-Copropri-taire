@@ -1,17 +1,17 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Home, CreditCard, FileText, BarChart3, User, LogOut } from "lucide-react";
+import { Home, CreditCard, FileText, BarChart3, User, LogOut, Loader2 } from "lucide-react";
 
-// Mock tenant info - TODO: Get from auth context
-const tenantInfo = {
-  name: "Mme Marie Martin",
-  email: "marie.martin@email.com",
-  lot: "Appartement B12",
-};
+interface TenantInfo {
+  name: string;
+  email: string;
+  lot: string;
+}
 
 const navItems = [
   { href: "/tenant", label: "Dashboard", icon: Home },
@@ -26,6 +26,23 @@ export default function TenantLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [tenantInfo, setTenantInfo] = useState<TenantInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTenantInfo() {
+      try {
+        setLoading(true);
+        // TODO: Get from auth context
+        setTenantInfo(null);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTenantInfo();
+  }, []);
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -63,7 +80,11 @@ export default function TenantLayout({
             <ThemeToggle />
             <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
               <User className="h-4 w-4" />
-              <span className="hidden lg:block">{tenantInfo.name}</span>
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <span className="hidden lg:block">{tenantInfo?.name || "Utilisateur"}</span>
+              )}
             </div>
             <Link href="/login">
               <Button variant="outline" size="sm" className="gap-2">

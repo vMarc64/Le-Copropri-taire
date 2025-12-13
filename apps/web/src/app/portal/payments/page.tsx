@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,25 +28,51 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Loader2 } from "lucide-react";
 
-// Mock data
-const payments = [
-  { id: "1", date: "01/12/2025", label: "Appel de fonds T4 2025", amount: 450, status: "paid", method: "SEPA", reference: "AF-2025-T4" },
-  { id: "2", date: "01/09/2025", label: "Appel de fonds T3 2025", amount: 450, status: "paid", method: "SEPA", reference: "AF-2025-T3" },
-  { id: "3", date: "01/06/2025", label: "Appel de fonds T2 2025", amount: 450, status: "paid", method: "CB", reference: "AF-2025-T2" },
-  { id: "4", date: "01/03/2025", label: "Appel de fonds T1 2025", amount: 450, status: "paid", method: "SEPA", reference: "AF-2025-T1" },
-  { id: "5", date: "01/12/2024", label: "Appel de fonds T4 2024", amount: 420, status: "paid", method: "SEPA", reference: "AF-2024-T4" },
-  { id: "6", date: "01/09/2024", label: "Appel de fonds T3 2024", amount: 420, status: "paid", method: "SEPA", reference: "AF-2024-T3" },
-];
+interface Payment {
+  id: string;
+  date: string;
+  label: string;
+  amount: number;
+  status: string;
+  method: string;
+  reference: string;
+}
 
-const pendingPayments = [
-  { id: "pending-1", dueDate: "01/01/2026", label: "Appel de fonds T1 2026", amount: 450, reference: "AF-2026-T1" },
-];
+interface PendingPayment {
+  id: string;
+  dueDate: string;
+  label: string;
+  amount: number;
+  reference: string;
+}
 
 export default function PaymentsHistoryPage() {
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [isPayOpen, setIsPayOpen] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState<typeof pendingPayments[0] | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<PendingPayment | null>(null);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [pendingPayments, setPendingPayments] = useState<PendingPayment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // TODO: Replace with actual API calls
+        setPayments([]);
+        setPendingPayments([]);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Une erreur est survenue");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const filteredPayments = payments.filter((payment) => {
     if (yearFilter === "all") return true;
@@ -59,10 +85,27 @@ export default function PaymentsHistoryPage() {
     pending: pendingPayments.reduce((sum, p) => sum + p.amount, 0),
   };
 
-  const openPayDialog = (payment: typeof pendingPayments[0]) => {
+  const openPayDialog = (payment: PendingPayment) => {
     setSelectedPayment(payment);
     setIsPayOpen(true);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <p className="text-destructive">{error}</p>
+        <Button onClick={() => window.location.reload()}>Réessayer</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

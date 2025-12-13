@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,37 +32,57 @@ import {
   FileSignature,
   ShieldCheck,
   CreditCard,
+  Loader2,
 } from "lucide-react";
 
-// Mock data - Mandat SEPA existant
-const sepaMandate = {
-  active: true,
-  iban: "FR76 1234 5678 9012 3456 7890 123",
-  bic: "BNPAFRPP",
-  bankName: "BNP Paribas",
-  accountHolder: "Jean Dupont",
-  rum: "SEPA-2024-001-DUPONT",
-  signedAt: "20/03/2024",
-  lastDebit: "01/12/2025",
-  nextDebit: "01/01/2026",
-  nextAmount: 450,
-};
+interface SepaMandate {
+  active: boolean;
+  iban: string;
+  bic: string;
+  bankName: string;
+  accountHolder: string;
+  rum: string;
+  signedAt: string;
+  lastDebit: string;
+  nextDebit: string;
+  nextAmount: number;
+}
 
-// Historique des prélèvements
-const debitHistory = [
-  { id: "1", date: "01/12/2025", label: "Appel de fonds T4 2025", amount: 450, status: "success" as const },
-  { id: "2", date: "01/09/2025", label: "Appel de fonds T3 2025", amount: 450, status: "success" as const },
-  { id: "3", date: "01/06/2025", label: "Appel de fonds T2 2025", amount: 450, status: "rejected" as const, reason: "Provision insuffisante" },
-  { id: "4", date: "01/03/2025", label: "Appel de fonds T1 2025", amount: 450, status: "success" as const },
-  { id: "5", date: "01/12/2024", label: "Appel de fonds T4 2024", amount: 420, status: "success" as const },
-];
+interface DebitHistory {
+  id: string;
+  date: string;
+  label: string;
+  amount: number;
+  status: "success" | "rejected";
+  reason?: string;
+}
 
 export default function SepaPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isRevokeOpen, setIsRevokeOpen] = useState(false);
-  const [mandate, setMandate] = useState(sepaMandate);
+  const [mandate, setMandate] = useState<SepaMandate | null>(null);
+  const [debitHistory, setDebitHistory] = useState<DebitHistory[]>([]);
   const [autoDebit, setAutoDebit] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // TODO: Replace with actual API calls
+        setMandate(null);
+        setDebitHistory([]);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Une erreur est survenue");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleSaveMandate = () => {
     setIsSubmitting(true);
@@ -74,14 +94,35 @@ export default function SepaPage() {
   };
 
   const handleRevoke = () => {
-    setMandate(prev => ({ ...prev, active: false }));
+    if (mandate) {
+      setMandate({ ...mandate, active: false });
+    }
     setIsRevokeOpen(false);
   };
 
   const handleSetupMandate = () => {
     // Simulation d'activation du mandat
-    setMandate(prev => ({ ...prev, active: true }));
+    if (mandate) {
+      setMandate({ ...mandate, active: true });
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <p className="text-destructive">{error}</p>
+        <Button onClick={() => window.location.reload()}>Réessayer</Button>
+      </div>
+    );
+  }
 
   const successCount = debitHistory.filter(d => d.status === "success").length;
   const totalDebited = debitHistory.filter(d => d.status === "success").reduce((sum, d) => sum + d.amount, 0);
@@ -100,7 +141,7 @@ export default function SepaPage() {
       </div>
 
       {/* Status Alert */}
-      {mandate.active ? (
+      {mandate?.active ? (
         <Alert className="border-green-500/50 bg-green-500/10">
           <CheckCircle2 className="h-5 w-5 text-green-600" />
           <AlertTitle className="text-green-700 dark:text-green-400">Mandat actif</AlertTitle>
@@ -118,7 +159,7 @@ export default function SepaPage() {
         </Alert>
       )}
 
-      {mandate.active ? (
+      {mandate?.active ? (
         <>
           {/* Stats Cards */}
           <div className="grid gap-4 md:grid-cols-4">
@@ -155,7 +196,7 @@ export default function SepaPage() {
                     <Calendar className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{mandate.nextDebit}</p>
+                    <p className="text-2xl font-bold">{mandate?.nextDebit || "-"}</p>
                     <p className="text-xs text-muted-foreground">Prochain prélèvement</p>
                   </div>
                 </div>
@@ -168,7 +209,7 @@ export default function SepaPage() {
                     <CreditCard className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{mandate.nextAmount} €</p>
+                    <p className="text-2xl font-bold">{mandate?.nextAmount || 0} €</p>
                     <p className="text-xs text-muted-foreground">Montant prévu</p>
                   </div>
                 </div>
@@ -193,29 +234,29 @@ export default function SepaPage() {
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Titulaire du compte</p>
-                    <p className="font-medium">{mandate.accountHolder}</p>
+                    <p className="font-medium">{mandate?.accountHolder || "-"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Banque</p>
-                    <p className="font-medium">{mandate.bankName}</p>
+                    <p className="font-medium">{mandate?.bankName || "-"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">IBAN</p>
-                    <p className="font-mono text-sm bg-muted px-2 py-1 rounded inline-block">{mandate.iban}</p>
+                    <p className="font-mono text-sm bg-muted px-2 py-1 rounded inline-block">{mandate?.iban || "-"}</p>
                   </div>
                 </div>
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-muted-foreground">BIC</p>
-                    <p className="font-mono text-sm bg-muted px-2 py-1 rounded inline-block">{mandate.bic}</p>
+                    <p className="font-mono text-sm bg-muted px-2 py-1 rounded inline-block">{mandate?.bic || "-"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Référence Unique de Mandat (RUM)</p>
-                    <p className="font-mono text-xs">{mandate.rum}</p>
+                    <p className="font-mono text-xs">{mandate?.rum || "-"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Date de signature</p>
-                    <p className="font-medium">{mandate.signedAt}</p>
+                    <p className="font-medium">{mandate?.signedAt || "-"}</p>
                   </div>
                 </div>
               </div>
@@ -233,10 +274,10 @@ export default function SepaPage() {
                   <Calendar className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <p className="font-medium">Appel de fonds T1 2026</p>
-                    <p className="text-sm text-muted-foreground">Prélèvement prévu le {mandate.nextDebit}</p>
+                    <p className="text-sm text-muted-foreground">Prélèvement prévu le {mandate?.nextDebit || "-"}</p>
                   </div>
                 </div>
-                <span className="text-2xl font-bold">{mandate.nextAmount} €</span>
+                <span className="text-2xl font-bold">{mandate?.nextAmount || 0} €</span>
               </div>
               
               <div className="flex items-center justify-between pt-4 border-t">
@@ -382,15 +423,15 @@ export default function SepaPage() {
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="edit-holder">Titulaire du compte</Label>
-              <Input id="edit-holder" defaultValue={mandate.accountHolder} />
+              <Input id="edit-holder" defaultValue={mandate?.accountHolder || ""} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-iban">IBAN</Label>
-              <Input id="edit-iban" defaultValue={mandate.iban} className="font-mono" />
+              <Input id="edit-iban" defaultValue={mandate?.iban || ""} className="font-mono" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-bic">BIC</Label>
-              <Input id="edit-bic" defaultValue={mandate.bic} className="font-mono" />
+              <Input id="edit-bic" defaultValue={mandate?.bic || ""} className="font-mono" />
             </div>
           </div>
           <DialogFooter>

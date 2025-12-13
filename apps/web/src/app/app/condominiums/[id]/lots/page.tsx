@@ -1,10 +1,10 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -31,65 +31,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
-// Mock data
-const mockLots = [
-  { 
-    id: "1", 
-    reference: "A12", 
-    type: "apartment", 
-    floor: 1, 
-    surface: 65, 
-    tantiemes: 120, 
-    owner: { id: "1", name: "M. Dupont" },
-    balance: 0,
-    status: "up-to-date"
-  },
-  { 
-    id: "2", 
-    reference: "A13", 
-    type: "apartment", 
-    floor: 1, 
-    surface: 48, 
-    tantiemes: 90, 
-    owner: { id: "2", name: "Mme Martin" },
-    balance: -380,
-    status: "pending"
-  },
-  { 
-    id: "3", 
-    reference: "B03", 
-    type: "apartment", 
-    floor: 0, 
-    surface: 72, 
-    tantiemes: 140, 
-    owner: { id: "3", name: "M. Bernard" },
-    balance: -520,
-    status: "overdue"
-  },
-  { 
-    id: "4", 
-    reference: "P01", 
-    type: "parking", 
-    floor: -1, 
-    surface: 12, 
-    tantiemes: 15, 
-    owner: { id: "1", name: "M. Dupont" },
-    balance: 0,
-    status: "up-to-date"
-  },
-  { 
-    id: "5", 
-    reference: "C05", 
-    type: "cellar", 
-    floor: -1, 
-    surface: 6, 
-    tantiemes: 8, 
-    owner: { id: "2", name: "Mme Martin" },
-    balance: 0,
-    status: "up-to-date"
-  },
-];
+interface Lot {
+  id: string;
+  reference: string;
+  type: string;
+  floor: number;
+  surface: number;
+  tantiemes: number;
+  owner: { id: string; name: string } | null;
+  balance: number;
+  status: string;
+}
 
 const lotTypes: Record<string, { label: string; icon: string }> = {
   apartment: { label: "Appartement", icon: "🏠" },
@@ -104,21 +58,58 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [lots, setLots] = useState<Lot[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredLots = mockLots.filter((lot) => {
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        // TODO: Fetch from API
+        setLots([]);
+        setError(null);
+      } catch (err) {
+        setError("Erreur lors du chargement des lots");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [condoId]);
+
+  const filteredLots = lots.filter((lot) => {
     const matchesSearch = 
       lot.reference.toLowerCase().includes(search.toLowerCase()) ||
-      lot.owner.name.toLowerCase().includes(search.toLowerCase());
+      (lot.owner?.name.toLowerCase().includes(search.toLowerCase()) ?? false);
     const matchesType = typeFilter === "all" || lot.type === typeFilter;
     return matchesSearch && matchesType;
   });
 
   const stats = {
-    total: mockLots.length,
-    apartments: mockLots.filter(l => l.type === "apartment").length,
-    parkings: mockLots.filter(l => l.type === "parking").length,
-    totalTantiemes: mockLots.reduce((sum, l) => sum + l.tantiemes, 0),
+    total: lots.length,
+    apartments: lots.filter(l => l.type === "apartment").length,
+    parkings: lots.filter(l => l.type === "parking").length,
+    totalTantiemes: lots.reduce((sum, l) => sum + l.tantiemes, 0),
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
+        <p className="text-destructive">{error}</p>
+        <Button onClick={() => window.location.reload()}>Réessayer</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -182,19 +173,6 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
                   <Input id="tantiemes" type="number" placeholder="100" />
                 </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="owner">Propriétaire</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un propriétaire" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">M. Dupont</SelectItem>
-                    <SelectItem value="2">Mme Martin</SelectItem>
-                    <SelectItem value="3">M. Bernard</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
@@ -236,25 +214,6 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
         </Card>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex gap-2 border-b pb-2">
-        <Link href={`/app/condominiums/${condoId}`}>
-          <Button variant="ghost" size="sm">📊 Dashboard</Button>
-        </Link>
-        <Link href={`/app/condominiums/${condoId}/lots`}>
-          <Button variant="default" size="sm">🚪 Lots</Button>
-        </Link>
-        <Link href={`/app/condominiums/${condoId}/owners`}>
-          <Button variant="ghost" size="sm">👥 Propriétaires</Button>
-        </Link>
-        <Link href={`/app/condominiums/${condoId}/bank`}>
-          <Button variant="ghost" size="sm">🏦 Banque</Button>
-        </Link>
-        <Link href={`/app/condominiums/${condoId}/documents`}>
-          <Button variant="ghost" size="sm">📁 Documents</Button>
-        </Link>
-      </div>
-
       {/* Filters */}
       <div className="flex gap-4">
         <Input
@@ -292,37 +251,47 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredLots.map((lot) => (
-              <TableRow key={lot.id}>
-                <TableCell className="font-medium">{lot.reference}</TableCell>
-                <TableCell>
-                  <span className="flex items-center gap-2">
-                    {lotTypes[lot.type]?.icon} {lotTypes[lot.type]?.label}
-                  </span>
-                </TableCell>
-                <TableCell>{lot.floor === 0 ? "RDC" : lot.floor}</TableCell>
-                <TableCell>{lot.surface} m²</TableCell>
-                <TableCell>{lot.tantiemes}</TableCell>
-                <TableCell>
-                  <Link 
-                    href={`/app/condominiums/${condoId}/owners/${lot.owner.id}`}
-                    className="text-primary hover:underline"
-                  >
-                    {lot.owner.name}
-                  </Link>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Badge variant={lot.status === "up-to-date" ? "default" : lot.status === "pending" ? "secondary" : "destructive"}>
-                    {lot.balance === 0 ? "À jour" : `${lot.balance} €`}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Link href={`/app/condominiums/${condoId}/lots/${lot.id}`}>
-                    <Button variant="ghost" size="sm">Voir</Button>
-                  </Link>
+            {filteredLots.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
+                  Aucun lot trouvé
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filteredLots.map((lot) => (
+                <TableRow key={lot.id}>
+                  <TableCell className="font-medium">{lot.reference}</TableCell>
+                  <TableCell>
+                    <span className="flex items-center gap-2">
+                      {lotTypes[lot.type]?.icon} {lotTypes[lot.type]?.label}
+                    </span>
+                  </TableCell>
+                  <TableCell>{lot.floor === 0 ? "RDC" : lot.floor}</TableCell>
+                  <TableCell>{lot.surface} m²</TableCell>
+                  <TableCell>{lot.tantiemes}</TableCell>
+                  <TableCell>
+                    {lot.owner ? (
+                      <Link 
+                        href={`/app/condominiums/${condoId}/owners/${lot.owner.id}`}
+                        className="text-primary hover:underline"
+                      >
+                        {lot.owner.name}
+                      </Link>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Badge variant={lot.status === "up-to-date" ? "default" : lot.status === "pending" ? "secondary" : "destructive"}>
+                      {lot.balance === 0 ? "À jour" : `${lot.balance} €`}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="sm">Voir</Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </Card>

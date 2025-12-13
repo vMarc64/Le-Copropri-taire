@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,43 +13,106 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Loader2 } from "lucide-react";
 
-// Mock data for owner portal
-const ownerInfo = {
-  name: "M. Jean Dupont",
-  email: "jean.dupont@email.com",
-  condominium: "Résidence Les Lilas",
-  address: "12 rue des Lilas, 75020 Paris",
-};
+interface OwnerInfo {
+  name: string;
+  email: string;
+  condominium: string;
+  address: string;
+}
 
-const lotsInfo = [
-  { id: "1", reference: "A12", type: "Appartement", floor: 1, surface: 65, tantiemes: 120 },
-  { id: "2", reference: "P01", type: "Parking", floor: -1, surface: 12, tantiemes: 15 },
-];
+interface LotInfo {
+  id: string;
+  reference: string;
+  type: string;
+  floor: number;
+  surface: number;
+  tantiemes: number;
+}
 
-const balanceInfo = {
-  total: 0,
-  nextCall: { amount: 450, dueDate: "01/01/2026", label: "Appel T1 2026" },
-  sepaActive: true,
-};
+interface BalanceInfo {
+  total: number;
+  nextCall: { amount: number; dueDate: string; label: string };
+  sepaActive: boolean;
+}
 
-const recentPayments = [
-  { id: "1", date: "01/12/2025", label: "Appel de fonds T4 2025", amount: 450, status: "paid" },
-  { id: "2", date: "01/09/2025", label: "Appel de fonds T3 2025", amount: 450, status: "paid" },
-  { id: "3", date: "01/06/2025", label: "Appel de fonds T2 2025", amount: 450, status: "paid" },
-];
+interface Payment {
+  id: string;
+  date: string;
+  label: string;
+  amount: number;
+  status: string;
+}
 
-const recentDocuments = [
-  { id: "1", name: "PV AG 2025.pdf", date: "15/06/2025" },
-  { id: "2", name: "Appel de fonds T4 2025.pdf", date: "01/12/2025" },
-];
+interface Document {
+  id: string;
+  name: string;
+  date: string;
+}
 
-const announcements = [
-  { id: "1", title: "Travaux ascenseur", date: "10/12/2025", content: "L'ascenseur sera en maintenance du 15 au 17 décembre." },
-  { id: "2", title: "Assemblée Générale 2026", date: "05/12/2025", content: "L'AG se tiendra le 15 mars 2026 à 18h." },
-];
+interface Announcement {
+  id: string;
+  title: string;
+  date: string;
+  content: string;
+}
 
 export default function PortalDashboardPage() {
+  const [ownerInfo, setOwnerInfo] = useState<OwnerInfo | null>(null);
+  const [lotsInfo, setLotsInfo] = useState<LotInfo[]>([]);
+  const [balanceInfo, setBalanceInfo] = useState<BalanceInfo | null>(null);
+  const [recentPayments, setRecentPayments] = useState<Payment[]>([]);
+  const [recentDocuments, setRecentDocuments] = useState<Document[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // TODO: Replace with actual API calls
+        setOwnerInfo(null);
+        setLotsInfo([]);
+        setBalanceInfo(null);
+        setRecentPayments([]);
+        setRecentDocuments([]);
+        setAnnouncements([]);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Une erreur est survenue");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <p className="text-destructive">{error}</p>
+        <Button onClick={() => window.location.reload()}>Réessayer</Button>
+      </div>
+    );
+  }
+
+  if (!ownerInfo || !balanceInfo) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <p className="text-muted-foreground">Aucune donnée disponible</p>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
       {/* Welcome */}

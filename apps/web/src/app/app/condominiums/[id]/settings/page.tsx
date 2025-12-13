@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +31,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Loader2 } from "lucide-react";
 
 // Types pour les paramètres extensibles
 interface SettingField {
@@ -52,88 +53,49 @@ interface SettingGroup {
   fields: SettingField[];
 }
 
-// Mock data - Structure extensible pour ajouter des paramètres dynamiquement
-const settingGroups: SettingGroup[] = [
+// Empty settings groups structure - to be filled from API or user creation
+const defaultSettingGroups: SettingGroup[] = [
   {
     id: "general",
     name: "Informations générales",
     icon: "🏢",
     description: "Informations de base de la copropriété",
-    fields: [
-      { id: "1", key: "name", label: "Nom de la copropriété", type: "text", value: "Résidence Les Lilas", required: true },
-      { id: "2", key: "address", label: "Adresse", type: "text", value: "12 rue des Lilas", required: true },
-      { id: "3", key: "city", label: "Ville", type: "text", value: "Paris", required: true },
-      { id: "4", key: "postal_code", label: "Code postal", type: "text", value: "75020", required: true },
-      { id: "5", key: "siret", label: "SIRET", type: "text", value: "12345678901234" },
-      { id: "6", key: "description", label: "Description", type: "textarea", value: "Belle résidence des années 80 avec jardin privatif" },
-    ],
+    fields: [],
   },
   {
     id: "financial",
     name: "Paramètres financiers",
     icon: "💰",
     description: "Configuration des paiements et appels de fonds",
-    fields: [
-      { id: "10", key: "fiscal_year_start", label: "Début exercice comptable", type: "date", value: "01/01" },
-      { id: "11", key: "call_frequency", label: "Fréquence des appels", type: "select", value: "quarterly", options: [
-        { value: "monthly", label: "Mensuel" },
-        { value: "quarterly", label: "Trimestriel" },
-        { value: "biannual", label: "Semestriel" },
-        { value: "annual", label: "Annuel" },
-      ]},
-      { id: "12", key: "payment_deadline_days", label: "Délai de paiement (jours)", type: "number", value: 30 },
-      { id: "13", key: "late_fee_percent", label: "Pénalité de retard (%)", type: "number", value: 10 },
-      { id: "14", key: "reminder_enabled", label: "Relances automatiques", type: "boolean", value: true },
-      { id: "15", key: "reminder_days_before", label: "Relance J- (jours)", type: "number", value: 7 },
-    ],
+    fields: [],
   },
   {
     id: "payment_methods",
     name: "Modes de paiement",
     icon: "💳",
     description: "Activation des différents modes de paiement",
-    fields: [
-      { id: "20", key: "sepa_enabled", label: "Prélèvement SEPA", type: "boolean", value: true, description: "Permettre les prélèvements SEPA automatiques" },
-      { id: "21", key: "cb_enabled", label: "Carte bancaire", type: "boolean", value: true, description: "Permettre le paiement par carte bancaire" },
-      { id: "22", key: "transfer_enabled", label: "Virement bancaire", type: "boolean", value: true, description: "Permettre les virements bancaires" },
-      { id: "23", key: "check_enabled", label: "Chèque", type: "boolean", value: false, description: "Permettre les paiements par chèque" },
-    ],
+    fields: [],
   },
   {
     id: "bank",
     name: "Coordonnées bancaires",
     icon: "🏦",
     description: "Informations du compte bancaire de la copropriété",
-    fields: [
-      { id: "30", key: "bank_name", label: "Nom de la banque", type: "text", value: "Crédit Mutuel" },
-      { id: "31", key: "iban", label: "IBAN", type: "text", value: "FR76 1234 5678 9012 3456 7890 123" },
-      { id: "32", key: "bic", label: "BIC", type: "text", value: "CMCIFRPP" },
-      { id: "33", key: "creditor_id", label: "ICS (Identifiant Créancier SEPA)", type: "text", value: "FR12ZZZ123456" },
-    ],
+    fields: [],
   },
   {
     id: "notifications",
     name: "Notifications",
     icon: "🔔",
     description: "Paramètres des notifications et alertes",
-    fields: [
-      { id: "40", key: "email_notifications", label: "Notifications par email", type: "boolean", value: true },
-      { id: "41", key: "sms_notifications", label: "Notifications par SMS", type: "boolean", value: false },
-      { id: "42", key: "notify_new_payment", label: "Notifier les nouveaux paiements", type: "boolean", value: true },
-      { id: "43", key: "notify_overdue", label: "Notifier les impayés", type: "boolean", value: true },
-      { id: "44", key: "overdue_threshold_days", label: "Seuil d'alerte impayé (jours)", type: "number", value: 15 },
-    ],
+    fields: [],
   },
   {
     id: "documents",
     name: "Documents",
     icon: "📁",
     description: "Paramètres de gestion documentaire",
-    fields: [
-      { id: "50", key: "auto_archive_enabled", label: "Archivage automatique", type: "boolean", value: true },
-      { id: "51", key: "archive_after_months", label: "Archiver après (mois)", type: "number", value: 24 },
-      { id: "52", key: "max_file_size_mb", label: "Taille max fichier (MB)", type: "number", value: 10 },
-    ],
+    fields: [],
   },
   {
     id: "custom",
@@ -146,13 +108,32 @@ const settingGroups: SettingGroup[] = [
 
 export default function SettingsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: condoId } = use(params);
-  const [settings, setSettings] = useState<SettingGroup[]>(settingGroups);
+  const [settings, setSettings] = useState<SettingGroup[]>(defaultSettingGroups);
   const [isAddFieldOpen, setIsAddFieldOpen] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState<string>("custom");
   const [newField, setNewField] = useState<Partial<SettingField>>({
     type: "text",
     value: "",
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        // TODO: Fetch from API
+        setSettings(defaultSettingGroups);
+        setError(null);
+      } catch (err) {
+        setError("Erreur lors du chargement des paramètres");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [condoId]);
 
   const updateFieldValue = (groupId: string, fieldId: string, value: string | number | boolean) => {
     setSettings(prev => prev.map(group => {
@@ -190,6 +171,23 @@ export default function SettingsPage({ params }: { params: Promise<{ id: string 
     setNewField({ type: "text", value: "" });
     setIsAddFieldOpen(false);
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
+        <p className="text-destructive">{error}</p>
+        <Button onClick={() => window.location.reload()}>Réessayer</Button>
+      </div>
+    );
+  }
 
   const renderField = (group: SettingGroup, field: SettingField) => {
     switch (field.type) {

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -21,114 +22,67 @@ import {
   BarChart3,
   Calendar,
   Info,
+  Loader2,
 } from "lucide-react";
 
-// Mock data - Consommations
-const consumptions = {
-  water: {
-    current: 45,
-    previous: 42,
-    average: 40,
-    unit: "m³",
-    icon: Droplets,
-    color: "blue",
-    label: "Eau",
-    description: "Consommation d'eau froide et chaude",
-    history: [
-      { month: "Déc 2025", value: 45 },
-      { month: "Nov 2025", value: 42 },
-      { month: "Oct 2025", value: 38 },
-      { month: "Sep 2025", value: 35 },
-      { month: "Août 2025", value: 48 },
-      { month: "Juil 2025", value: 52 },
-      { month: "Juin 2025", value: 44 },
-      { month: "Mai 2025", value: 40 },
-      { month: "Avr 2025", value: 38 },
-      { month: "Mar 2025", value: 36 },
-      { month: "Fév 2025", value: 34 },
-      { month: "Jan 2025", value: 32 },
-    ],
-  },
-  heating: {
-    current: 1250,
-    previous: 1180,
-    average: 1100,
-    unit: "kWh",
-    icon: Flame,
-    color: "orange",
-    label: "Chauffage",
-    description: "Chauffage collectif",
-    history: [
-      { month: "Déc 2025", value: 1250 },
-      { month: "Nov 2025", value: 1180 },
-      { month: "Oct 2025", value: 850 },
-      { month: "Sep 2025", value: 320 },
-      { month: "Août 2025", value: 0 },
-      { month: "Juil 2025", value: 0 },
-      { month: "Juin 2025", value: 0 },
-      { month: "Mai 2025", value: 180 },
-      { month: "Avr 2025", value: 450 },
-      { month: "Mar 2025", value: 980 },
-      { month: "Fév 2025", value: 1350 },
-      { month: "Jan 2025", value: 1480 },
-    ],
-  },
-  electricity: {
-    current: 285,
-    previous: 270,
-    average: 250,
-    unit: "kWh",
-    icon: Zap,
-    color: "yellow",
-    label: "Électricité",
-    description: "Parties communes (éclairage, ascenseur)",
-    history: [
-      { month: "Déc 2025", value: 285 },
-      { month: "Nov 2025", value: 270 },
-      { month: "Oct 2025", value: 245 },
-      { month: "Sep 2025", value: 220 },
-      { month: "Août 2025", value: 195 },
-      { month: "Juil 2025", value: 180 },
-      { month: "Juin 2025", value: 190 },
-      { month: "Mai 2025", value: 210 },
-      { month: "Avr 2025", value: 230 },
-      { month: "Mar 2025", value: 255 },
-      { month: "Fév 2025", value: 275 },
-      { month: "Jan 2025", value: 290 },
-    ],
-  },
-};
+interface ConsumptionHistory {
+  month: string;
+  value: number;
+}
 
-// Conseils personnalisés
-const tips = [
-  {
-    type: "heating",
-    icon: Flame,
-    title: "Chauffage au-dessus de la moyenne",
-    description: "Votre consommation de chauffage est 14% supérieure à la moyenne de l'immeuble. Pensez à purger vos radiateurs et vérifier l'isolation de vos fenêtres.",
-    color: "orange",
-  },
-  {
-    type: "water",
-    icon: Droplets,
-    title: "Bonne gestion de l'eau",
-    description: "Votre consommation d'eau est proche de la moyenne. Continuez à adopter les bons gestes !",
-    color: "green",
-  },
-];
+interface ConsumptionData {
+  current: number;
+  previous: number;
+  average: number;
+  unit: string;
+  icon: typeof Droplets;
+  color: string;
+  label: string;
+  description: string;
+  history: ConsumptionHistory[];
+}
 
-type ConsumptionType = keyof typeof consumptions;
+interface Tip {
+  type: string;
+  icon: typeof Flame;
+  title: string;
+  description: string;
+  color: string;
+}
+
+type ConsumptionType = "water" | "heating" | "electricity";
 
 export default function ConsumptionsPage() {
   const [period, setPeriod] = useState<string>("6");
   const [activeTab, setActiveTab] = useState<ConsumptionType>("water");
+  const [consumptions, setConsumptions] = useState<Record<ConsumptionType, ConsumptionData> | null>(null);
+  const [tips, setTips] = useState<Tip[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // TODO: Replace with actual API calls
+        setConsumptions(null);
+        setTips([]);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Une erreur est survenue");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const getVariation = (current: number, previous: number) => {
     if (previous === 0) return 0;
     return ((current - previous) / previous) * 100;
   };
 
-  const getHistoryByPeriod = (history: typeof consumptions.water.history) => {
+  const getHistoryByPeriod = (history: ConsumptionHistory[]) => {
     const months = parseInt(period);
     return history.slice(0, months);
   };
@@ -142,6 +96,32 @@ export default function ConsumptionsPage() {
     };
     return colors[color] || colors.blue;
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <p className="text-destructive">{error}</p>
+        <Button onClick={() => window.location.reload()}>Réessayer</Button>
+      </div>
+    );
+  }
+
+  if (!consumptions) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <BarChart3 className="h-12 w-12 text-muted-foreground" />
+        <p className="text-muted-foreground">Aucune donnée de consommation disponible</p>
+      </div>
+    );
+  }
 
   const totalAnnual = Object.values(consumptions).reduce((acc, data) => {
     const yearTotal = data.history.reduce((sum, h) => sum + h.value, 0);

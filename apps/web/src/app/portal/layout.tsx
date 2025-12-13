@@ -1,15 +1,16 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Loader2 } from "lucide-react";
 
-// Mock owner info - TODO: Get from auth context
-const ownerInfo = {
-  name: "M. Jean Dupont",
-  email: "jean.dupont@email.com",
-};
+interface OwnerInfo {
+  name: string;
+  email: string;
+}
 
 const navItems = [
   { href: "/portal", label: "Dashboard", icon: "🏠" },
@@ -25,6 +26,24 @@ export default function PortalLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [ownerInfo, setOwnerInfo] = useState<OwnerInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // TODO: Get from auth context
+        setOwnerInfo(null);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -51,7 +70,13 @@ export default function PortalLayout({
           <div className="flex items-center gap-4">
             <ThemeToggle />
             <div className="hidden sm:block h-6 w-px bg-border" />
-            <span className="hidden sm:block text-sm text-muted-foreground">{ownerInfo.name}</span>
+            <span className="hidden sm:block text-sm text-muted-foreground">
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                ownerInfo?.name || "Utilisateur"
+              )}
+            </span>
             <Link href="/login">
               <Button variant="outline" size="sm">Déconnexion</Button>
             </Link>

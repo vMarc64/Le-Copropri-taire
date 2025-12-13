@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,24 +32,17 @@ import {
   Scale,
   PieChart,
   Shield,
+  Loader2,
 } from "lucide-react";
 
-// Mock data - Documents par catégorie
-const documents = [
-  { id: "1", name: "PV AG 2025.pdf", category: "ag", date: "15/06/2025", size: "2.4 MB", description: "Procès-verbal de l'assemblée générale ordinaire" },
-  { id: "2", name: "PV AG 2024.pdf", category: "ag", date: "12/06/2024", size: "2.1 MB", description: "Procès-verbal de l'assemblée générale ordinaire" },
-  { id: "3", name: "PV AG Extraordinaire 2024.pdf", category: "ag", date: "15/09/2024", size: "1.8 MB", description: "Procès-verbal de l'assemblée générale extraordinaire" },
-  { id: "4", name: "Appel de fonds T1 2025.pdf", category: "call", date: "01/01/2025", size: "156 KB", description: "Appel de provisions 1er trimestre" },
-  { id: "5", name: "Appel de fonds T2 2025.pdf", category: "call", date: "01/04/2025", size: "152 KB", description: "Appel de provisions 2ème trimestre" },
-  { id: "6", name: "Appel de fonds T3 2025.pdf", category: "call", date: "01/07/2025", size: "148 KB", description: "Appel de provisions 3ème trimestre" },
-  { id: "7", name: "Appel de fonds T4 2025.pdf", category: "call", date: "01/10/2025", size: "160 KB", description: "Appel de provisions 4ème trimestre" },
-  { id: "8", name: "Règlement de copropriété.pdf", category: "legal", date: "15/03/2020", size: "5.2 MB", description: "Règlement de copropriété et état descriptif de division" },
-  { id: "9", name: "Carnet d'entretien.pdf", category: "legal", date: "01/01/2025", size: "1.2 MB", description: "Carnet d'entretien de l'immeuble" },
-  { id: "10", name: "Budget prévisionnel 2025.pdf", category: "budget", date: "01/01/2025", size: "320 KB", description: "Budget prévisionnel voté en AG" },
-  { id: "11", name: "Comptes annuels 2024.pdf", category: "budget", date: "15/02/2025", size: "480 KB", description: "Comptes de l'exercice 2024" },
-  { id: "12", name: "Attestation assurance MRH 2025.pdf", category: "insurance", date: "01/01/2025", size: "180 KB", description: "Attestation multirisque habitation" },
-  { id: "13", name: "Attestation RC Syndic 2025.pdf", category: "insurance", date: "01/01/2025", size: "165 KB", description: "Attestation responsabilité civile du syndic" },
-];
+interface Document {
+  id: string;
+  name: string;
+  category: string;
+  date: string;
+  size: string;
+  description: string;
+}
 
 const categories = {
   all: { label: "Tous", icon: FolderOpen },
@@ -63,6 +56,26 @@ const categories = {
 export default function PortalDocumentsPage() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchDocuments() {
+      try {
+        setLoading(true);
+        // TODO: Fetch from API
+        setDocuments([]);
+        setError(null);
+      } catch (err) {
+        setError("Erreur lors du chargement des documents");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchDocuments();
+  }, []);
 
   const filteredDocuments = documents.filter((doc) => {
     const matchesSearch = doc.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -75,6 +88,14 @@ export default function PortalDocumentsPage() {
     if (category === "all") return documents.length;
     return documents.filter(d => d.category === category).length;
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

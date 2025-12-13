@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -6,9 +7,31 @@ import { QueueModule } from './queue';
 import { AuthModule, JwtAuthGuard, RolesGuard, PermissionsGuard } from './auth';
 import { TenantModule, TenantGuard } from './tenant';
 import { ZoneGuard } from './guards';
+import { StripeModule } from './integrations/stripe';
+import { PowensModule } from './integrations/powens';
+import { OwnersModule } from './owners';
+import { DocumentsModule } from './documents';
+import { BankModule } from './bank';
+import { CondominiumsModule } from './condominiums';
+import { DashboardModule } from './dashboard';
 
 @Module({
-  imports: [QueueModule, AuthModule, TenantModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+    QueueModule,
+    AuthModule,
+    TenantModule,
+    StripeModule,
+    PowensModule,
+    OwnersModule,
+    DocumentsModule,
+    BankModule,
+    CondominiumsModule,
+    DashboardModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,

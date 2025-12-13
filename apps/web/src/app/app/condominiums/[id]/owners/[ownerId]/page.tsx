@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,46 +25,103 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
-// Mock data
-const mockOwner = {
-  id: "1",
-  name: "M. Jean Dupont",
-  email: "jean.dupont@email.com",
-  phone: "06 12 34 56 78",
-  address: "12 rue des Lilas, 75020 Paris",
-  createdAt: "15/03/2024",
+interface Owner {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  createdAt: string;
   sepaMandate: {
-    active: true,
-    iban: "FR76 **** **** **** **** **** 123",
-    signedAt: "20/03/2024",
-    rum: "SEPA-2024-001",
-  },
-  lots: [
-    { id: "1", reference: "A12", type: "apartment", surface: 65, tantiemes: 120 },
-    { id: "4", reference: "P01", type: "parking", surface: 12, tantiemes: 15 },
-  ],
-  balance: 0,
-  totalTantiemes: 135,
-};
+    active: boolean;
+    iban: string;
+    signedAt: string;
+    rum: string;
+  };
+  lots: {
+    id: string;
+    reference: string;
+    type: string;
+    surface: number;
+    tantiemes: number;
+  }[];
+  balance: number;
+  totalTantiemes: number;
+}
 
-const paymentHistory = [
-  { id: "1", date: "01/12/2025", label: "Appel de fonds T4 2025", amount: 450, status: "paid", method: "SEPA" },
-  { id: "2", date: "01/09/2025", label: "Appel de fonds T3 2025", amount: 450, status: "paid", method: "SEPA" },
-  { id: "3", date: "01/06/2025", label: "Appel de fonds T2 2025", amount: 450, status: "paid", method: "CB" },
-  { id: "4", date: "01/03/2025", label: "Appel de fonds T1 2025", amount: 450, status: "paid", method: "SEPA" },
-];
+interface Payment {
+  id: string;
+  date: string;
+  label: string;
+  amount: number;
+  status: string;
+  method: string;
+}
 
-const documents = [
-  { id: "1", name: "Appel de fonds T4 2025.pdf", date: "01/12/2025", type: "invoice" },
-  { id: "2", name: "Mandat SEPA.pdf", date: "20/03/2024", type: "mandate" },
-  { id: "3", name: "PV AG 2024.pdf", date: "15/06/2024", type: "meeting" },
-];
+interface Document {
+  id: string;
+  name: string;
+  date: string;
+  type: string;
+}
 
 export default function OwnerProfilePage({ params }: { params: Promise<{ id: string; ownerId: string }> }) {
   const { id: condoId, ownerId } = use(params);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const owner = mockOwner; // TODO: Fetch from API
+  const [owner, setOwner] = useState<Owner | null>(null);
+  const [paymentHistory, setPaymentHistory] = useState<Payment[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        // TODO: Fetch from API
+        setOwner(null);
+        setPaymentHistory([]);
+        setDocuments([]);
+        setError(null);
+      } catch (err) {
+        setError("Erreur lors du chargement du propriétaire");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [condoId, ownerId]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
+        <p className="text-destructive">{error}</p>
+        <Button onClick={() => window.location.reload()}>Réessayer</Button>
+      </div>
+    );
+  }
+
+  if (!owner) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
+        <p className="text-muted-foreground">Propriétaire non trouvé</p>
+        <Link href={`/app/condominiums/${condoId}/owners`}>
+          <Button variant="outline">Retour à la liste</Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -220,21 +277,29 @@ export default function OwnerProfilePage({ params }: { params: Promise<{ id: str
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paymentHistory.map((payment) => (
-                    <TableRow key={payment.id}>
-                      <TableCell>{payment.date}</TableCell>
-                      <TableCell className="font-medium">{payment.label}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{payment.method}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">{payment.amount} €</TableCell>
-                      <TableCell>
-                        <Badge variant={payment.status === "paid" ? "default" : "destructive"}>
-                          {payment.status === "paid" ? "Payé" : "Impayé"}
-                        </Badge>
+                  {paymentHistory.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                        Aucun paiement trouvé
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    paymentHistory.map((payment) => (
+                      <TableRow key={payment.id}>
+                        <TableCell>{payment.date}</TableCell>
+                        <TableCell className="font-medium">{payment.label}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{payment.method}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">{payment.amount} €</TableCell>
+                        <TableCell>
+                          <Badge variant={payment.status === "paid" ? "default" : "destructive"}>
+                            {payment.status === "paid" ? "Payé" : "Impayé"}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -265,20 +330,28 @@ export default function OwnerProfilePage({ params }: { params: Promise<{ id: str
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {documents.map((doc) => (
-                    <TableRow key={doc.id}>
-                      <TableCell className="font-medium">📄 {doc.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {doc.type === "invoice" ? "Facture" : doc.type === "mandate" ? "Mandat" : "PV"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{doc.date}</TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm">⬇️ Télécharger</Button>
+                  {documents.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
+                        Aucun document trouvé
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    documents.map((doc) => (
+                      <TableRow key={doc.id}>
+                        <TableCell className="font-medium">📄 {doc.name}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {doc.type === "invoice" ? "Facture" : doc.type === "mandate" ? "Mandat" : "PV"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{doc.date}</TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm">⬇️ Télécharger</Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>

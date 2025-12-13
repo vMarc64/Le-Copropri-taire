@@ -1,23 +1,31 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit, Logger } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
-import { EmailProcessor, EMAIL_QUEUE } from './processors/email.processor';
-import { SepaProcessor, SEPA_QUEUE } from './processors/sepa.processor';
+
+const redisEnabled = process.env.REDIS_ENABLED === 'true';
+
+const bullModules = redisEnabled
+  ? [
+      BullModule.forRoot({
+        connection: {
+          host: process.env.REDIS_HOST || 'localhost',
+          port: parseInt(process.env.REDIS_PORT || '6379'),
+          password: process.env.REDIS_PASSWORD,
+        },
+      }),
+    ]
+  : [];
 
 @Module({
-  imports: [
-    BullModule.forRoot({
-      connection: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379'),
-        password: process.env.REDIS_PASSWORD,
-      },
-    }),
-    BullModule.registerQueue(
-      { name: EMAIL_QUEUE },
-      { name: SEPA_QUEUE },
-    ),
-  ],
-  providers: [EmailProcessor, SepaProcessor],
-  exports: [BullModule],
+  imports: bullModules,
+  providers: [],
+  exports: redisEnabled ? [BullModule] : [],
 })
-export class QueueModule {}
+export class QueueModule implements OnModuleInit {
+  private readonly logger = new Logger(QueueModule.name);
+
+  onModuleInit() {
+    if (!redisEnabled) {
+      this.logger.warn('Redis is disabled. Queue functionality is not available.');
+    }
+  }
+}

@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import Link from "next/link";
 import { use } from "react";
+import { Loader2 } from "lucide-react";
 
 const editTenantSchema = z.object({
   name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
@@ -33,47 +34,64 @@ const editTenantSchema = z.object({
 
 type EditTenantFormData = z.infer<typeof editTenantSchema>;
 
-// Mock data - will be replaced with API call
-const mockTenant = {
-  id: "1",
-  name: "Syndic ABC",
-  email: "contact@syndicabc.fr",
-  siret: "12345678901234",
-  phone: "01 23 45 67 89",
-  address: "123 rue de Paris",
-  city: "Paris",
-  postalCode: "75001",
-  status: "active" as const,
-  condominiums: 12,
-  users: 45,
-  createdAt: "2025-10-15",
-};
+interface Tenant {
+  id: string;
+  name: string;
+  email: string;
+  siret: string;
+  phone: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  status: "active" | "pending" | "suspended";
+  condominiums: number;
+  users: number;
+  createdAt: string;
+}
 
 export default function EditTenantPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tenant, setTenant] = useState(mockTenant);
+  const [tenant, setTenant] = useState<Tenant | null>(null);
 
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors },
   } = useForm<EditTenantFormData>({
     resolver: zodResolver(editTenantSchema),
-    defaultValues: tenant,
   });
 
   const currentStatus = watch("status");
 
   useEffect(() => {
-    // TODO: Fetch tenant data from API
-    // For now, use mock data
-    setTenant(mockTenant);
+    async function fetchTenant() {
+      try {
+        setFetchLoading(true);
+        // TODO: Fetch tenant data from API
+        setTenant(null);
+        setError(null);
+      } catch (err) {
+        setError("Erreur lors du chargement du gestionnaire");
+        console.error(err);
+      } finally {
+        setFetchLoading(false);
+      }
+    }
+    fetchTenant();
   }, [id]);
+
+  useEffect(() => {
+    if (tenant) {
+      reset(tenant);
+    }
+  }, [tenant, reset]);
 
   const onSubmit = async (data: EditTenantFormData) => {
     setIsLoading(true);
@@ -100,6 +118,26 @@ export default function EditTenantPage({ params }: { params: Promise<{ id: strin
     }
   };
 
+  if (fetchLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!tenant) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <p className="text-muted-foreground mb-4">
+          Gestionnaire non trouvé
+        </p>
+        <Link href="/platform/tenants">
+          <Button variant="outline">← Retour à la liste</Button>
+        </Link>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6">
       {/* Header */}
