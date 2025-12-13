@@ -173,18 +173,18 @@ jobs:
           script: |
             cd /opt/lecopro
             
-            # Create .env from GitHub secrets (escape $ with $$)
+            # Create .env from GitHub secrets
             cat > .env << EOF
             NODE_ENV=production
-            DATABASE_URL=$DATABASE_URL
-            JWT_SECRET=$${JWT_SECRET}
+            DATABASE_URL=${DATABASE_URL}
+            JWT_SECRET=${JWT_SECRET}
             JWT_EXPIRES_IN=7d
-            API_URL=$API_URL
-            FRONTEND_URL=$FRONTEND_URL
-            POWENS_DOMAIN=$POWENS_DOMAIN
-            POWENS_BASE_URL=$POWENS_BASE_URL
-            POWENS_CLIENT_ID=$POWENS_CLIENT_ID
-            POWENS_CLIENT_SECRET=$${POWENS_CLIENT_SECRET}
+            API_URL=${API_URL}
+            FRONTEND_URL=${FRONTEND_URL}
+            POWENS_DOMAIN=${POWENS_DOMAIN}
+            POWENS_BASE_URL=${POWENS_BASE_URL}
+            POWENS_CLIENT_ID=${POWENS_CLIENT_ID}
+            POWENS_CLIENT_SECRET=${POWENS_CLIENT_SECRET}
             POWENS_REDIRECT_URI=/powens/callback
             EOF
             
