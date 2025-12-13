@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +31,7 @@ import {
 import {
   Users,
   Search,
-  Plus,
+  UserPlus,
   Mail,
   Phone,
   Building2,
@@ -46,7 +45,6 @@ import {
   Eye,
   Send,
   Receipt,
-  UserPlus,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -58,32 +56,56 @@ import {
 import { getOwners, type Owner } from "@/lib/api";
 
 function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-    active: { label: "Actif", variant: "default" },
-    pending: { label: "En attente", variant: "secondary" },
-    suspended: { label: "Suspendu", variant: "destructive" },
+  const config: Record<string, { label: string; bgColor: string; textColor: string; icon: React.ReactNode }> = {
+    active: { 
+      label: "Actif", 
+      bgColor: "bg-emerald-100 dark:bg-emerald-950", 
+      textColor: "text-emerald-700 dark:text-emerald-400",
+      icon: <CheckCircle2 className="h-3 w-3" />
+    },
+    pending: { 
+      label: "En attente", 
+      bgColor: "bg-amber-100 dark:bg-amber-950", 
+      textColor: "text-amber-700 dark:text-amber-400",
+      icon: <Clock className="h-3 w-3" />
+    },
+    invited: { 
+      label: "Invité", 
+      bgColor: "bg-blue-100 dark:bg-blue-950", 
+      textColor: "text-blue-700 dark:text-blue-400",
+      icon: <Mail className="h-3 w-3" />
+    },
+    suspended: { 
+      label: "Suspendu", 
+      bgColor: "bg-red-100 dark:bg-red-950", 
+      textColor: "text-red-700 dark:text-red-400",
+      icon: <AlertTriangle className="h-3 w-3" />
+    },
   };
 
-  const { label, variant } = config[status] || { label: status, variant: "outline" as const };
+  const statusConfig = config[status] || { 
+    label: status, 
+    bgColor: "bg-gray-100 dark:bg-gray-800", 
+    textColor: "text-gray-700 dark:text-gray-400",
+    icon: null
+  };
 
   return (
-    <Badge variant={variant} className="gap-1">
-      {status === "active" && <CheckCircle2 className="h-3 w-3" />}
-      {status === "pending" && <Clock className="h-3 w-3" />}
-      {status === "suspended" && <AlertTriangle className="h-3 w-3" />}
-      {label}
+    <Badge variant="secondary" className={`${statusConfig.bgColor} ${statusConfig.textColor} border-0 gap-1`}>
+      {statusConfig.icon}
+      {statusConfig.label}
     </Badge>
   );
 }
 
 function SepaBadge({ hasMandate }: { hasMandate: boolean }) {
   return hasMandate ? (
-    <Badge variant="default" className="gap-1 bg-emerald-500 hover:bg-emerald-600">
+    <Badge variant="secondary" className="gap-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 border-0">
       <CreditCard className="h-3 w-3" />
       Actif
     </Badge>
   ) : (
-    <Badge variant="outline" className="gap-1 text-muted-foreground">
+    <Badge variant="secondary" className="gap-1 bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 border-0">
       <UserX className="h-3 w-3" />
       Aucun
     </Badge>
@@ -247,8 +269,8 @@ export default function OwnersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Propriétaires</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-semibold tracking-tight">Propriétaires</h1>
+          <p className="text-sm text-muted-foreground">
             Gérez les {owners.length} propriétaire{owners.length > 1 ? "s" : ""} de votre portefeuille
           </p>
         </div>
@@ -257,7 +279,6 @@ export default function OwnersPage() {
           onOpenChange={(open) => {
             setIsModalOpen(open);
             if (!open) {
-              // Reset modal state on close
               setOrphanSearchQuery("");
               setOrphanResults([]);
               setHasSearched(false);
@@ -267,9 +288,9 @@ export default function OwnersPage() {
           }}
         >
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Nouveau propriétaire
+            <Button size="sm">
+              <UserPlus className="mr-2 h-4 w-4" />
+              Ajouter
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
@@ -324,13 +345,20 @@ export default function OwnersPage() {
                       {orphanResults.map((owner) => (
                         <div
                           key={owner.id}
-                          className="flex items-center justify-between p-3 hover:bg-muted/50"
+                          className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
                         >
-                          <div>
-                            <p className="font-medium">
-                              {owner.firstName} {owner.lastName}
-                            </p>
-                            <p className="text-sm text-muted-foreground">{owner.email}</p>
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                              <span className="text-xs font-semibold text-primary">
+                                {owner.firstName?.[0]}{owner.lastName?.[0]}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">
+                                {owner.firstName} {owner.lastName}
+                              </p>
+                              <p className="text-xs text-muted-foreground">{owner.email}</p>
+                            </div>
                           </div>
                           <Button
                             size="sm"
@@ -435,61 +463,53 @@ export default function OwnersPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold">{stats.total}</p>
-                <p className="text-sm text-muted-foreground">Total</p>
-              </div>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10">
+              <Users className="h-5 w-5 text-blue-500" />
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <p className="text-2xl font-bold">{stats.total}</p>
+              <p className="text-xs text-muted-foreground">Total</p>
+            </div>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10">
-                <CheckCircle2 className="h-6 w-6 text-emerald-500" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold">{stats.active}</p>
-                <p className="text-sm text-muted-foreground">Actifs</p>
-              </div>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10">
+              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <p className="text-2xl font-bold">{stats.active}</p>
+              <p className="text-xs text-muted-foreground">Actifs</p>
+            </div>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-                <AlertTriangle className="h-6 w-6 text-destructive" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold">{stats.withArrears}</p>
-                <p className="text-sm text-muted-foreground">Avec impayés</p>
-              </div>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <p className="text-2xl font-bold">{stats.withArrears}</p>
+              <p className="text-xs text-muted-foreground">Avec impayés</p>
+            </div>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
-                <CreditCard className="h-6 w-6 text-amber-500" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold">{stats.pendingMandate}</p>
-                <p className="text-sm text-muted-foreground">Sans mandat SEPA</p>
-              </div>
+        <div className="rounded-lg border bg-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/10">
+              <CreditCard className="h-5 w-5 text-amber-500" />
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <p className="text-2xl font-bold">{stats.pendingMandate}</p>
+              <p className="text-xs text-muted-foreground">Sans mandat SEPA</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Search */}
@@ -504,136 +524,149 @@ export default function OwnersPage() {
       </div>
 
       {/* Owners Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
+      <div className="rounded-md border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b bg-muted/50 hover:bg-muted/50">
+              <TableHead className="font-medium">Propriétaire</TableHead>
+              <TableHead className="font-medium">Contact</TableHead>
+              <TableHead className="font-medium">Copropriétés</TableHead>
+              <TableHead className="font-medium text-center">Lots</TableHead>
+              <TableHead className="font-medium text-right">Solde</TableHead>
+              <TableHead className="font-medium text-center">SEPA</TableHead>
+              <TableHead className="font-medium text-center">Statut</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredOwners.length === 0 ? (
               <TableRow>
-                <TableHead>Propriétaire</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Copropriétés</TableHead>
-                <TableHead className="text-center">Lots</TableHead>
-                <TableHead className="text-right">Solde</TableHead>
-                <TableHead className="text-center">SEPA</TableHead>
-                <TableHead className="text-center">Statut</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableCell colSpan={8} className="h-32 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <Users className="h-8 w-8 text-muted-foreground/50" />
+                    <p className="text-muted-foreground">
+                      {searchQuery
+                        ? "Aucun propriétaire trouvé"
+                        : "Aucun propriétaire"}
+                    </p>
+                    {!searchQuery && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsModalOpen(true)}
+                      >
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Ajouter un propriétaire
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOwners.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="py-12 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <Users className="h-10 w-10 text-muted-foreground/50" />
-                      <p className="font-medium">Aucun propriétaire trouvé</p>
-                      <p className="text-sm text-muted-foreground">
-                        {searchQuery
-                          ? "Essayez de modifier votre recherche"
-                          : "Ajoutez votre premier propriétaire pour commencer"}
-                      </p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredOwners.map((owner) => {
-                  const balance = formatBalance(owner.balance);
-                  return (
-                    <TableRow key={owner.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                            <span className="text-sm font-semibold text-primary">
-                              {owner.firstName[0]}{owner.lastName[0]}
-                            </span>
-                          </div>
-                          <Link
-                            href={`/app/owners/${owner.id}`}
-                            className="font-medium hover:underline"
-                          >
-                            {owner.firstName} {owner.lastName}
-                          </Link>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1 text-sm">
-                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <Mail className="h-3.5 w-3.5" />
-                            <span className="truncate max-w-[180px]">{owner.email}</span>
-                          </div>
-                          {owner.phone && (
-                            <div className="flex items-center gap-1.5 text-muted-foreground">
-                              <Phone className="h-3.5 w-3.5" />
-                              <span>{owner.phone}</span>
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5 text-sm">
-                          <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="truncate max-w-[150px]">
-                            {owner.condominiums[0] || "Aucune"}
+            ) : (
+              filteredOwners.map((owner) => {
+                const balance = formatBalance(owner.balance);
+                return (
+                  <TableRow 
+                    key={owner.id}
+                    className="group border-b transition-colors hover:bg-muted/50"
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                          <span className="text-xs font-semibold text-primary">
+                            {owner.firstName[0]}{owner.lastName[0]}
                           </span>
-                          {owner.condominiums.length > 1 && (
-                            <Badge variant="secondary" className="text-xs">
-                              +{owner.condominiums.length - 1}
-                            </Badge>
-                          )}
                         </div>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <span className="text-sm text-muted-foreground">
-                          {owner.lots.length > 0 ? owner.lots.join(", ") : "-"}
+                        <Link
+                          href={`/app/owners/${owner.id}`}
+                          className="font-medium hover:underline"
+                        >
+                          {owner.firstName} {owner.lastName}
+                        </Link>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1 text-sm">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Mail className="h-3.5 w-3.5" />
+                          <span className="truncate max-w-[180px]">{owner.email}</span>
+                        </div>
+                        {owner.phone && (
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <Phone className="h-3.5 w-3.5" />
+                            <span>{owner.phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5 text-sm">
+                        <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="truncate max-w-[150px]">
+                          {owner.condominiums[0] || "Aucune"}
                         </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span className={balance.className}>{balance.text}</span>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <SepaBadge hasMandate={owner.hasSepaMandateActive} />
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <StatusBadge status={owner.status} />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Actions</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link href={`/app/owners/${owner.id}`}>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Voir le profil
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Send className="mr-2 h-4 w-4" />
-                              Envoyer un message
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>
-                              <Receipt className="mr-2 h-4 w-4" />
-                              Voir les paiements
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <CreditCard className="mr-2 h-4 w-4" />
-                              Gérer le mandat SEPA
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                        {owner.condominiums.length > 1 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{owner.condominiums.length - 1}
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className="text-sm text-muted-foreground">
+                        {owner.lots.length > 0 ? owner.lots.join(", ") : "-"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span className={balance.className}>{balance.text}</span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <SepaBadge hasMandate={owner.hasSepaMandateActive} />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <StatusBadge status={owner.status} />
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link href={`/app/owners/${owner.id}`}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              Voir le profil
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Send className="mr-2 h-4 w-4" />
+                            Envoyer un message
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem>
+                            <Receipt className="mr-2 h-4 w-4" />
+                            Voir les paiements
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <CreditCard className="mr-2 h-4 w-4" />
+                            Gérer le mandat SEPA
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
