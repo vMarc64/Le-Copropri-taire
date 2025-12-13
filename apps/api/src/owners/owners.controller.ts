@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Param, Query, ForbiddenException } from '@nestjs/common';
 import { OwnersService } from './owners.service';
 import { CurrentTenantId } from '../tenant/current-tenant.decorator';
 
@@ -12,6 +12,12 @@ export class OwnersController {
       throw new ForbiddenException('Tenant context is required');
     }
     return this.ownersService.findAll(tenantId);
+  }
+
+  @Get('search')
+  async searchOrphanOwners(@Query('q') query: string) {
+    // Search for orphan owners (no tenant) - accessible by any authenticated manager
+    return this.ownersService.searchOrphanOwners(query);
   }
 
   @Get(':id')
