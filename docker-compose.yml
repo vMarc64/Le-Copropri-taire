@@ -77,7 +77,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # Nginx reverse proxy (optional, for SSL termination)
+  # Nginx reverse proxy with SSL
   nginx:
     image: nginx:alpine
     container_name: lecopro-nginx
@@ -88,13 +88,23 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./certbot/www:/var/www/certbot:ro
     depends_on:
       - web
       - api
     networks:
       - lecopro-network
+
+  # Certbot for SSL certificate renewal
+  certbot:
+    image: certbot/certbot
+    container_name: lecopro-certbot
+    volumes:
+      - ./nginx/ssl:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
     profiles:
-      - with-nginx
+      - with-certbot
 
 networks:
   lecopro-network:

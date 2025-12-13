@@ -11,13 +11,13 @@
 └─────────────────────────────────────────────────────────────────┘
 
 Environnements:
-┌─────────┬────────────────────┬─────────────────────────────────┐
-│ Env     │ Infra              │ URL                             │
-├─────────┼────────────────────┼─────────────────────────────────┤
-│ Dev     │ Local              │ localhost:3000/3002             │
-│ UAT     │ VPS (Docker)       │ uat.lecopro.fr                  │
-│ Prod    │ GCP Cloud Run      │ lecopro.fr                      │
-└─────────┴────────────────────┴─────────────────────────────────┘
+┌─────────┬────────────────────┬─────────────────────────────────────────────┐
+│ Env     │ Infra              │ URL                                         │
+├─────────┼────────────────────┼─────────────────────────────────────────────┤
+│ Dev     │ Local              │ localhost:3000 / localhost:3002             │
+│ UAT     │ VPS (Docker)       │ uat.lecopro.mneto.fr / api.uat.lecopro.mneto.fr │
+│ Prod    │ GCP Cloud Run      │ lecopro.mneto.fr / api.lecopro.mneto.fr     │
+└─────────┴────────────────────┴─────────────────────────────────────────────┘
 ```
 
 ## Prérequis VPS (UAT)
@@ -83,18 +83,20 @@ docker compose logs -f
 Dans Settings > Secrets and variables > Actions :
 
 ### Environnement UAT
-| Secret | Description |
-|--------|-------------|
-| `UAT_HOST` | IP ou domaine du VPS |
-| `UAT_USERNAME` | Utilisateur SSH |
-| `UAT_SSH_KEY` | Clé SSH privée |
-| `UAT_API_URL` | https://api.uat.lecopro.fr |
+| Secret | Description | Valeur |
+|--------|-------------|--------|
+| `UAT_HOST` | IP du VPS | `45.94.209.84` |
+| `UAT_USERNAME` | Utilisateur SSH | `github` |
+| `UAT_SSH_KEY` | Clé SSH privée | Votre clé privée |
+| `UAT_API_URL` | URL API UAT | `https://api.uat.lecopro.mneto.fr` |
+| `UAT_FRONTEND_URL` | URL Frontend UAT | `https://uat.lecopro.mneto.fr` |
 
 ### Environnement Production
-| Secret | Description |
-|--------|-------------|
-| `GCP_SA_KEY` | Service Account JSON |
-| `PROD_API_URL` | https://api.lecopro.fr |
+| Secret | Description | Valeur |
+|--------|-------------|--------|
+| `GCP_SA_KEY` | Service Account JSON | (GCP) |
+| `PROD_API_URL` | URL API Prod | `https://api.lecopro.mneto.fr` |
+| `PROD_FRONTEND_URL` | URL Frontend Prod | `https://lecopro.mneto.fr` |
 
 ## Commandes utiles
 
@@ -145,11 +147,14 @@ mkdir -p /opt/lecopro/nginx
 # Installer certbot
 sudo apt install certbot
 
-# Obtenir le certificat
-sudo certbot certonly --standalone -d uat.lecopro.fr -d api.uat.lecopro.fr
+# Obtenir le certificat (arrêter nginx d'abord)
+docker compose stop nginx
+sudo certbot certonly --standalone -d uat.lecopro.mneto.fr -d api.uat.lecopro.mneto.fr
 
-# Copier les certificats
-sudo cp /etc/letsencrypt/live/uat.lecopro.fr/* /opt/lecopro/nginx/ssl/
+# Créer le dossier SSL et copier les certificats
+sudo mkdir -p /opt/lecopro/nginx/ssl
+sudo cp /etc/letsencrypt/live/uat.lecopro.mneto.fr/* /opt/lecopro/nginx/ssl/
+sudo chown -R $USER:$USER /opt/lecopro/nginx/ssl
 ```
 
 ## Monitoring
