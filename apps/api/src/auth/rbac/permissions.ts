@@ -2,7 +2,7 @@
  * User roles in the system
  * Hierarchical from least to most privileged
  */
-export enum UserRole {
+export enum Role {
   // Locataire - resident of a lot
   TENANT = 'tenant',
   
@@ -91,8 +91,8 @@ export enum Permission {
 /**
  * Role to permissions mapping
  */
-export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
-  [UserRole.TENANT]: [
+export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
+  [Role.TENANT]: [
     // Basic view access
     Permission.CONDO_VIEW,
     Permission.LOT_VIEW,
@@ -104,7 +104,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.FINANCE_VIEW, // Own finances only
   ],
 
-  [UserRole.OWNER]: [
+  [Role.OWNER]: [
     // Everything tenant can do plus:
     Permission.CONDO_VIEW,
     Permission.LOT_VIEW,
@@ -121,7 +121,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.REPORT_VIEW,
   ],
 
-  [UserRole.COUNCIL]: [
+  [Role.COUNCIL]: [
     // Everything owner can do plus:
     Permission.CONDO_VIEW,
     Permission.LOT_VIEW,
@@ -142,7 +142,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.ANNOUNCEMENT_CREATE,
   ],
 
-  [UserRole.MANAGER]: [
+  [Role.MANAGER]: [
     // Full management access
     Permission.USER_VIEW,
     Permission.USER_CREATE,
@@ -176,7 +176,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.SETTINGS_VIEW,
   ],
 
-  [UserRole.ADMIN]: [
+  [Role.ADMIN]: [
     // Everything manager can do plus user deletion and settings
     Permission.USER_VIEW,
     Permission.USER_CREATE,
@@ -214,7 +214,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.SETTINGS_UPDATE,
   ],
 
-  [UserRole.PLATFORM_ADMIN]: [
+  [Role.PLATFORM_ADMIN]: [
     // All permissions including tenant management
     ...Object.values(Permission),
   ],
@@ -223,7 +223,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 /**
  * Check if a role has a specific permission
  */
-export function hasPermission(role: UserRole, permission: Permission): boolean {
+export function hasPermission(role: Role, permission: Permission): boolean {
   const permissions = ROLE_PERMISSIONS[role];
   return permissions?.includes(permission) ?? false;
 }
@@ -231,20 +231,20 @@ export function hasPermission(role: UserRole, permission: Permission): boolean {
 /**
  * Check if a role has all of the specified permissions
  */
-export function hasAllPermissions(role: UserRole, permissions: Permission[]): boolean {
+export function hasAllPermissions(role: Role, permissions: Permission[]): boolean {
   return permissions.every((p) => hasPermission(role, p));
 }
 
 /**
  * Check if a role has any of the specified permissions
  */
-export function hasAnyPermission(role: UserRole, permissions: Permission[]): boolean {
+export function hasAnyPermission(role: Role, permissions: Permission[]): boolean {
   return permissions.some((p) => hasPermission(role, p));
 }
 
 /**
  * Get all permissions for a role
  */
-export function getPermissionsForRole(role: UserRole): Permission[] {
+export function getPermissionsForRole(role: Role): Permission[] {
   return ROLE_PERMISSIONS[role] ?? [];
 }

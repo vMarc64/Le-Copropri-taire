@@ -1,19 +1,11 @@
 import { Injectable, UnauthorizedException, ConflictException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { eq } from 'drizzle-orm';
 import { LoginDto, RegisterDto, AuthResponse } from './dto/auth.dto';
-import { JwtPayload } from './strategies/jwt.strategy';
-
-// TODO: Replace with actual database queries using Drizzle
-interface User {
-  id: string;
-  email: string;
-  passwordHash: string;
-  firstName: string;
-  lastName: string;
-  role: 'platform_admin' | 'manager' | 'owner' | 'tenant';
-  tenantId: string | null;
-}
+import { JwtPayload, UserRole } from './strategies/jwt.strategy';
+import { db } from '../database/client';
+import { users, tenants } from '../database/schema';
 
 @Injectable()
 export class AuthService {
@@ -22,11 +14,14 @@ export class AuthService {
   constructor(private readonly jwtService: JwtService) {}
 
   async login(dto: LoginDto): Promise<AuthResponse> {
-    // TODO: Replace with actual database query
     const user = await this.findUserByEmail(dto.email);
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (user.status !== 'active') {
+      throw new UnauthorizedException('Account is not active');
     }
 
     const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
@@ -38,7 +33,7 @@ export class AuthService {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
-      role: user.role,
+      role: user.role as UserRole,
       tenantId: user.tenantId,
     };
 
@@ -53,14 +48,13 @@ export class AuthService {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role,
+        role: user.role as UserRole,
         tenantId: user.tenantId,
       },
     };
   }
 
   async register(dto: RegisterDto): Promise<AuthResponse> {
-    // TODO: Replace with actual database query
     const existingUser = await this.findUserByEmail(dto.email);
 
     if (existingUser) {
@@ -69,52 +63,64 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
-    // TODO: Replace with actual database insert
-    const user: User = {
-      id: crypto.randomUUID(),
+    // Create tenant (property management company) for the new manager
+    const [newTenant] = await db.insert(tenants).values({
+      name: dto.companyName || `${dto.firstName} ${dto.lastName}`,
+      email: dto.email,
+      status: 'active',
+    }).returning();
+
+    // Create the user with manager role linked to the tenant
+    const [newUser] = await db.insert(users).values({
+      tenantId: newTenant.id,
       email: dto.email,
       passwordHash,
       firstName: dto.firstName,
       lastName: dto.lastName,
-      role: 'manager', // Default role for new registrations
-      tenantId: null, // Will be set when creating a tenant
-    };
-
-    // TODO: Save user to database
+      role: 'manager',
+      status: 'active',
+    }).returning();
 
     const payload: JwtPayload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-      tenantId: user.tenantId,
+      sub: newUser.id,
+      email: newUser.email,
+      role: newUser.role as UserRole,
+      tenantId: newUser.tenantId,
     };
 
     const accessToken = this.jwtService.sign(payload);
 
-    this.logger.log(`User ${user.email} registered successfully`);
+    this.logger.log(`User ${newUser.email} registered successfully with tenant ${newTenant.id}`);
 
     return {
       accessToken,
       user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        tenantId: user.tenantId,
+        id: newUser.id,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        role: newUser.role as UserRole,
+        tenantId: newUser.tenantId,
       },
     };
   }
 
   async validateUser(payload: JwtPayload): Promise<JwtPayload | null> {
-    // TODO: Optionally validate user still exists in database
+    // Validate user still exists and is active
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, payload.sub),
+    });
+
+    if (!user || user.status !== 'active') {
+      return null;
+    }
+
     return payload;
   }
 
-  // Placeholder - replace with Drizzle query
-  private async findUserByEmail(email: string): Promise<User | null> {
-    // TODO: Implement with Drizzle ORM
-    // return await db.query.users.findFirst({ where: eq(users.email, email) });
-    return null;
+  private async findUserByEmail(email: string) {
+    return await db.query.users.findFirst({
+      where: eq(users.email, email),
+    });
   }
 }

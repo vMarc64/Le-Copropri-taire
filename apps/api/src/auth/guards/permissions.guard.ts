@@ -1,7 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PERMISSIONS_KEY } from '../decorators/permissions.decorator';
-import { Permission, UserRole, hasAllPermissions } from '../rbac/permissions';
+import { Permission, Role, hasAllPermissions } from '../rbac/permissions';
 import { JwtPayload } from '../strategies/jwt.strategy';
 
 @Injectable()
@@ -26,7 +26,7 @@ export class PermissionsGuard implements CanActivate {
       throw new ForbiddenException('User not authenticated');
     }
 
-    const userRole = user.role as UserRole;
+    const userRole = user.role as Role;
     const hasAccess = hasAllPermissions(userRole, requiredPermissions);
 
     if (!hasAccess) {
