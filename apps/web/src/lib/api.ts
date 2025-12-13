@@ -49,6 +49,26 @@ export async function getOwners(): Promise<Owner[]> {
   return fetchApi<Owner[]>('/owners');
 }
 
+export interface OrphanOwner {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  status: string;
+  createdAt: string;
+}
+
+export async function searchOrphanOwners(query: string): Promise<OrphanOwner[]> {
+  if (!query || query.length < 2) return [];
+  return fetchApi<OrphanOwner[]>(`/owners/search?q=${encodeURIComponent(query)}`);
+}
+
+export async function associateOwnerToSyndic(ownerId: string): Promise<Owner> {
+  return fetchApi<Owner>(`/owners/${ownerId}/associate`, {
+    method: 'POST',
+  });
+}
+
 // Documents API
 export interface Document {
   id: string;
