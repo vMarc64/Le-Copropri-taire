@@ -47,3 +47,4 @@ apps/api/prisma/*.db-journal
 # Misc
 *.tsbuildinfo
 .turbo/
+.env*

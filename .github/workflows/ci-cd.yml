@@ -148,24 +148,43 @@ jobs:
           host: ${{ secrets.UAT_HOST }}
           username: ${{ secrets.UAT_USERNAME }}
           key: ${{ secrets.UAT_SSH_KEY }}
-          source: "docker-compose.yml,nginx/,.env.uat,scripts/"
+          source: "docker-compose.yml,nginx/,scripts/"
           target: "/opt/lecopro"
           overwrite: true
 
       - name: Deploy to UAT VPS
         uses: appleboy/ssh-action@v1.0.0
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          API_URL: ${{ secrets.UAT_API_URL }}
+          FRONTEND_URL: ${{ secrets.UAT_FRONTEND_URL }}
+          POWENS_DOMAIN: ${{ secrets.POWENS_DOMAIN }}
+          POWENS_BASE_URL: ${{ secrets.POWENS_BASE_URL }}
+          POWENS_CLIENT_ID: ${{ secrets.POWENS_CLIENT_ID }}
+          POWENS_CLIENT_SECRET: ${{ secrets.POWENS_CLIENT_SECRET }}
         with:
           host: ${{ secrets.UAT_HOST }}
           username: ${{ secrets.UAT_USERNAME }}
           key: ${{ secrets.UAT_SSH_KEY }}
+          envs: DATABASE_URL,JWT_SECRET,API_URL,FRONTEND_URL,POWENS_DOMAIN,POWENS_BASE_URL,POWENS_CLIENT_ID,POWENS_CLIENT_SECRET
           script: |
             cd /opt/lecopro
             
-            # Setup .env if not exists
-            if [ ! -f .env ]; then
-              cp .env.uat .env
-              echo "⚠️  Created .env from .env.uat - please configure it!"
-            fi
+            # Create .env from GitHub secrets
+            cat > .env << 'EOF'
+            NODE_ENV=production
+            DATABASE_URL=$DATABASE_URL
+            JWT_SECRET=$JWT_SECRET
+            JWT_EXPIRES_IN=7d
+            API_URL=$API_URL
+            FRONTEND_URL=$FRONTEND_URL
+            POWENS_DOMAIN=$POWENS_DOMAIN
+            POWENS_BASE_URL=$POWENS_BASE_URL
+            POWENS_CLIENT_ID=$POWENS_CLIENT_ID
+            POWENS_CLIENT_SECRET=$POWENS_CLIENT_SECRET
+            POWENS_REDIRECT_URI=/powens/callback
+            EOF
             
             # Login to GitHub Container Registry
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
