@@ -55,7 +55,8 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3002/ || exit 1
 
 # Start the application (NestJS compiles to dist/src/main.js in this repo)
+# Start API with compiled entrypoint
 CMD ["node", "dist/src/main.js"]
 
 # Start the application
-CMD ["node", "dist/main.js"]
+## Note: legacy path removed; Nest outputs to dist/src/main.js
