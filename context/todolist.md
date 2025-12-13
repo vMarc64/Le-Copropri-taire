@@ -48,9 +48,8 @@
 | ⬜ | Gestion des lots | ��� Moyenne | | [#24](https://github.com/vMarc64/Le-Copropri-taire/issues/24) |
 | ⬜ | Transactions bancaires (modal) | �� Moyenne | Vue open banking | [#25](https://github.com/vMarc64/Le-Copropri-taire/issues/25) |
 | ⬜ | Rapprochement bancaire | ��� Moyenne | Matching transactions ↔ paiements | [#26](https://github.com/vMarc64/Le-Copropri-taire/issues/26) |
-| ⬜ | Gestion documents | ��� Basse | Upload, catégories | [#27](https://github.com/vMarc64/Le-Copropri-taire/issues/27) |
-| ⬜ | Paramètres copropriété | ��� Basse | | [#28](https://github.com/vMarc64/Le-Copropri-taire/issues/28) |
-| ⬜ | Refonte design backoffice (sidebar, header, dashboard) | ��� Moyenne | | [#80](https://github.com/vMarc64/Le-Copropri-taire/issues/80) |
+| ⬜ | Gestion documents | 🟢 Basse | Upload, catégories | [#27](https://github.com/vMarc64/Le-Copropri-taire/issues/27) |
+| ⬜ | Paramètres copropriété | 🟢 Basse | | [#28](https://github.com/vMarc64/Le-Copropri-taire/issues/28) |
 
 ---
 

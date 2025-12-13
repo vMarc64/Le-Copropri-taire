@@ -5,7 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -22,14 +28,32 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import { getSyndic, createManager, deleteManager, type SyndicDetail, type Manager } from "@/lib/api";
+import { toast } from "sonner";
+import {
+  getSyndic,
+  createManager,
+  deleteManager,
+  type SyndicDetail,
+} from "@/lib/api";
 
-const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {
+const statusConfig: Record<
+  string,
+  { label: string; variant: "default" | "secondary" | "destructive" }
+> = {
   active: { label: "Actif", variant: "default" },
   pending: { label: "En attente", variant: "secondary" },
+  invited: { label: "Invité", variant: "secondary" },
   suspended: { label: "Suspendu", variant: "destructive" },
 };
 
@@ -67,8 +91,9 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
   }, [id]);
 
   const handleAddManager = async () => {
-    if (!managerForm.firstName || !managerForm.lastName || !managerForm.email) return;
-    
+    if (!managerForm.firstName || !managerForm.lastName || !managerForm.email)
+      return;
+
     try {
       setAddingManager(true);
       await createManager(id, {
@@ -78,24 +103,34 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
       });
       setAddManagerOpen(false);
       setManagerForm({ firstName: "", lastName: "", email: "" });
+      toast.success("Manager ajouté avec succès", {
+        description: `${managerForm.firstName} ${managerForm.lastName} recevra un email avec ses identifiants.`,
+      });
       await fetchTenant();
     } catch (err) {
       console.error(err);
-      alert("Erreur lors de l'ajout du manager");
+      toast.error("Erreur lors de l'ajout du manager", {
+        description: "Veuillez réessayer ultérieurement.",
+      });
     } finally {
       setAddingManager(false);
     }
   };
 
-  const handleDeleteManager = async (managerId: string) => {
+  const handleDeleteManager = async (managerId: string, managerName: string) => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer ce manager ?")) return;
-    
+
     try {
       await deleteManager(id, managerId);
+      toast.success("Manager supprimé", {
+        description: `${managerName} n'a plus accès au compte.`,
+      });
       await fetchTenant();
     } catch (err) {
       console.error(err);
-      alert("Erreur lors de la suppression du manager");
+      toast.error("Erreur lors de la suppression", {
+        description: "Veuillez réessayer ultérieurement.",
+      });
     }
   };
 
@@ -122,6 +157,23 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
 
   return (
     <div className="space-y-6">
+      {/* Breadcrumb */}
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/platform">Platform</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/platform/tenants">Syndics</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{tenant.name}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -288,31 +340,57 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
               <TableRow>
                 <TableHead>Nom</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Statut</TableHead>
                 <TableHead>Rôle</TableHead>
+                <TableHead>Créé le</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {!tenant.managers || tenant.managers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={6}
+                    className="h-24 text-center text-muted-foreground"
+                  >
                     Aucun manager
                   </TableCell>
                 </TableRow>
               ) : (
                 tenant.managers.map((manager) => (
                   <TableRow key={manager.id}>
-                    <TableCell className="font-medium">{manager.firstName} {manager.lastName}</TableCell>
+                    <TableCell className="font-medium">
+                      {manager.firstName} {manager.lastName}
+                    </TableCell>
                     <TableCell>{manager.email}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{roleLabels[manager.role] || manager.role}</Badge>
+                      <Badge
+                        variant={
+                          statusConfig[manager.status]?.variant ?? "secondary"
+                        }
+                      >
+                        {statusConfig[manager.status]?.label ?? manager.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {roleLabels[manager.role] || manager.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(manager.createdAt).toLocaleDateString("fr-FR")}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
                         variant="ghost"
                         size="sm"
                         className="text-destructive hover:text-destructive"
-                        onClick={() => handleDeleteManager(manager.id)}
+                        onClick={() =>
+                          handleDeleteManager(
+                            manager.id,
+                            `${manager.firstName} ${manager.lastName}`
+                          )
+                        }
                       >
                         🗑️
                       </Button>
