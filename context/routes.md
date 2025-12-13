@@ -1,9 +1,25 @@
 ## 1. Public & Authentication
-- /login
-- /register                           # Self-registration for new Syndic (creates org + admin manager)
+
+### 1.1 Home & Product
+- /                                   # Landing page with 3 blocks (Product, Owner Space, Manager Space)
+- /product                            # Product presentation / marketing page
+
+### 1.2 Owner Authentication (Copropriétaires)
+- /owner/login                        # Login for owners (neutral colors)
+- /owner/register                     # Registration for owners (creates pending account)
+
+### 1.3 Manager Authentication (Gestionnaires)
+- /manager/login                      # Login for managers (primary/green colors)
+- /manager/register                   # Registration for managers (creates pending account)
+
+### 1.4 Common Auth Routes
 - /forgot-password
 - /reset-password
 - /invite/[token]                     # Accept invitation (manager/owner/resident)
+
+### 1.5 Pending Pages
+- /app/pending                        # Pending page for managers awaiting syndic association
+- /portal/pending                     # Pending page for owners awaiting copropriété association
 
 ---
 
@@ -13,17 +29,14 @@
 
 ### 2.1 Dashboard
 - /platform                           # Dashboard with KPIs (total syndics, managers, condos)
+                                      # + Syndics list table with creation modal
 
 ### 2.2 Syndics (Organizations)
-- /platform/syndics                   # List all Syndics
-- /platform/syndics/new               # Create a new Syndic
-- /platform/syndics/[syndicId]        # Syndic details (status, contact, settings)
-- /platform/syndics/[syndicId]/edit   # Edit Syndic info
+- /platform/tenants                   # List all Syndics (alias for syndics)
+- /platform/tenants/[syndicId]        # Syndic details
 
-### 2.3 Syndic Managers
-- /platform/syndics/[syndicId]/managers           # List managers of this Syndic
-- /platform/syndics/[syndicId]/managers/new       # Invite a new manager
-- /platform/syndics/[syndicId]/managers/[userId]  # Manager details
+### 2.3 Users Management
+- /platform/users                     # List pending users, associate to syndics
 
 ---
 
