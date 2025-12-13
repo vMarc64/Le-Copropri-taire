@@ -2,107 +2,107 @@
 
 ## LÃ©gende
 - â¬œ Ã€ faire
-- í´„ En cours
+- ï¿½ï¿½ï¿½ En cours
 - âœ… TerminÃ©
 - âŒ AnnulÃ© / BloquÃ©
 
 ---
 
-## í´ Auth & Users
+## ï¿½ï¿½ï¿½ Auth & Users
 
 | Statut | TÃ¢che | PrioritÃ© | Notes | Issue |
 |--------|-------|----------|-------|-------|
-| âœ… | Configurer authentification | í´´ Haute | JWT avec Passport | [#7](https://github.com/vMarc64/Le-Copropri-taire/issues/7) |
-| âœ… | Page Login | í´´ Haute | Formulaire fonctionnel | [#9](https://github.com/vMarc64/Le-Copropri-taire/issues/9) |
-| âœ… | Page Register (Property Manager) | í´´ Haute | CrÃ©e tenant + user en DB | [#10](https://github.com/vMarc64/Le-Copropri-taire/issues/10) |
-| âœ… | SystÃ¨me RBAC (rÃ´les) | í´´ Haute | platform_admin, manager, owner, resident | [#11](https://github.com/vMarc64/Le-Copropri-taire/issues/11) |
-| âœ… | Middleware multi-tenant | í´´ Haute | Isolation par tenant_id (PR #82) | [#12](https://github.com/vMarc64/Le-Copropri-taire/issues/12) |
-| âœ… | Guards par zone (/platform, /app, /portal, /resident) | í´´ Haute | ZoneGuard implÃ©mentÃ© | [#13](https://github.com/vMarc64/Le-Copropri-taire/issues/13) |
+| âœ… | Configurer authentification | ï¿½ï¿½ï¿½ Haute | JWT avec Passport | [#7](https://github.com/vMarc64/Le-Copropri-taire/issues/7) |
+| âœ… | Page Login | ï¿½ï¿½ï¿½ Haute | Formulaire fonctionnel | [#9](https://github.com/vMarc64/Le-Copropri-taire/issues/9) |
+| âœ… | Page Register (Property Manager) | ï¿½ï¿½ï¿½ Haute | CrÃ©e tenant + user en DB | [#10](https://github.com/vMarc64/Le-Copropri-taire/issues/10) |
+| âœ… | SystÃ¨me RBAC (rÃ´les) | ï¿½ï¿½ï¿½ Haute | platform_admin, manager, owner, resident | [#11](https://github.com/vMarc64/Le-Copropri-taire/issues/11) |
+| âœ… | Middleware multi-tenant | ï¿½ï¿½ï¿½ Haute | Isolation par tenant_id (PR #82) | [#12](https://github.com/vMarc64/Le-Copropri-taire/issues/12) |
+| âœ… | Guards par zone (/platform, /app, /portal, /resident) | ï¿½ï¿½ï¿½ Haute | ZoneGuard implÃ©mentÃ© | [#13](https://github.com/vMarc64/Le-Copropri-taire/issues/13) |
 
 ---
 
-## í¿¢ Platform Admin
+## ï¿½ï¿½ï¿½ Platform Admin
 
 | Statut | TÃ¢che | PrioritÃ© | Notes | Issue |
 |--------|-------|----------|-------|-------|
-| â¬œ | Dashboard Platform Admin | í¿¡ Moyenne | KPIs globaux (nb syndics, users, copros) | [#14](https://github.com/vMarc64/Le-Copropri-taire/issues/14) |
-| â¬œ | Liste des Syndics (Frontend) | í´´ Haute | /platform/syndics | [#15](https://github.com/vMarc64/Le-Copropri-taire/issues/15) |
-| â¬œ | CrÃ©ation / Ã©dition Syndic | í´´ Haute | Modal ou page dÃ©diÃ©e | [#16](https://github.com/vMarc64/Le-Copropri-taire/issues/16) |
-| â¬œ | API CRUD Syndics | í´´ Haute | GET/POST/PATCH/DELETE /platform/syndics | [#83](https://github.com/vMarc64/Le-Copropri-taire/issues/83) |
-| â¬œ | API Gestion Managers | í´´ Haute | CRUD managers d'un syndic | [#84](https://github.com/vMarc64/Le-Copropri-taire/issues/84) |
-| â¬œ | Gestion Managers d'un Syndic | í´´ Haute | /platform/syndics/[id]/managers | [#85](https://github.com/vMarc64/Le-Copropri-taire/issues/85) |
+| â¬œ | Dashboard Platform Admin | ï¿½ï¿½ï¿½ Moyenne | KPIs globaux (nb syndics, users, copros) | [#14](https://github.com/vMarc64/Le-Copropri-taire/issues/14) |
+| â¬œ | Liste des Syndics (Frontend) | ï¿½ï¿½ï¿½ Haute | /platform/syndics | [#15](https://github.com/vMarc64/Le-Copropri-taire/issues/15) |
+| â¬œ | CrÃ©ation / Ã©dition Syndic | ï¿½ï¿½ï¿½ Haute | Modal ou page dÃ©diÃ©e | [#16](https://github.com/vMarc64/Le-Copropri-taire/issues/16) |
+| âœ… | API CRUD Syndics | ğŸ”´ Haute | GET/POST/PATCH/DELETE /platform/syndics (PR #88) | [#83](https://github.com/vMarc64/Le-Copropri-taire/issues/83) |
+| âœ… | API Gestion Managers | ğŸ”´ Haute | CRUD managers d'un syndic (PR #89) | [#84](https://github.com/vMarc64/Le-Copropri-taire/issues/84) |
+| â¬œ | Gestion Managers d'un Syndic | ï¿½ï¿½ï¿½ Haute | /platform/syndics/[id]/managers | [#85](https://github.com/vMarc64/Le-Copropri-taire/issues/85) |
 
 ---
 
-## í±” Manager Backoffice
+## ï¿½ï¿½ï¿½ Manager Backoffice
 
 | Statut | TÃ¢che | PrioritÃ© | Notes | Issue |
 |--------|-------|----------|-------|-------|
-| â¬œ | Layout (Sidebar + Header) | í´´ Haute | Composants rÃ©utilisables | [#17](https://github.com/vMarc64/Le-Copropri-taire/issues/17) |
-| â¬œ | Dashboard Manager | í´´ Haute | KPIs, impayÃ©s | [#18](https://github.com/vMarc64/Le-Copropri-taire/issues/18) |
-| â¬œ | Liste des copropriÃ©tÃ©s | í´´ Haute | | [#19](https://github.com/vMarc64/Le-Copropri-taire/issues/19) |
-| â¬œ | CrÃ©ation copropriÃ©tÃ© (modal) | í´´ Haute | | [#20](https://github.com/vMarc64/Le-Copropri-taire/issues/20) |
-| â¬œ | Dashboard copropriÃ©tÃ© | í´´ Haute | | [#21](https://github.com/vMarc64/Le-Copropri-taire/issues/21) |
-| â¬œ | Liste des propriÃ©taires (modal/panel) | í´´ Haute | | [#22](https://github.com/vMarc64/Le-Copropri-taire/issues/22) |
-| â¬œ | Profil propriÃ©taire | í´´ Haute | Tabs: overview, payments, documents, consumption | [#23](https://github.com/vMarc64/Le-Copropri-taire/issues/23) |
-| â¬œ | Gestion des lots | í¿¡ Moyenne | | [#24](https://github.com/vMarc64/Le-Copropri-taire/issues/24) |
+| â¬œ | Layout (Sidebar + Header) | ï¿½ï¿½ï¿½ Haute | Composants rÃ©utilisables | [#17](https://github.com/vMarc64/Le-Copropri-taire/issues/17) |
+| â¬œ | Dashboard Manager | ï¿½ï¿½ï¿½ Haute | KPIs, impayÃ©s | [#18](https://github.com/vMarc64/Le-Copropri-taire/issues/18) |
+| â¬œ | Liste des copropriÃ©tÃ©s | ï¿½ï¿½ï¿½ Haute | | [#19](https://github.com/vMarc64/Le-Copropri-taire/issues/19) |
+| â¬œ | CrÃ©ation copropriÃ©tÃ© (modal) | ï¿½ï¿½ï¿½ Haute | | [#20](https://github.com/vMarc64/Le-Copropri-taire/issues/20) |
+| â¬œ | Dashboard copropriÃ©tÃ© | ï¿½ï¿½ï¿½ Haute | | [#21](https://github.com/vMarc64/Le-Copropri-taire/issues/21) |
+| â¬œ | Liste des propriÃ©taires (modal/panel) | ï¿½ï¿½ï¿½ Haute | | [#22](https://github.com/vMarc64/Le-Copropri-taire/issues/22) |
+| â¬œ | Profil propriÃ©taire | ï¿½ï¿½ï¿½ Haute | Tabs: overview, payments, documents, consumption | [#23](https://github.com/vMarc64/Le-Copropri-taire/issues/23) |
+| â¬œ | Gestion des lots | ï¿½ï¿½ï¿½ Moyenne | | [#24](https://github.com/vMarc64/Le-Copropri-taire/issues/24) |
 | â¬œ | Transactions bancaires (modal) | ï¿½ï¿½ Moyenne | Vue open banking | [#25](https://github.com/vMarc64/Le-Copropri-taire/issues/25) |
-| â¬œ | Rapprochement bancaire | í¿¡ Moyenne | Matching transactions â†” paiements | [#26](https://github.com/vMarc64/Le-Copropri-taire/issues/26) |
-| â¬œ | Gestion documents | í¿¢ Basse | Upload, catÃ©gories | [#27](https://github.com/vMarc64/Le-Copropri-taire/issues/27) |
-| â¬œ | ParamÃ¨tres copropriÃ©tÃ© | í¿¢ Basse | | [#28](https://github.com/vMarc64/Le-Copropri-taire/issues/28) |
-| â¬œ | Refonte design backoffice (sidebar, header, dashboard) | í¿¡ Moyenne | | [#80](https://github.com/vMarc64/Le-Copropri-taire/issues/80) |
+| â¬œ | Rapprochement bancaire | ï¿½ï¿½ï¿½ Moyenne | Matching transactions â†” paiements | [#26](https://github.com/vMarc64/Le-Copropri-taire/issues/26) |
+| â¬œ | Gestion documents | ï¿½ï¿½ï¿½ Basse | Upload, catÃ©gories | [#27](https://github.com/vMarc64/Le-Copropri-taire/issues/27) |
+| â¬œ | ParamÃ¨tres copropriÃ©tÃ© | ï¿½ï¿½ï¿½ Basse | | [#28](https://github.com/vMarc64/Le-Copropri-taire/issues/28) |
+| â¬œ | Refonte design backoffice (sidebar, header, dashboard) | ï¿½ï¿½ï¿½ Moyenne | | [#80](https://github.com/vMarc64/Le-Copropri-taire/issues/80) |
 
 ---
 
-## í¿  Portail CopropriÃ©taire
+## ï¿½ï¿½ï¿½ Portail CopropriÃ©taire
 
 | Statut | TÃ¢che | PrioritÃ© | Notes | Issue |
 |--------|-------|----------|-------|-------|
-| â¬œ | Dashboard copropriÃ©taire | í´´ Haute | Balance, situation | [#29](https://github.com/vMarc64/Le-Copropri-taire/issues/29) |
-| â¬œ | Historique des paiements | í´´ Haute | | [#30](https://github.com/vMarc64/Le-Copropri-taire/issues/30) |
-| â¬œ | Documents accessibles | í¿¡ Moyenne | | [#31](https://github.com/vMarc64/Le-Copropri-taire/issues/31) |
-| â¬œ | Mandat SEPA (signature) | í¿¡ Moyenne | | [#32](https://github.com/vMarc64/Le-Copropri-taire/issues/32) |
-| â¬œ | Paiement CB (rattrapage) | í¿¢ Basse | | [#33](https://github.com/vMarc64/Le-Copropri-taire/issues/33) |
-| â¬œ | Suivi consommations | í¿¢ Basse | Eau, chauffage, etc. | [#34](https://github.com/vMarc64/Le-Copropri-taire/issues/34) |
-| â¬œ | Inscription automatique des copropriÃ©taires | í¿¡ Moyenne | | [#79](https://github.com/vMarc64/Le-Copropri-taire/issues/79) |
+| â¬œ | Dashboard copropriÃ©taire | ï¿½ï¿½ï¿½ Haute | Balance, situation | [#29](https://github.com/vMarc64/Le-Copropri-taire/issues/29) |
+| â¬œ | Historique des paiements | ï¿½ï¿½ï¿½ Haute | | [#30](https://github.com/vMarc64/Le-Copropri-taire/issues/30) |
+| â¬œ | Documents accessibles | ï¿½ï¿½ï¿½ Moyenne | | [#31](https://github.com/vMarc64/Le-Copropri-taire/issues/31) |
+| â¬œ | Mandat SEPA (signature) | ï¿½ï¿½ï¿½ Moyenne | | [#32](https://github.com/vMarc64/Le-Copropri-taire/issues/32) |
+| â¬œ | Paiement CB (rattrapage) | ï¿½ï¿½ï¿½ Basse | | [#33](https://github.com/vMarc64/Le-Copropri-taire/issues/33) |
+| â¬œ | Suivi consommations | ï¿½ï¿½ï¿½ Basse | Eau, chauffage, etc. | [#34](https://github.com/vMarc64/Le-Copropri-taire/issues/34) |
+| â¬œ | Inscription automatique des copropriÃ©taires | ï¿½ï¿½ï¿½ Moyenne | | [#79](https://github.com/vMarc64/Le-Copropri-taire/issues/79) |
 
 ---
 
-## í´‘ Portail Locataire
+## ï¿½ï¿½ï¿½ Portail Locataire
 
 | Statut | TÃ¢che | PrioritÃ© | Notes | Issue |
 |--------|-------|----------|-------|-------|
-| â¬œ | Dashboard locataire | í¿¢ Basse | Vue simplifiÃ©e | [#35](https://github.com/vMarc64/Le-Copropri-taire/issues/35) |
-| â¬œ | Consommations | í¿¢ Basse | | [#36](https://github.com/vMarc64/Le-Copropri-taire/issues/36) |
+| â¬œ | Dashboard locataire | ï¿½ï¿½ï¿½ Basse | Vue simplifiÃ©e | [#35](https://github.com/vMarc64/Le-Copropri-taire/issues/35) |
+| â¬œ | Consommations | ï¿½ï¿½ï¿½ Basse | | [#36](https://github.com/vMarc64/Le-Copropri-taire/issues/36) |
 
 ---
 
-## í¿¦ Bank & Payments
+## ï¿½ï¿½ï¿½ Bank & Payments
 
 | Statut | TÃ¢che | PrioritÃ© | Notes | Issue |
 |--------|-------|----------|-------|-------|
-| â¬œ | IntÃ©gration PSP (SEPA) | í´´ Haute | PrÃ©lÃ¨vements automatiques - Stripe SEPA mock prÃªt | [#37](https://github.com/vMarc64/Le-Copropri-taire/issues/37) |
-| â¬œ | IntÃ©gration PSP (CB) | í¿¡ Moyenne | Paiement rattrapage | [#38](https://github.com/vMarc64/Le-Copropri-taire/issues/38) |
-| âœ… | IntÃ©gration Open Banking | í¿¡ Moyenne | Powens sandbox intÃ©grÃ©, token exchange fonctionnel | [#39](https://github.com/vMarc64/Le-Copropri-taire/issues/39) |
-| â¬œ | Webhooks PSP | í´´ Haute | Notifications paiements | [#40](https://github.com/vMarc64/Le-Copropri-taire/issues/40) |
+| â¬œ | IntÃ©gration PSP (SEPA) | ï¿½ï¿½ï¿½ Haute | PrÃ©lÃ¨vements automatiques - Stripe SEPA mock prÃªt | [#37](https://github.com/vMarc64/Le-Copropri-taire/issues/37) |
+| â¬œ | IntÃ©gration PSP (CB) | ï¿½ï¿½ï¿½ Moyenne | Paiement rattrapage | [#38](https://github.com/vMarc64/Le-Copropri-taire/issues/38) |
+| âœ… | IntÃ©gration Open Banking | ï¿½ï¿½ï¿½ Moyenne | Powens sandbox intÃ©grÃ©, token exchange fonctionnel | [#39](https://github.com/vMarc64/Le-Copropri-taire/issues/39) |
+| â¬œ | Webhooks PSP | ï¿½ï¿½ï¿½ Haute | Notifications paiements | [#40](https://github.com/vMarc64/Le-Copropri-taire/issues/40) |
 
 ---
 
-## í³„ Documents
+## ï¿½ï¿½ï¿½ Documents
 
 | Statut | TÃ¢che | PrioritÃ© | Notes | Issue |
 |--------|-------|----------|-------|-------|
-| â¬œ | Gestion documents (Manager) | í¿¢ Basse | Upload, catÃ©gories | [#27](https://github.com/vMarc64/Le-Copropri-taire/issues/27) |
-| â¬œ | Documents accessibles (Portail) | í¿¡ Moyenne | | [#31](https://github.com/vMarc64/Le-Copropri-taire/issues/31) |
+| â¬œ | Gestion documents (Manager) | ï¿½ï¿½ï¿½ Basse | Upload, catÃ©gories | [#27](https://github.com/vMarc64/Le-Copropri-taire/issues/27) |
+| â¬œ | Documents accessibles (Portail) | ï¿½ï¿½ï¿½ Moyenne | | [#31](https://github.com/vMarc64/Le-Copropri-taire/issues/31) |
 
 ---
 
-## í´– IA & Automation
+## ï¿½ï¿½ï¿½ IA & Automation
 
 | Statut | TÃ¢che | PrioritÃ© | Notes | Issue |
 |--------|-------|----------|-------|-------|
-| â¬œ | Workers async (jobs critiques) | í¿¡ Moyenne | SEPA batch, sync bank (BullMQ) | [#41](https://github.com/vMarc64/Le-Copropri-taire/issues/41) |
-| â¬œ | Setup N8N + workflows IA | í´´ Haute | Rapprochement IA, emails, OCR | [#48](https://github.com/vMarc64/Le-Copropri-taire/issues/48) |
+| â¬œ | Workers async (jobs critiques) | ï¿½ï¿½ï¿½ Moyenne | SEPA batch, sync bank (BullMQ) | [#41](https://github.com/vMarc64/Le-Copropri-taire/issues/41) |
+| â¬œ | Setup N8N + workflows IA | ï¿½ï¿½ï¿½ Haute | Rapprochement IA, emails, OCR | [#48](https://github.com/vMarc64/Le-Copropri-taire/issues/48) |
 
 ---
 
@@ -110,20 +110,20 @@
 
 | Statut | TÃ¢che | PrioritÃ© | Notes | Issue |
 |--------|-------|----------|-------|-------|
-| âœ… | Setup projet Next.js (frontend + BFF) | í´´ Haute | App Router, TypeScript | [#1](https://github.com/vMarc64/Le-Copropri-taire/issues/1) |
-| âœ… | Setup projet NestJS (API mÃ©tier) | í´´ Haute | TypeScript, structure modulaire | [#2](https://github.com/vMarc64/Le-Copropri-taire/issues/2) |
-| âœ… | Configurer Tailwind + shadcn/ui | í´´ Haute | Design system tokens, thÃ¨me Neutral | [#3](https://github.com/vMarc64/Le-Copropri-taire/issues/3) |
-| âœ… | Configurer next-themes (dark mode) | í¿¡ Moyenne | Dark par dÃ©faut + 8 couleurs d'accent | [#4](https://github.com/vMarc64/Le-Copropri-taire/issues/4) |
-| âœ… | Setup PostgreSQL + Drizzle ORM | í´´ Haute | Schema multi-tenant, Supabase | [#5](https://github.com/vMarc64/Le-Copropri-taire/issues/5) |
-| â¬œ | Setup Redis + BullMQ | í¿¡ Moyenne | Workers async (dÃ©sactivÃ© pour l'instant) | [#6](https://github.com/vMarc64/Le-Copropri-taire/issues/6) |
-| â¬œ | Setup CI/CD | í¿¢ Basse | GitHub Actions | [#8](https://github.com/vMarc64/Le-Copropri-taire/issues/8) |
-| â¬œ | Tests unitaires | í¿¡ Moyenne | | [#42](https://github.com/vMarc64/Le-Copropri-taire/issues/42) |
-| â¬œ | Tests e2e | í¿¢ Basse | | [#43](https://github.com/vMarc64/Le-Copropri-taire/issues/43) |
-| â¬œ | Responsive mobile | í¿¡ Moyenne | | [#44](https://github.com/vMarc64/Le-Copropri-taire/issues/44) |
-| â¬œ | Performance / optimisation | í¿¢ Basse | | [#45](https://github.com/vMarc64/Le-Copropri-taire/issues/45) |
-| â¬œ | DÃ©ploiement production | í´´ Haute | | [#46](https://github.com/vMarc64/Le-Copropri-taire/issues/46) |
-| â¬œ | Monitoring / logs | í¿¡ Moyenne | | [#47](https://github.com/vMarc64/Le-Copropri-taire/issues/47) |
-| â¬œ | Connecter les pages Frontend aux APIs Backend | í´´ Haute | | [#87](https://github.com/vMarc64/Le-Copropri-taire/issues/87) |
+| âœ… | Setup projet Next.js (frontend + BFF) | ï¿½ï¿½ï¿½ Haute | App Router, TypeScript | [#1](https://github.com/vMarc64/Le-Copropri-taire/issues/1) |
+| âœ… | Setup projet NestJS (API mÃ©tier) | ï¿½ï¿½ï¿½ Haute | TypeScript, structure modulaire | [#2](https://github.com/vMarc64/Le-Copropri-taire/issues/2) |
+| âœ… | Configurer Tailwind + shadcn/ui | ï¿½ï¿½ï¿½ Haute | Design system tokens, thÃ¨me Neutral | [#3](https://github.com/vMarc64/Le-Copropri-taire/issues/3) |
+| âœ… | Configurer next-themes (dark mode) | ï¿½ï¿½ï¿½ Moyenne | Dark par dÃ©faut + 8 couleurs d'accent | [#4](https://github.com/vMarc64/Le-Copropri-taire/issues/4) |
+| âœ… | Setup PostgreSQL + Drizzle ORM | ï¿½ï¿½ï¿½ Haute | Schema multi-tenant, Supabase | [#5](https://github.com/vMarc64/Le-Copropri-taire/issues/5) |
+| â¬œ | Setup Redis + BullMQ | ï¿½ï¿½ï¿½ Moyenne | Workers async (dÃ©sactivÃ© pour l'instant) | [#6](https://github.com/vMarc64/Le-Copropri-taire/issues/6) |
+| â¬œ | Setup CI/CD | ï¿½ï¿½ï¿½ Basse | GitHub Actions | [#8](https://github.com/vMarc64/Le-Copropri-taire/issues/8) |
+| â¬œ | Tests unitaires | ï¿½ï¿½ï¿½ Moyenne | | [#42](https://github.com/vMarc64/Le-Copropri-taire/issues/42) |
+| â¬œ | Tests e2e | ï¿½ï¿½ï¿½ Basse | | [#43](https://github.com/vMarc64/Le-Copropri-taire/issues/43) |
+| â¬œ | Responsive mobile | ï¿½ï¿½ï¿½ Moyenne | | [#44](https://github.com/vMarc64/Le-Copropri-taire/issues/44) |
+| â¬œ | Performance / optimisation | ï¿½ï¿½ï¿½ Basse | | [#45](https://github.com/vMarc64/Le-Copropri-taire/issues/45) |
+| â¬œ | DÃ©ploiement production | ï¿½ï¿½ï¿½ Haute | | [#46](https://github.com/vMarc64/Le-Copropri-taire/issues/46) |
+| â¬œ | Monitoring / logs | ï¿½ï¿½ï¿½ Moyenne | | [#47](https://github.com/vMarc64/Le-Copropri-taire/issues/47) |
+| âœ… | Connecter les pages Frontend aux APIs Backend | ğŸ”´ Haute | Platform Admin connectÃ© (PR #90) | [#87](https://github.com/vMarc64/Le-Copropri-taire/issues/87) |
 
 ---
 
@@ -142,5 +142,5 @@
 ## Notes
 
 - Mettre Ã  jour ce fichier au fur et Ã  mesure de l'avancement
-- PrioritÃ©s : í´´ Haute | í¿¡ Moyenne | í¿¢ Basse
+- PrioritÃ©s : ï¿½ï¿½ï¿½ Haute | ï¿½ï¿½ï¿½ Moyenne | ï¿½ï¿½ï¿½ Basse
 - Les milestones GitHub correspondent maintenant aux sections ci-dessus
