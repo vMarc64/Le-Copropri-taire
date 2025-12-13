@@ -141,3 +141,122 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 export async function getCondominiumsWithUnpaid(): Promise<CondominiumWithUnpaid[]> {
   return fetchApi<CondominiumWithUnpaid[]>('/dashboard/condominiums-with-unpaid');
 }
+
+// =============================================================================
+// Platform Admin API
+// =============================================================================
+
+export interface Syndic {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  managersCount?: number;
+  condominiumsCount?: number;
+  ownersCount?: number;
+}
+
+export interface SyndicDetail extends Syndic {
+  managers?: Manager[];
+  condominiums?: { id: string; name: string; address: string; city: string }[];
+}
+
+export interface SyndicListResponse {
+  data: Syndic[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface Manager {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PlatformStats {
+  syndics: number;
+  users: number;
+  condominiums: number;
+  owners: number;
+}
+
+export async function getPlatformStats(): Promise<PlatformStats> {
+  return fetchApi<PlatformStats>('/platform/stats');
+}
+
+export async function getSyndics(options?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+}): Promise<SyndicListResponse> {
+  const params = new URLSearchParams();
+  if (options?.page) params.append('page', options.page.toString());
+  if (options?.limit) params.append('limit', options.limit.toString());
+  if (options?.search) params.append('search', options.search);
+  if (options?.status) params.append('status', options.status);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return fetchApi<SyndicListResponse>(`/platform/syndics${query}`);
+}
+
+export async function getSyndic(id: string): Promise<SyndicDetail> {
+  return fetchApi<SyndicDetail>(`/platform/syndics/${id}`);
+}
+
+export interface CreateSyndicData {
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  siret?: string;
+}
+
+export async function createSyndic(data: CreateSyndicData): Promise<Syndic> {
+  return fetchApi<Syndic>('/platform/syndics', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateSyndic(id: string, data: Partial<Syndic>): Promise<Syndic> {
+  return fetchApi<Syndic>(`/platform/syndics/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteSyndic(id: string): Promise<{ message: string }> {
+  return fetchApi<{ message: string }>(`/platform/syndics/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function getManagers(syndicId: string): Promise<{ data: Manager[]; total: number }> {
+  return fetchApi<{ data: Manager[]; total: number }>(`/platform/syndics/${syndicId}/managers`);
+}
+
+export async function createManager(syndicId: string, data: {
+  firstName: string;
+  lastName: string;
+  email: string;
+}): Promise<Manager> {
+  return fetchApi<Manager>(`/platform/syndics/${syndicId}/managers`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteManager(syndicId: string, managerId: string): Promise<{ message: string }> {
+  return fetchApi<{ message: string }>(`/platform/syndics/${syndicId}/managers/${managerId}`, {
+    method: 'DELETE',
+  });
+}
+

@@ -19,19 +19,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-
-interface Tenant {
-  id: string;
-  name: string;
-  email: string;
-  siret: string;
-  status: string;
-  condominiums: number;
-  users: number;
-  createdAt: string;
-}
+import { getSyndics, type Syndic } from "@/lib/api";
 
 type TenantStatus = "active" | "pending" | "suspended";
 
@@ -44,7 +34,7 @@ const statusConfig: Record<TenantStatus, { label: string; variant: "default" | "
 export default function TenantsListPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<TenantStatus | "all">("all");
-  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [tenants, setTenants] = useState<Syndic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,8 +42,8 @@ export default function TenantsListPage() {
     async function fetchData() {
       try {
         setLoading(true);
-        // TODO: Fetch from API
-        setTenants([]);
+        const response = await getSyndics();
+        setTenants(response.data);
         setError(null);
       } catch (err) {
         setError("Erreur lors du chargement des gestionnaires");
@@ -68,8 +58,7 @@ export default function TenantsListPage() {
   const filteredTenants = tenants.filter((tenant) => {
     const matchesSearch =
       tenant.name.toLowerCase().includes(search.toLowerCase()) ||
-      tenant.email.toLowerCase().includes(search.toLowerCase()) ||
-      tenant.siret.includes(search);
+      tenant.email.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "all" || tenant.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -115,7 +104,7 @@ export default function TenantsListPage() {
           <div className="flex flex-col gap-4 md:flex-row">
             <div className="flex-1">
               <Input
-                placeholder="Rechercher par nom, email ou SIRET..."
+                placeholder="Rechercher par nom ou email..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -162,9 +151,8 @@ export default function TenantsListPage() {
               <TableRow>
                 <TableHead>Nom</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>SIRET</TableHead>
                 <TableHead className="text-center">Copropriétés</TableHead>
-                <TableHead className="text-center">Utilisateurs</TableHead>
+                <TableHead className="text-center">Managers</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead>Créé le</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -173,7 +161,7 @@ export default function TenantsListPage() {
             <TableBody>
               {filteredTenants.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     Aucun gestionnaire trouvé
                   </TableCell>
                 </TableRow>
@@ -182,15 +170,14 @@ export default function TenantsListPage() {
                   <TableRow key={tenant.id}>
                     <TableCell className="font-medium">{tenant.name}</TableCell>
                     <TableCell>{tenant.email}</TableCell>
-                    <TableCell className="font-mono text-sm">{tenant.siret}</TableCell>
-                    <TableCell className="text-center">{tenant.condominiums}</TableCell>
-                    <TableCell className="text-center">{tenant.users}</TableCell>
+                    <TableCell className="text-center">{tenant.condominiumsCount ?? 0}</TableCell>
+                    <TableCell className="text-center">{tenant.managersCount ?? 0}</TableCell>
                     <TableCell>
-                      <Badge variant={statusConfig[tenant.status as TenantStatus].variant}>
-                        {statusConfig[tenant.status as TenantStatus].label}
+                      <Badge variant={statusConfig[tenant.status as TenantStatus]?.variant ?? "secondary"}>
+                        {statusConfig[tenant.status as TenantStatus]?.label ?? tenant.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{tenant.createdAt}</TableCell>
+                    <TableCell>{new Date(tenant.createdAt).toLocaleDateString("fr-FR")}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -239,7 +226,7 @@ export default function TenantsListPage() {
           {filteredTenants.length} gestionnaire(s) affiché(s) sur {tenants.length}
         </span>
         <span>
-          Total : {tenants.reduce((acc, t) => acc + t.condominiums, 0)} copropriétés, {tenants.reduce((acc, t) => acc + t.users, 0)} utilisateurs
+          Total : {tenants.reduce((acc, t) => acc + (t.condominiumsCount ?? 0), 0)} copropriétés, {tenants.reduce((acc, t) => acc + (t.managersCount ?? 0), 0)} managers
         </span>
       </div>
     </div>
