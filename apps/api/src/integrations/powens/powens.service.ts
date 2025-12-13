@@ -450,6 +450,29 @@ export class PowensService {
   }
 
   /**
+   * Generate the URL for the Powens webview with state parameter
+   * The state will be returned unchanged in the callback
+   * 
+   * @param redirectUri - URL to redirect after connection
+   * @param state - State parameter to pass through the callback (e.g., base64-encoded JSON)
+   * @param connectorId - Optional: pre-select a specific bank
+   */
+  getWebviewConnectUrlWithState(redirectUri: string, state: string, connectorId?: number): string {
+    const params = new URLSearchParams({
+      domain: `${this.domain}.biapi.pro`,
+      client_id: this.clientId,
+      redirect_uri: redirectUri,
+      state,
+    });
+
+    if (connectorId) {
+      params.append('connector_ids', connectorId.toString());
+    }
+
+    return `https://webview.powens.com/connect?${params.toString()}`;
+  }
+
+  /**
    * Generate the URL for the Powens webview with a temporary code
    * 
    * @param code - Temporary code from generateWebviewCode()

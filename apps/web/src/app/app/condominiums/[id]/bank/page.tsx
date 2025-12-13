@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +38,11 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
+import {
   ArrowLeft,
   Landmark,
   Wallet,
@@ -56,6 +62,9 @@ import {
   Plus,
   Building2,
   ShieldCheck,
+  ExternalLink,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 
 interface BankAccount {
@@ -89,6 +98,7 @@ interface PendingPayment {
 
 export default function BankPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: condoId } = use(params);
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isMatchOpen, setIsMatchOpen] = useState(false);
@@ -100,6 +110,14 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
   const [pendingPayments, setPendingPayments] = useState<PendingPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Powens connect state
+  const [connectLoading, setConnectLoading] = useState(false);
+  const [powensConfigured, setPowensConfigured] = useState(true);
+  
+  // Check for callback params
+  const callbackSuccess = searchParams.get('success');
+  const callbackError = searchParams.get('error');
 
   const hasBankAccount = bankAccounts.length > 0;
   const mainAccount = bankAccounts.find(a => a.status === 'active') || bankAccounts[0];
@@ -126,6 +144,33 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
     }
     fetchData();
   }, [condoId]);
+
+  // Handle Powens connect flow
+  const handleConnectBank = async () => {
+    try {
+      setConnectLoading(true);
+      const response = await fetch(`/api/condominiums/${condoId}/bank/connect`);
+      
+      if (!response.ok) {
+        throw new Error("Erreur lors de la récupération de l'URL de connexion");
+      }
+      
+      const data = await response.json();
+      
+      if (!data.configured) {
+        setPowensConfigured(false);
+        return;
+      }
+      
+      // Redirect to Powens webview
+      window.location.href = data.url;
+    } catch (err) {
+      console.error("Connect bank error:", err);
+      setError("Impossible de démarrer la connexion bancaire");
+    } finally {
+      setConnectLoading(false);
+    }
+  };
 
   const filteredTransactions = transactions.filter((tx) => {
     const matchesSearch = tx.label.toLowerCase().includes(search.toLowerCase());
@@ -179,6 +224,31 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
           </div>
         </div>
 
+        {/* Callback Status Messages */}
+        {callbackSuccess === 'true' && (
+          <Alert className="border-green-200 bg-green-50 text-green-800">
+            <CheckCircle2 className="h-4 w-4" />
+            <AlertTitle>Connexion réussie !</AlertTitle>
+            <AlertDescription>
+              Votre compte bancaire a été connecté avec succès. Les données sont en cours de synchronisation.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {callbackError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erreur de connexion</AlertTitle>
+            <AlertDescription>
+              {callbackError === 'invalid_state' 
+                ? "Paramètres de connexion invalides. Veuillez réessayer."
+                : callbackError === 'token_exchange_failed'
+                ? "Impossible de finaliser la connexion. Veuillez réessayer."
+                : `Erreur: ${callbackError}`}
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Empty State Card */}
         <Card className="mx-auto max-w-lg">
           <CardContent className="flex flex-col items-center py-12 text-center">
@@ -203,7 +273,7 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
           </CardContent>
         </Card>
 
-        {/* Connect Bank Modal - Placeholder for issue #109 */}
+        {/* Connect Bank Modal */}
         <Dialog open={showConnectModal} onOpenChange={setShowConnectModal}>
           <DialogContent>
             <DialogHeader>
@@ -216,14 +286,55 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mx-auto mb-4">
                 <Building2 className="h-6 w-6 text-primary" />
               </div>
-              <p className="text-sm text-muted-foreground">
-                L'intégration Powens sera disponible prochainement.
-              </p>
+              
+              {!powensConfigured ? (
+                <div className="space-y-4">
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Configuration requise</AlertTitle>
+                    <AlertDescription>
+                      L'intégration Powens n'est pas configurée. Veuillez contacter l'administrateur.
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Vous allez être redirigé vers la plateforme sécurisée Powens pour sélectionner votre banque et autoriser l'accès.
+                  </p>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p className="flex items-center justify-center gap-2">
+                      <ShieldCheck className="h-3 w-3" /> Connexion DSP2 sécurisée
+                    </p>
+                    <p className="flex items-center justify-center gap-2">
+                      <CheckCircle className="h-3 w-3" /> Données chiffrées de bout en bout
+                    </p>
+                    <p className="flex items-center justify-center gap-2">
+                      <Landmark className="h-3 w-3" /> Compatible avec toutes les banques françaises
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
-            <DialogFooter>
+            <DialogFooter className="gap-2 sm:gap-0">
               <Button variant="outline" onClick={() => setShowConnectModal(false)}>
-                Fermer
+                Annuler
               </Button>
+              {powensConfigured && (
+                <Button onClick={handleConnectBank} disabled={connectLoading}>
+                  {connectLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Redirection...
+                    </>
+                  ) : (
+                    <>
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      Continuer vers Powens
+                    </>
+                  )}
+                </Button>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>
