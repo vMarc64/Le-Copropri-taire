@@ -37,8 +37,9 @@ Objectif : permettre à un agent IA (ou un nouveau dev) de comprendre rapidement
    - Sert à coder l'UI de manière cohérente
 
 7) **todolist.md**  
-   - Liste des tâches par phase (Setup, Auth, Platform Admin, Manager, Portails, Intégrations)  
+   - Liste des tâches par domaine fonctionnel (Auth, Platform Admin, Manager, Portails, Bank, Documents, IA, Infrastructure)  
    - Suivi de l'avancement du projet  
+   - Correspond aux milestones GitHub  
    - À mettre à jour régulièrement
 
 ---
