@@ -241,39 +241,71 @@ export default function CondominiumsListPage() {
       {/* Cards View */}
       {viewMode === "cards" && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredCondos.map((condo) => (
-            <Link key={condo.id} href={`/app/condominiums/${condo.id}`}>
-              <Card className="cursor-pointer transition-colors hover:bg-muted/50">
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg">{condo.name}</CardTitle>
-                    {condo.sepaEnabled && <Badge>SEPA</Badge>}
+          {filteredCondos.length === 0 ? (
+            <div className="col-span-full flex h-40 items-center justify-center rounded-lg border border-dashed text-muted-foreground">
+              Aucune copropriété trouvée
+            </div>
+          ) : (
+            filteredCondos.map((condo) => (
+              <Link key={condo.id} href={`/app/condominiums/${condo.id}`}>
+                <Card className="group relative overflow-hidden transition-all hover:shadow-md hover:border-primary/50">
+                  {/* Header with gradient accent */}
+                  <div className="h-1.5 bg-gradient-to-r from-primary/80 to-primary/40" />
+                  
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="space-y-1 min-w-0">
+                        <CardTitle className="text-base font-semibold truncate group-hover:text-primary transition-colors">
+                          {condo.name}
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {condo.address}, {condo.postalCode} {condo.city}
+                        </p>
+                      </div>
+                      {condo.sepaEnabled && (
+                        <Badge 
+                          variant="outline" 
+                          className="shrink-0 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        >
+                          SEPA
+                        </Badge>
+                      )}
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="pt-0">
+                    {/* Stats row */}
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="rounded-lg bg-muted/50 p-3 text-center">
+                        <p className="text-xl font-bold tabular-nums">{condo.lots}</p>
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Lots</p>
+                      </div>
+                      <div className="rounded-lg bg-muted/50 p-3 text-center">
+                        <p className="text-xl font-bold tabular-nums">{condo.owners}</p>
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Propriétaires</p>
+                      </div>
+                      <div className="rounded-lg bg-muted/50 p-3 text-center">
+                        <p className={`text-xl font-bold tabular-nums ${condo.balance < 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400"}`}>
+                          {condo.balance >= 1000 || condo.balance <= -1000 
+                            ? `${(condo.balance / 1000).toFixed(1)}k` 
+                            : condo.balance.toLocaleString('fr-FR')
+                          }€
+                        </p>
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Solde</p>
+                      </div>
+                    </div>
+                  </CardContent>
+
+                  {/* Hover arrow indicator */}
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      →
+                    </div>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {condo.address}, {condo.postalCode} {condo.city}
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div>
-                      <p className="text-2xl font-bold">{condo.lots}</p>
-                      <p className="text-xs text-muted-foreground">Lots</p>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{condo.owners}</p>
-                      <p className="text-xs text-muted-foreground">Propriétaires</p>
-                    </div>
-                    <div>
-                      <p className={`text-2xl font-bold ${condo.balance < 0 ? "text-destructive" : "text-green-600"}`}>
-                        {(condo.balance / 1000).toFixed(1)}k
-                      </p>
-                      <p className="text-xs text-muted-foreground">Solde €</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                </Card>
+              </Link>
+            ))
+          )}
         </div>
       )}
     </div>
