@@ -5,99 +5,125 @@
 | Propriété | Valeur |
 |-----------|--------|
 | Style | Fintech / Proptech, moderne, professionnel |
-| Thème | Light + Dark (switch utilisateur ou système) |
+| Thème de base | **Dark mode** (Neutral) par défaut |
+| Couleurs d'accent | 8 options (Neutral, Blue, Green, Orange, Red, Rose, Violet, Yellow) |
+| Mode | Light / Dark (switch utilisateur) |
 | Layout | Sidebar gauche + Header top |
 | Breakpoint principal | Desktop first (1440px) |
 | Responsive | Tablet (1024px), Mobile (640px) — à adapter |
 
 ---
 
-## 2. Couleurs
+## 2. Système de thème
 
-### 2.1 Palette principale
+### 2.1 Architecture
 
-| Token | Light | Dark |
-|-------|-------|------|
-| `background` | Gray 50 `#F9FAFB` | Gray 950 `#030712` |
-| `surface` | White `#FFFFFF` | Gray 900 `#111827` |
-| `surface-elevated` | White `#FFFFFF` | Gray 800 `#1F2937` |
-| `border` | Gray 200 `#E5E7EB` | Gray 700 `#374151` |
-| `border-muted` | Gray 100 `#F3F4F6` | Gray 800 `#1F2937` |
-| `text-primary` | Gray 900 `#111827` | Gray 50 `#F9FAFB` |
-| `text-secondary` | Gray 500 `#6B7280` | Gray 400 `#9CA3AF` |
-| `text-muted` | Gray 400 `#9CA3AF` | Gray 500 `#6B7280` |
+Le système utilise **shadcn/ui** avec le thème **Neutral** comme base. Les utilisateurs peuvent :
+1. Choisir le mode (Light/Dark) - **Dark par défaut**
+2. Choisir la couleur d'accent (8 options)
 
-### 2.2 Accent (Primary)
+### 2.2 Couleurs d'accent disponibles
 
-| Token | Light | Dark |
-|-------|-------|------|
-| `primary` | Blue 600 `#2563EB` | Blue 500 `#3B82F6` |
-| `primary-hover` | Blue 700 `#1D4ED8` | Blue 400 `#60A5FA` |
-| `primary-muted` | Blue 50 `#EFF6FF` | Blue 950 `#172554` |
-| `primary-foreground` | White `#FFFFFF` | White `#FFFFFF` |
+| Couleur | Valeur oklch (Dark) | Aperçu |
+|---------|---------------------|--------|
+| Neutral | `oklch(0.922 0 0)` | Gris clair |
+| Blue | `oklch(0.546 0.245 262.881)` | 🔵 |
+| Green | `oklch(0.723 0.219 149.579)` | 🟢 |
+| Orange | `oklch(0.792 0.17 70.67)` | 🟠 |
+| Red | `oklch(0.704 0.191 22.216)` | 🔴 |
+| Rose | `oklch(0.76 0.175 11.844)` | 🌸 |
+| Violet | `oklch(0.702 0.183 293.541)` | 🟣 |
+| Yellow | `oklch(0.879 0.169 91.605)` | 🟡 |
 
-### 2.3 Couleurs sémantiques (statuts)
+### 2.3 Couleurs sémantiques (fixes)
 
-| Statut | Light bg | Light text | Dark bg | Dark text |
-|--------|----------|------------|---------|-----------|
-| `success` | Green 50 `#F0FDF4` | Green 600 `#16A34A` | Green 950 `#052E16` | Green 400 `#4ADE80` |
-| `warning` | Amber 50 `#FFFBEB` | Amber 600 `#D97706` | Amber 950 `#451A03` | Amber 400 `#FBBF24` |
-| `error` | Red 50 `#FEF2F2` | Red 600 `#DC2626` | Red 950 `#450A0A` | Red 400 `#F87171` |
-| `info` | Blue 50 `#EFF6FF` | Blue 600 `#2563EB` | Blue 950 `#172554` | Blue 400 `#60A5FA` |
+Ces couleurs ne changent **jamais** avec le thème car elles ont une signification universelle :
 
-### 2.4 CSS Variables (Tailwind)
+| Statut | Usage | Couleur |
+|--------|-------|---------|
+| Success | Paiement OK, solde positif | `emerald-500/600` |
+| Destructive | Erreurs, retards, impayés | Variable `--destructive` |
+| Warning | Alertes, attente | `amber-500/600` |
+
+### 2.4 Variables CSS (globals.css)
 
 ```css
-/* globals.css */
-@layer base {
-  :root {
-    --background: 249 250 251;        /* gray-50 */
-    --surface: 255 255 255;           /* white */
-    --surface-elevated: 255 255 255;
-    --border: 229 231 235;            /* gray-200 */
-    --text-primary: 17 24 39;         /* gray-900 */
-    --text-secondary: 107 114 128;    /* gray-500 */
-    --text-muted: 156 163 175;        /* gray-400 */
-    
-    --primary: 37 99 235;             /* blue-600 */
-    --primary-hover: 29 78 216;       /* blue-700 */
-    --primary-muted: 239 246 255;     /* blue-50 */
-    --primary-foreground: 255 255 255;
-    
-    --success: 240 253 244;
-    --success-foreground: 22 163 74;
-    --warning: 255 251 235;
-    --warning-foreground: 217 119 6;
-    --error: 254 242 242;
-    --error-foreground: 220 38 38;
-    --info: 239 246 255;
-    --info-foreground: 37 99 235;
-  }
-
-  .dark {
-    --background: 3 7 18;             /* gray-950 */
-    --surface: 17 24 39;              /* gray-900 */
-    --surface-elevated: 31 41 55;     /* gray-800 */
-    --border: 55 65 81;               /* gray-700 */
-    --text-primary: 249 250 251;      /* gray-50 */
-    --text-secondary: 156 163 175;    /* gray-400 */
-    --text-muted: 107 114 128;        /* gray-500 */
-    
-    --primary: 59 130 246;            /* blue-500 */
-    --primary-hover: 96 165 250;      /* blue-400 */
-    --primary-muted: 23 37 84;        /* blue-950 */
-    --primary-foreground: 255 255 255;
-    
-    --success: 5 46 22;
-    --success-foreground: 74 222 128;
-    --warning: 69 26 3;
-    --warning-foreground: 251 191 36;
-    --error: 69 10 10;
-    --error-foreground: 248 113 113;
-    --info: 23 37 84;
-    --info-foreground: 96 165 250;
-  }
+/* Mode Dark par défaut (Neutral) */
+:root {
+  --radius: 0.625rem;
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.371 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
 }
+
+/* Mode Light */
+.light {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  /* ... */
+}
+
+/* Couleurs d'accent (exemple Blue) */
+[data-theme="blue"] {
+  --primary: oklch(0.546 0.245 262.881);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.546 0.245 262.881);
+  --sidebar-primary: oklch(0.546 0.245 262.881);
+}
+```
+
+### 2.5 Implémentation du sélecteur de thème
+
+```tsx
+// components/theme-toggle.tsx
+const themeColors = [
+  { name: "Neutral", value: "neutral", color: "#737373" },
+  { name: "Blue", value: "blue", color: "#3b82f6" },
+  { name: "Green", value: "green", color: "#22c55e" },
+  { name: "Orange", value: "orange", color: "#f97316" },
+  { name: "Red", value: "red", color: "#ef4444" },
+  { name: "Rose", value: "rose", color: "#f43f5e" },
+  { name: "Violet", value: "violet", color: "#8b5cf6" },
+  { name: "Yellow", value: "yellow", color: "#eab308" },
+];
+
+// Le choix est persisté dans localStorage
+// L'attribut data-theme est appliqué sur <html>
+```
+
+### 2.6 Usage dans les composants
+
+```tsx
+// ✅ Utiliser les variables de thème
+<div className="bg-primary text-primary-foreground" />
+<div className="bg-primary/10 text-primary" />
+<Button>Texte</Button> // Utilise automatiquement --primary
+
+// ✅ Couleurs sémantiques (fixes)
+<span className="text-emerald-500">Paiement reçu</span>
+<span className="text-destructive">En retard</span>
+
+// ❌ NE PAS utiliser de couleurs hardcodées pour l'accent
+<div className="bg-blue-600" /> // Mauvais
+<div className="text-blue-500" /> // Mauvais
 ```
 
 ---
@@ -242,21 +268,21 @@ Tailles :
 
 ### 6.1 Sidebar (Navigation gauche)
 
-| Propriété | Light | Dark |
-|-----------|-------|------|
-| Background | white | gray-900 |
-| Border right | gray-200 | gray-800 |
-| Item hover | gray-100 | gray-800 |
-| Item active bg | primary/10 (blue-50) | primary/10 (blue-950) |
-| Item active text | primary | primary |
+| Propriété | Valeur |
+|-----------|--------|
+| Background | `bg-card` |
+| Border right | `border-border` |
+| Item hover | `hover:bg-muted` |
+| Item active bg | `bg-primary/10` |
+| Item active text | `text-primary` |
 
 ```
-- Width: 240px (expanded), 64px (collapsed)
-- Logo: en haut, h-16
+- Width: 260px (expanded), 72px (collapsed)
+- Logo: en haut, h-16, bg-primary avec icon en text-primary-foreground
 - Nav items:
   - Icon (20px) + Label
-  - Padding: py-2 px-3
-  - Border radius: rounded-md
+  - Padding: py-2.5 px-3
+  - Border radius: rounded-xl
 ```
 
 Navigation Property Manager (`/app`) :
@@ -268,18 +294,18 @@ Navigation Property Manager (`/app`) :
 
 ### 6.2 Header (Top bar)
 
-| Propriété | Light | Dark |
-|-----------|-------|------|
-| Background | white | gray-900 |
-| Border bottom | gray-200 | gray-800 |
+| Propriété | Valeur |
+|-----------|--------|
+| Background | `bg-card` |
+| Border bottom | `border-border` |
 
 ```
 - Height: 64px (h-16)
 - Content:
-  - Search bar (gauche ou centre)
-  - Theme toggle (soleil/lune)
+  - Search bar (gauche ou centre) - bg-muted
+  - Theme toggle (icône palette 🎨)
   - Notifications icon (optionnel)
-  - User avatar + dropdown (droite)
+  - User avatar (bg-primary/10, text-primary) + dropdown
 ```
 
 ### 6.3 Page content
@@ -298,59 +324,97 @@ Navigation Property Manager (`/app`) :
 
 ## 7. Theme Switching
 
-### 7.1 Implémentation (next-themes)
+### 7.1 Implémentation (next-themes + custom)
 
 ```tsx
-// providers/theme-provider.tsx
-"use client"
-
-import { ThemeProvider as NextThemesProvider } from "next-themes"
-
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  return (
-    <NextThemesProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
-      {children}
-    </NextThemesProvider>
-  )
-}
+// app/layout.tsx
+<ThemeProvider
+  attribute="class"
+  defaultTheme="dark"        // Dark mode par défaut
+  enableSystem={false}       // Pas de détection système
+  disableTransitionOnChange
+>
+  {children}
+</ThemeProvider>
 ```
 
-### 7.2 Toggle Button
+### 7.2 Sélecteur de thème (ThemeToggle)
+
+Le composant `ThemeToggle` permet de :
+1. Changer le mode (Light/Dark)
+2. Changer la couleur d'accent (8 options)
 
 ```tsx
 // components/theme-toggle.tsx
-"use client"
-
-import { Moon, Sun } from "lucide-react"
-import { useTheme } from "next-themes"
-
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme } = useTheme();
+  const { themeColor, setThemeColor } = useThemeColor();
 
   return (
-    <button
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
-    >
-      <Sun className="h-5 w-5 dark:hidden" />
-      <Moon className="h-5 w-5 hidden dark:block" />
-    </button>
-  )
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <Palette className="h-[1.2rem] w-[1.2rem]" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {/* Mode selection */}
+        <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {/* Color selection */}
+        {themeColors.map((color) => (
+          <DropdownMenuItem onClick={() => setThemeColor(color.value)}>
+            <span style={{ backgroundColor: color.color }} />
+            {color.name}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 ```
 
-### 7.3 Options de thème
+### 7.3 Hook useThemeColor
 
-| Option | Comportement |
-|--------|--------------|
-| `light` | Thème clair forcé |
-| `dark` | Thème sombre forcé |
-| `system` | Suit les préférences OS (défaut) |
+```tsx
+export function useThemeColor() {
+  const [themeColor, setThemeColorState] = useState<ThemeColor>("neutral");
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme-color");
+    if (stored) {
+      setThemeColorState(stored);
+      document.documentElement.setAttribute("data-theme", stored);
+    }
+  }, []);
+
+  const setThemeColor = (color: ThemeColor) => {
+    setThemeColorState(color);
+    localStorage.setItem("theme-color", color);
+    document.documentElement.setAttribute("data-theme", color === "neutral" ? "" : color);
+  };
+
+  return { themeColor, setThemeColor };
+}
+```
+
+### 7.4 Persistance
+
+| Donnée | Stockage | Clé |
+|--------|----------|-----|
+| Mode (light/dark) | localStorage | `theme` (géré par next-themes) |
+| Couleur d'accent | localStorage | `theme-color` |
+
+### 7.5 Attributs HTML
+
+```html
+<!-- Dark mode avec couleur Blue -->
+<html class="dark" data-theme="blue">
+
+<!-- Light mode avec Neutral (défaut) -->
+<html class="light" data-theme="">
+```
 
 ---
 
@@ -409,8 +473,9 @@ Icônes clés :
 | Recherche | `Search` |
 | Notifications | `Bell` |
 | Utilisateur | `CircleUser` |
-| Thème light | `Sun` |
-| Thème dark | `Moon` |
+| Thème/Couleurs | `Palette` |
+| Mode light | `Sun` |
+| Mode dark | `Moon` |
 
 ---
 
@@ -439,7 +504,8 @@ Icônes clés :
 ---
 
 ## TODO (optionnel)
-- Configurer les design tokens dans `tailwind.config.ts`
+- ~~Configurer les design tokens dans `tailwind.config.ts`~~ ✅ Fait via CSS variables
+- ~~Implémenter le système de thème avec couleurs d'accent~~ ✅ Fait
 - Créer un Storybook pour documenter les composants
 - Définir les animations et transitions
 - Ajouter des illustrations pour les empty states (adaptées au thème)

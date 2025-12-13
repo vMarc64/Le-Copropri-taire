@@ -14,8 +14,8 @@
 |--------|-------|----------|-------|-------|
 | ✅ | Setup projet Next.js (frontend + BFF) | 🔴 Haute | App Router, TypeScript | [#1](https://github.com/vMarc64/Le-Copropri-taire/issues/1) |
 | ✅ | Setup projet NestJS (API métier) | 🔴 Haute | TypeScript, structure modulaire | [#2](https://github.com/vMarc64/Le-Copropri-taire/issues/2) |
-| ⬜ | Configurer Tailwind + shadcn/ui | 🔴 Haute | Design system tokens | [#3](https://github.com/vMarc64/Le-Copropri-taire/issues/3) |
-| ⬜ | Configurer next-themes (dark mode) | 🟡 Moyenne | | [#4](https://github.com/vMarc64/Le-Copropri-taire/issues/4) |
+| ✅ | Configurer Tailwind + shadcn/ui | 🔴 Haute | Design system tokens, thème Neutral | [#3](https://github.com/vMarc64/Le-Copropri-taire/issues/3) |
+| ✅ | Configurer next-themes (dark mode) | 🟡 Moyenne | Dark par défaut + 8 couleurs d'accent | [#4](https://github.com/vMarc64/Le-Copropri-taire/issues/4) |
 | ⬜ | Setup PostgreSQL + Drizzle ORM | 🔴 Haute | Schema multi-tenant, Supabase | [#5](https://github.com/vMarc64/Le-Copropri-taire/issues/5) |
 | ⬜ | Setup Redis + BullMQ | 🟡 Moyenne | Workers async | [#6](https://github.com/vMarc64/Le-Copropri-taire/issues/6) |
 | ⬜ | Configurer authentification | 🔴 Haute | JWT / Sessions | [#7](https://github.com/vMarc64/Le-Copropri-taire/issues/7) |

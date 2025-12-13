@@ -1,64 +1,42 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Building2,
+  LayoutDashboard,
+  Users,
+  Landmark,
+  FileText,
+  Settings,
+  HelpCircle,
+  ChevronLeft,
+  ChevronRight,
+  type LucideIcon,
+} from "lucide-react";
 
 interface NavItem {
   title: string;
   href: string;
-  icon: string;
-  badge?: number;
+  icon: LucideIcon;
 }
 
-interface NavGroup {
-  title: string;
-  items: NavItem[];
-}
-
-const navigation: NavGroup[] = [
-  {
-    title: "Principal",
-    items: [
-      { title: "Dashboard", href: "/app", icon: "📊" },
-      { title: "Copropriétés", href: "/app/condominiums", icon: "🏢" },
-    ],
-  },
-  {
-    title: "Gestion",
-    items: [
-      { title: "Propriétaires", href: "/app/owners", icon: "👥" },
-      { title: "Locataires", href: "/app/tenants", icon: "🔑" },
-      { title: "Lots", href: "/app/lots", icon: "🚪" },
-    ],
-  },
-  {
-    title: "Finances",
-    items: [
-      { title: "Appels de fonds", href: "/app/calls", icon: "📨" },
-      { title: "Paiements", href: "/app/payments", icon: "💳" },
-      { title: "Banque", href: "/app/bank", icon: "🏦" },
-      { title: "Comptabilité", href: "/app/accounting", icon: "📒" },
-    ],
-  },
-  {
-    title: "Communication",
-    items: [
-      { title: "Assemblées", href: "/app/meetings", icon: "📋" },
-      { title: "Documents", href: "/app/documents", icon: "📁" },
-      { title: "Messages", href: "/app/messages", icon: "✉️", badge: 3 },
-    ],
-  },
+const navigation: NavItem[] = [
+  { title: "Dashboard", href: "/app", icon: LayoutDashboard },
+  { title: "Copropriétés", href: "/app/condominiums", icon: Building2 },
+  { title: "Propriétaires", href: "/app/owners", icon: Users },
+  { title: "Banque", href: "/app/bank", icon: Landmark },
+  { title: "Documents", href: "/app/documents", icon: FileText },
+  { title: "Paramètres", href: "/app/settings", icon: Settings },
 ];
 
 interface SidebarProps {
@@ -73,110 +51,119 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
     <TooltipProvider delayDuration={0}>
       <div
         className={cn(
-          "flex h-full flex-col border-r bg-card transition-all duration-300",
-          collapsed ? "w-16" : "w-64"
+          "flex h-full flex-col border-r border-border bg-card transition-all duration-300",
+          collapsed ? "w-[72px]" : "w-[260px]"
         )}
       >
         {/* Header */}
-        <div className="flex h-16 items-center justify-between border-b px-4">
-          {!collapsed && (
-            <Link href="/app" className="flex items-center gap-2">
-              <span className="text-lg font-bold text-primary">Le Copro</span>
+        <div className="flex h-16 items-center border-b border-border px-5">
+          {!collapsed ? (
+            <Link href="/app" className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
+                <Building2 className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[14px] font-semibold text-foreground">Le Copropriétaire</span>
+                <span className="text-[12px] text-muted-foreground">Gestion immobilière</span>
+              </div>
             </Link>
+          ) : (
+            <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
+              <Building2 className="h-5 w-5 text-primary-foreground" />
+            </div>
           )}
+        </div>
+
+        {/* Toggle Button */}
+        <div className="flex justify-end px-3 py-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={onToggle}
-            className={cn(collapsed && "mx-auto")}
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
           >
-            {collapsed ? "→" : "←"}
+            {collapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
           </Button>
         </div>
 
         {/* Navigation */}
-        <ScrollArea className="flex-1 py-4">
-          <nav className="space-y-4 px-2">
-            {navigation.map((group) => (
-              <div key={group.title}>
-                {!collapsed && (
-                  <h3 className="mb-2 px-2 text-xs font-semibold uppercase text-muted-foreground">
-                    {group.title}
-                  </h3>
-                )}
-                <div className="space-y-1">
-                  {group.items.map((item) => {
-                    const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-                    
-                    const linkContent = (
-                      <Link
-                        href={item.href}
-                        className={cn(
-                          "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                          isActive
-                            ? "bg-primary text-primary-foreground"
-                            : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                          collapsed && "justify-center px-2"
-                        )}
-                      >
-                        <span className="text-lg">{item.icon}</span>
-                        {!collapsed && (
-                          <>
-                            <span className="flex-1">{item.title}</span>
-                            {item.badge && (
-                              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs text-destructive-foreground">
-                                {item.badge}
-                              </span>
-                            )}
-                          </>
-                        )}
-                      </Link>
-                    );
+        <ScrollArea className="flex-1 px-3">
+          <nav className="space-y-1">
+            {navigation.map((item) => {
+              const isActive = pathname === item.href || 
+                (item.href !== "/app" && pathname.startsWith(item.href + "/"));
+              const Icon = item.icon;
+              
+              const linkContent = (
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-all duration-200",
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    collapsed && "justify-center px-2"
+                  )}
+                >
+                  <Icon className={cn("h-[20px] w-[20px]", isActive && "text-primary")} />
+                  {!collapsed && <span>{item.title}</span>}
+                </Link>
+              );
 
-                    if (collapsed) {
-                      return (
-                        <Tooltip key={item.href}>
-                          <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-                          <TooltipContent side="right">
-                            <p>{item.title}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      );
-                    }
+              if (collapsed) {
+                return (
+                  <Tooltip key={item.href}>
+                    <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+                    <TooltipContent side="right" className="text-[13px]">
+                      <p>{item.title}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              }
 
-                    return <div key={item.href}>{linkContent}</div>;
-                  })}
-                </div>
-                {!collapsed && <Separator className="mt-4" />}
-              </div>
-            ))}
+              return <div key={item.href}>{linkContent}</div>;
+            })}
           </nav>
         </ScrollArea>
 
-        {/* Footer */}
-        <div className="border-t p-4">
-          {collapsed ? (
+        {/* Help Section */}
+        <div className="border-t border-border p-4">
+          {!collapsed ? (
+            <div className="rounded-xl bg-muted p-4">
+              <div className="flex items-center gap-2 text-[13px] font-medium text-foreground">
+                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                <span>Besoin d&apos;aide ?</span>
+              </div>
+              <p className="mt-1 text-[12px] text-muted-foreground">
+                Consultez notre documentation
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-3 h-8 w-full rounded-lg border-border text-[13px] font-medium" 
+                asChild
+              >
+                <Link href="/app/help">Voir la doc</Link>
+              </Button>
+            </div>
+          ) : (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
-                  href="/app/settings"
-                  className="flex items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-muted"
+                  href="/app/help"
+                  className="flex items-center justify-center rounded-xl p-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
-                  ⚙️
+                  <HelpCircle className="h-5 w-5" />
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right">
-                <p>Paramètres</p>
+              <TooltipContent side="right" className="text-[13px]">
+                <p>Aide</p>
               </TooltipContent>
             </Tooltip>
-          ) : (
-            <Link
-              href="/app/settings"
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted"
-            >
-              <span>⚙️</span>
-              <span>Paramètres</span>
-            </Link>
           )}
         </div>
       </div>

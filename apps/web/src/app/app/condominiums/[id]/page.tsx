@@ -3,210 +3,229 @@
 import { use } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Building2,
+  DollarSign,
+  Users,
+  TrendingUp,
+  Settings,
+  Landmark,
+  FileText,
+  UserPlus,
+  List,
+} from "lucide-react";
 
 // Mock data
 const mockCondominium = {
   id: "1",
   name: "Résidence Les Lilas",
-  address: "12 rue des Lilas",
-  city: "Paris",
-  postalCode: "75020",
-  description: "Belle résidence des années 80 avec jardin privatif",
-  siret: "12345678901234",
-  sepaEnabled: true,
-  cbEnabled: true,
-  lots: 24,
-  owners: 18,
-  tenants: 6,
-  balance: 12500,
-  unpaidAmount: 2300,
+  address: "12 rue des Lilas, Paris 75020",
+  currentBalance: 45230,
+  balanceTrend: 8,
+  ownersInArrears: 3,
+  monthlyIncome: 12500,
+  incomeTrend: 15,
 };
 
-const recentPayments = [
-  { id: "1", owner: "M. Dupont", lot: "A12", amount: 450, date: "12/12/2025", status: "paid" },
-  { id: "2", owner: "Mme Martin", lot: "B03", amount: 380, date: "11/12/2025", status: "paid" },
-  { id: "3", owner: "M. Bernard", lot: "C08", amount: 520, date: "05/12/2025", status: "overdue" },
+const recentActivities = [
+  {
+    id: "1",
+    type: "payment",
+    title: "Paiement reçu de M. Dupont",
+    details: "Lot A12 • 850 € • Il y a 2 heures",
+    color: "bg-emerald-500", // Success - stays green
+  },
+  {
+    id: "2",
+    type: "overdue",
+    title: "Paiement en retard - Mme Martin",
+    details: "Lot B03 • 1 200 € • Depuis 1 jour",
+    color: "bg-destructive", // Error/Warning - uses theme destructive
+  },
+  {
+    id: "3",
+    type: "document",
+    title: "Nouveau document ajouté",
+    details: "Budget Annuel 2025.pdf • Il y a 3 jours",
+    color: "bg-primary", // Uses theme primary color
+  },
 ];
 
-const quickStats = [
-  { label: "Lots", value: 24, icon: "🚪" },
-  { label: "Propriétaires", value: 18, icon: "👥" },
-  { label: "Locataires", value: 6, icon: "🔑" },
-  { label: "Solde", value: "12.5k €", icon: "💰", color: "text-green-600" },
+const quickActions = [
+  {
+    title: "Compte bancaire & Transactions",
+    description: "Voir et gérer les transactions",
+    icon: Landmark,
+    href: "bank",
+    iconBg: "bg-primary/10",
+    iconColor: "text-primary",
+  },
+  {
+    title: "Ajouter un document",
+    description: "Télécharger contrats et fichiers",
+    icon: FileText,
+    href: "documents",
+    iconBg: "bg-primary/10",
+    iconColor: "text-primary",
+  },
+  {
+    title: "Gérer Propriétaires / Locataires",
+    description: "Ajouter ou modifier les informations",
+    icon: UserPlus,
+    href: "owners",
+    iconBg: "bg-primary/10",
+    iconColor: "text-primary",
+  },
+  {
+    title: "Liste des propriétaires",
+    description: "Voir tous les propriétaires et leur statut",
+    icon: List,
+    href: "owners",
+    iconBg: "bg-primary/10",
+    iconColor: "text-primary",
+  },
 ];
+
+function TrendBadge({ value }: { value: number }) {
+  return (
+    <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+      <TrendingUp className="h-4 w-4" />
+      +{value}%
+    </span>
+  );
+}
 
 export default function CondominiumDashboardPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const condo = mockCondominium; // TODO: Fetch from API
+  const condo = mockCondominium;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/app/condominiums">
-            <Button variant="ghost" size="sm">← Retour</Button>
-          </Link>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold">{condo.name}</h1>
-              {condo.sepaEnabled && <Badge>SEPA</Badge>}
-              {condo.cbEnabled && <Badge variant="secondary">CB</Badge>}
+    <div className="min-h-screen">
+      <div className="mx-auto max-w-7xl space-y-10 px-6 py-8 lg:px-8">
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-5">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+              <Building2 className="h-7 w-7 text-primary" />
             </div>
-            <p className="text-muted-foreground">
-              {condo.address}, {condo.postalCode} {condo.city}
-            </p>
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                {condo.name}
+              </h1>
+              <p className="mt-0.5 text-[15px] text-muted-foreground">
+                {condo.address}
+              </p>
+            </div>
           </div>
+          <Button variant="outline" className="h-10 gap-2 rounded-lg border-border px-4 text-[13px] font-medium" asChild>
+            <Link href={`/app/condominiums/${id}/settings`}>
+              <Settings className="h-4 w-4" />
+              Paramètres
+            </Link>
+          </Button>
         </div>
-        <div className="flex gap-2">
-          <Link href={`/app/condominiums/${id}/settings`}>
-            <Button variant="outline">⚙️ Paramètres</Button>
-          </Link>
-          <Link href={`/app/condominiums/${id}/call`}>
-            <Button>📨 Nouvel appel</Button>
-          </Link>
-        </div>
-      </div>
 
-      {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
-        {quickStats.map((stat) => (
-          <Card key={stat.label}>
-            <CardContent className="flex items-center justify-between pt-6">
-              <div>
-                <p className={`text-2xl font-bold ${stat.color || ""}`}>{stat.value}</p>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
+        {/* Stats Cards */}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Current Balance */}
+          <Card className="p-0">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10">
+                  <DollarSign className="h-6 w-6 text-emerald-500" />
+                </div>
+                <TrendBadge value={condo.balanceTrend} />
               </div>
-              <span className="text-3xl">{stat.icon}</span>
+              <div className="mt-5">
+                <p className="text-[13px] font-medium text-muted-foreground">Solde actuel</p>
+                <p className="mt-1 text-3xl font-semibold tracking-tight text-foreground">
+                  {condo.currentBalance.toLocaleString("fr-FR")} €
+                </p>
+              </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex gap-2 border-b pb-2">
-        <Link href={`/app/condominiums/${id}`}>
-          <Button variant="default" size="sm">📊 Dashboard</Button>
-        </Link>
-        <Link href={`/app/condominiums/${id}/lots`}>
-          <Button variant="ghost" size="sm">🚪 Lots</Button>
-        </Link>
-        <Link href={`/app/condominiums/${id}/owners`}>
-          <Button variant="ghost" size="sm">👥 Propriétaires</Button>
-        </Link>
-        <Link href={`/app/condominiums/${id}/bank`}>
-          <Button variant="ghost" size="sm">🏦 Banque</Button>
-        </Link>
-        <Link href={`/app/condominiums/${id}/documents`}>
-          <Button variant="ghost" size="sm">📁 Documents</Button>
-        </Link>
-      </div>
+          {/* Owners in Arrears */}
+          <Card className="p-0">
+            <CardContent className="p-6">
+              <div className="flex items-start">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-destructive/10">
+                  <Users className="h-6 w-6 text-destructive" />
+                </div>
+              </div>
+              <div className="mt-5">
+                <p className="text-[13px] font-medium text-muted-foreground">Propriétaires en retard</p>
+                <p className="mt-1 text-3xl font-semibold tracking-tight text-foreground">
+                  {condo.ownersInArrears}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Alerts */}
-        <Card>
-          <CardHeader>
-            <CardTitle>⚠️ Alertes</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between rounded-lg border border-destructive/50 bg-destructive/10 p-3">
-              <span className="text-sm">3 impayés en retard (&gt;30 jours)</span>
-              <Link href={`/app/condominiums/${id}/payments?filter=overdue`}>
-                <Button variant="ghost" size="sm">Voir →</Button>
-              </Link>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-3">
-              <span className="text-sm">2 mandats SEPA en attente de signature</span>
-              <Link href={`/app/condominiums/${id}/sepa`}>
-                <Button variant="ghost" size="sm">Voir →</Button>
-              </Link>
+          {/* Monthly Income */}
+          <Card className="p-0">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                  <TrendingUp className="h-6 w-6 text-primary" />
+                </div>
+                <TrendBadge value={condo.incomeTrend} />
+              </div>
+              <div className="mt-5">
+                <p className="text-[13px] font-medium text-muted-foreground">Revenus mensuels</p>
+                <p className="mt-1 text-3xl font-semibold tracking-tight text-foreground">
+                  {condo.monthlyIncome.toLocaleString("fr-FR")} €
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <Card className="p-0">
+          <CardContent className="p-6">
+            <h3 className="text-[15px] font-semibold text-foreground">Actions rapides</h3>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {quickActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <Link
+                    key={action.title}
+                    href={`/app/condominiums/${id}/${action.href}`}
+                    className="flex items-center gap-4 rounded-xl p-4 transition-colors hover:bg-muted/50"
+                  >
+                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${action.iconBg}`}>
+                      <Icon className={`h-5 w-5 ${action.iconColor}`} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[14px] font-medium text-foreground">{action.title}</p>
+                      <p className="mt-0.5 text-[13px] text-muted-foreground">{action.description}</p>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
 
-        {/* Recent Payments */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>💳 Derniers paiements</CardTitle>
-              <Link href={`/app/condominiums/${id}/payments`} className="text-sm text-primary hover:underline">
-                Voir tout →
-              </Link>
+        {/* Recent Activity */}
+        <Card className="p-0">
+          <CardContent className="p-6">
+            <h3 className="text-[15px] font-semibold text-foreground">Activité récente</h3>
+            <div className="mt-5 space-y-5">
+              {recentActivities.map((activity) => (
+                <div key={activity.id} className="flex items-start gap-4">
+                  <div className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${activity.color}`} />
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-medium text-foreground">{activity.title}</p>
+                    <p className="mt-0.5 text-[13px] text-muted-foreground">{activity.details}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Propriétaire</TableHead>
-                  <TableHead>Lot</TableHead>
-                  <TableHead className="text-right">Montant</TableHead>
-                  <TableHead>Statut</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentPayments.map((payment) => (
-                  <TableRow key={payment.id}>
-                    <TableCell className="font-medium">{payment.owner}</TableCell>
-                    <TableCell>{payment.lot}</TableCell>
-                    <TableCell className="text-right">{payment.amount} €</TableCell>
-                    <TableCell>
-                      <Badge variant={payment.status === "paid" ? "default" : "destructive"}>
-                        {payment.status === "paid" ? "Payé" : "Impayé"}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Link href={`/app/condominiums/${id}/lots/new`}>
-          <Card className="cursor-pointer transition-colors hover:bg-muted/50">
-            <CardContent className="flex items-center gap-3 pt-6">
-              <span className="text-2xl">🚪</span>
-              <span className="font-medium">Ajouter un lot</span>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href={`/app/condominiums/${id}/owners/new`}>
-          <Card className="cursor-pointer transition-colors hover:bg-muted/50">
-            <CardContent className="flex items-center gap-3 pt-6">
-              <span className="text-2xl">👥</span>
-              <span className="font-medium">Ajouter propriétaire</span>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href={`/app/condominiums/${id}/documents/upload`}>
-          <Card className="cursor-pointer transition-colors hover:bg-muted/50">
-            <CardContent className="flex items-center gap-3 pt-6">
-              <span className="text-2xl">📁</span>
-              <span className="font-medium">Ajouter document</span>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href={`/app/condominiums/${id}/call`}>
-          <Card className="cursor-pointer transition-colors hover:bg-muted/50">
-            <CardContent className="flex items-center gap-3 pt-6">
-              <span className="text-2xl">📨</span>
-              <span className="font-medium">Appel de fonds</span>
-            </CardContent>
-          </Card>
-        </Link>
       </div>
     </div>
   );
