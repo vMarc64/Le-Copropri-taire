@@ -27,21 +27,24 @@
 
 | Statut | Tâche | Priorité | Notes | Issue |
 |--------|-------|----------|-------|-------|
-| ⬜ | Page Login | 🔴 Haute | | [#9](https://github.com/vMarc64/Le-Copropri-taire/issues/9) |
-| ⬜ | Page Register (Property Manager) | 🔴 Haute | | [#10](https://github.com/vMarc64/Le-Copropri-taire/issues/10) |
-| ⬜ | Système RBAC (rôles) | 🔴 Haute | platform_admin, manager, owner, tenant | [#11](https://github.com/vMarc64/Le-Copropri-taire/issues/11) |
-| ⬜ | Middleware multi-tenant | 🔴 Haute | Isolation par tenant_id | [#12](https://github.com/vMarc64/Le-Copropri-taire/issues/12) |
-| ⬜ | Guards par zone (/platform, /app, /portal, /tenant) | 🔴 Haute | | [#13](https://github.com/vMarc64/Le-Copropri-taire/issues/13) |
+| ✅ | Page Login | 🔴 Haute | Formulaire fonctionnel | [#9](https://github.com/vMarc64/Le-Copropri-taire/issues/9) |
+| ✅ | Page Register (Property Manager) | 🔴 Haute | Crée tenant + user en DB | [#10](https://github.com/vMarc64/Le-Copropri-taire/issues/10) |
+| ✅ | Système RBAC (rôles) | 🔴 Haute | platform_admin, manager, owner, resident | [#11](https://github.com/vMarc64/Le-Copropri-taire/issues/11) |
+| ✅ | Middleware multi-tenant | 🔴 Haute | Isolation par tenant_id (PR #82) | [#12](https://github.com/vMarc64/Le-Copropri-taire/issues/12) |
+| ✅ | Guards par zone (/platform, /app, /portal, /resident) | 🔴 Haute | ZoneGuard implémenté | [#13](https://github.com/vMarc64/Le-Copropri-taire/issues/13) |
 
 ---
 
-## Phase 3 : Platform Admin
+## Phase 3 : Platform Admin (Gestion des Syndics)
 
 | Statut | Tâche | Priorité | Notes | Issue |
 |--------|-------|----------|-------|-------|
-| ⬜ | Dashboard Platform Admin | 🟡 Moyenne | KPIs globaux | [#14](https://github.com/vMarc64/Le-Copropri-taire/issues/14) |
-| ⬜ | Liste des Property Managers | 🟡 Moyenne | | [#15](https://github.com/vMarc64/Le-Copropri-taire/issues/15) |
-| ⬜ | Création / édition Property Manager | 🟡 Moyenne | | [#16](https://github.com/vMarc64/Le-Copropri-taire/issues/16) |
+| ⬜ | Dashboard Platform Admin | 🟡 Moyenne | KPIs globaux (nb syndics, users, copros) | [#14](https://github.com/vMarc64/Le-Copropri-taire/issues/14) |
+| ⬜ | API CRUD Syndics | 🔴 Haute | GET/POST/PATCH/DELETE /platform/syndics | [#83](https://github.com/vMarc64/Le-Copropri-taire/issues/83) |
+| ⬜ | API Gestion Managers | 🔴 Haute | CRUD managers d'un syndic | [#84](https://github.com/vMarc64/Le-Copropri-taire/issues/84) |
+| ⬜ | Liste des Syndics (Frontend) | 🔴 Haute | /platform/syndics | [#15](https://github.com/vMarc64/Le-Copropri-taire/issues/15) |
+| ⬜ | Création / édition Syndic | 🔴 Haute | Modal ou page dédiée | [#16](https://github.com/vMarc64/Le-Copropri-taire/issues/16) |
+| ⬜ | Gestion Managers d'un Syndic | 🔴 Haute | /platform/syndics/[id]/managers | [#85](https://github.com/vMarc64/Le-Copropri-taire/issues/85) |
 
 ---
 
@@ -77,11 +80,11 @@
 
 ---
 
-## Phase 6 : Portail Locataire
+## Phase 6 : Portail Résident (Locataire)
 
 | Statut | Tâche | Priorité | Notes | Issue |
 |--------|-------|----------|-------|-------|
-| ⬜ | Dashboard locataire | 🟢 Basse | Vue simplifiée | [#35](https://github.com/vMarc64/Le-Copropri-taire/issues/35) |
+| ⬜ | Dashboard résident | 🟢 Basse | Vue simplifiée | [#35](https://github.com/vMarc64/Le-Copropri-taire/issues/35) |
 | ⬜ | Consommations | 🟢 Basse | | [#36](https://github.com/vMarc64/Le-Copropri-taire/issues/36) |
 
 ---

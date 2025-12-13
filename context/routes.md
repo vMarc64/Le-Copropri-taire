@@ -1,30 +1,35 @@
 ## 1. Public & Authentication
 - /login
+- /register                           # Self-registration for new Syndic (creates org + admin manager)
 - /forgot-password
 - /reset-password
-- /invite/[token]                     # accept invitation (manager/owner/tenant)
+- /invite/[token]                     # Accept invitation (manager/owner/resident)
 
 ---
 
 ## 2. Platform Admin Routes (/platform)
-> Scope: ONLY create & manage Property Managers (tenants)
+> Scope: Manage Syndics (property management organizations) and their managers
+> Access: role = 'platform_admin'
 
-### 2.1 Authentication
-- /platform/login
+### 2.1 Dashboard
+- /platform                           # Dashboard with KPIs (total syndics, managers, condos)
 
-### 2.2 Dashboard
-- /platform/dashboard                 # list + KPIs (basic)
+### 2.2 Syndics (Organizations)
+- /platform/syndics                   # List all Syndics
+- /platform/syndics/new               # Create a new Syndic
+- /platform/syndics/[syndicId]        # Syndic details (status, contact, settings)
+- /platform/syndics/[syndicId]/edit   # Edit Syndic info
 
-### 2.3 Property Managers (Tenants)
-- /platform/property-managers
-- /platform/property-managers/new
-- /platform/property-managers/[pmId]                 # details (status, contact, settings)
-- /platform/property-managers/[pmId]/users           # tenant admins/collaborators management
-- /platform/property-managers/[pmId]/invitations     # pending invites (optional)
+### 2.3 Syndic Managers
+- /platform/syndics/[syndicId]/managers           # List managers of this Syndic
+- /platform/syndics/[syndicId]/managers/new       # Invite a new manager
+- /platform/syndics/[syndicId]/managers/[userId]  # Manager details
 
 ---
 
-## 3. Property Manager Routes (/app)
+## 3. Manager Routes (/app)
+> Scope: Manage condominiums for a Syndic
+> Access: role = 'manager' or 'admin' (within their tenant/syndic)
 
 ### 3.1 Dashboard
 - /app/dashboard
@@ -78,11 +83,10 @@
 ---
 
 ## 4. Owner (Copropriétaire) Routes (/portal)
-- /portal/login
-- /portal/forgot-password
-- /portal/reset-password
-- /portal
-- /portal/coproprietes/[coproId]
+> Access: role = 'owner'
+
+- /portal                             # Dashboard (list condos, balances)
+- /portal/coproprietes/[coproId]      # Condo details
 - /portal/coproprietes/[coproId]/payments
 - /portal/coproprietes/[coproId]/mandate
 - /portal/coproprietes/[coproId]/documents
@@ -90,10 +94,45 @@
 
 ---
 
-## 5. Tenant (Locataire) Routes (/tenant)
-- /tenant/login
-- /tenant/forgot-password
-- /tenant/reset-password
-- /tenant
-- /tenant/coproprietes/[coproId]/consommations
-- /tenant/profile
+## 5. Resident (Locataire) Routes (/resident)
+> Access: role = 'resident'
+
+- /resident                           # Dashboard
+- /resident/coproprietes/[coproId]/consommations
+- /resident/profile
+
+---
+
+## API Routes (Backend NestJS)
+
+### Auth
+- POST /auth/login
+- POST /auth/register
+- POST /auth/forgot-password
+- POST /auth/reset-password
+- POST /auth/invite/accept
+
+### Platform Admin API (/platform/*)
+- GET    /platform/stats              # KPIs
+- GET    /platform/syndics            # List syndics
+- POST   /platform/syndics            # Create syndic
+- GET    /platform/syndics/:id        # Get syndic
+- PATCH  /platform/syndics/:id        # Update syndic
+- DELETE /platform/syndics/:id        # Soft delete syndic
+- GET    /platform/syndics/:id/managers      # List managers
+- POST   /platform/syndics/:id/managers      # Invite manager
+- DELETE /platform/syndics/:id/managers/:uid # Revoke manager
+
+### Manager API (tenant-scoped)
+- GET    /condominiums
+- POST   /condominiums
+- GET    /condominiums/:id
+- PATCH  /condominiums/:id
+- DELETE /condominiums/:id
+- GET    /owners
+- POST   /owners
+- GET    /documents
+- POST   /documents
+- GET    /bank/accounts
+- GET    /bank/transactions
+- GET    /dashboard/stats
