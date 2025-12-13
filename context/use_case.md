@@ -1,30 +1,47 @@
-## 1. Roles
-- Platform Admin (internal)
-- Property Manager (Gestionnaire / Syndic)
-- Owner (Copropriétaire)
-- Tenant (Locataire)
+## 1. Roles & Hierarchy
+
+### 1.1 Platform Level
+- **Platform Admin** (internal) – Manages the SaaS platform
+
+### 1.2 Organization Level (Syndic / Cabinet de Gestion)
+- **Syndic** (Organization/Tenant in multi-tenant) – A property management company
+- **Manager** (Gestionnaire) – Employee of a Syndic who manages condominiums
+
+### 1.3 Condominium Level
+- **Owner** (Copropriétaire) – Owns one or more lots
+- **Resident** (Locataire) – Rents a lot from an owner
+
+### Hierarchy Diagram
+```
+Platform Admin (you)
+    └── creates Syndics (organizations)
+            └── each Syndic has Managers (employees)
+                    └── Managers handle: Condominiums, Owners, Residents
+```
 
 ---
 
 ## 2. Platform Admin – Use Cases
-> Scope: ONLY create & manage Property Managers (tenants)
+> Scope: Manage Syndics (property management companies) and their admin users
 
-### 2.1 Property Manager (Tenant) Management
-- Create a Property Manager (tenant)
-- Edit Property Manager information (name, contact, status)
-- Activate / suspend a Property Manager
-- View Property Manager overview (counts: users / condos) (optional)
+### 2.1 Syndic Management
+- Create a Syndic (organization)
+- Edit Syndic information (company name, SIRET, contact email, status)
+- Activate / suspend a Syndic
+- View Syndic overview (counts: managers, condominiums)
+- Delete a Syndic (soft delete)
 
-### 2.2 Tenant User Management
-- Create / invite the first tenant admin user
-- Invite additional collaborator users (MANAGER)
-- Revoke access (disable user)
-- Resend invitation
-- Reset a user access (force password reset / revoke sessions) (optional)
+### 2.2 Syndic User Management
+- Create / invite the first admin Manager for a Syndic
+- View list of Managers per Syndic
+- Revoke Manager access (disable user)
+- Resend invitation email
+- Force password reset (optional)
 
 ---
 
-## 3. Property Manager – Use Cases
+## 3. Manager (Gestionnaire) – Use Cases
+> Employee of a Syndic, manages condominiums
 
 ### 3.1 Condominium Management
 - Create a condominium
@@ -136,7 +153,7 @@
 
 ---
 
-## 5. Tenant – Use Cases
+## 5. Resident (Locataire) – Use Cases
 
 ### 5.1 Consumption
 - View personal consumption history
