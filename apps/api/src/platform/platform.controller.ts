@@ -12,7 +12,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { PlatformService } from './platform.service';
-import { CreateSyndicDto, UpdateSyndicDto } from './dto';
+import { CreateSyndicDto, UpdateSyndicDto, CreateManagerDto } from './dto';
 import { Zone } from '../guards/zones';
 import { ZoneAccess } from '../guards/zone.decorator';
 import { SkipTenantCheck } from '../tenant/skip-tenant-check.decorator';
@@ -93,5 +93,40 @@ export class PlatformController {
   @Delete('syndics/:id')
   async deleteSyndic(@Param('id', ParseUUIDPipe) id: string) {
     return this.platformService.deleteSyndic(id);
+  }
+
+  // ==========================================================================
+  // MANAGERS ENDPOINTS
+  // ==========================================================================
+
+  /**
+   * List all managers of a syndic
+   */
+  @Get('syndics/:syndicId/managers')
+  async listManagers(@Param('syndicId', ParseUUIDPipe) syndicId: string) {
+    return this.platformService.findManagersBySyndic(syndicId);
+  }
+
+  /**
+   * Create (invite) a manager for a syndic
+   */
+  @Post('syndics/:syndicId/managers')
+  @HttpCode(HttpStatus.CREATED)
+  async createManager(
+    @Param('syndicId', ParseUUIDPipe) syndicId: string,
+    @Body() dto: CreateManagerDto,
+  ) {
+    return this.platformService.createManager(syndicId, dto);
+  }
+
+  /**
+   * Revoke a manager from a syndic
+   */
+  @Delete('syndics/:syndicId/managers/:managerId')
+  async deleteManager(
+    @Param('syndicId', ParseUUIDPipe) syndicId: string,
+    @Param('managerId', ParseUUIDPipe) managerId: string,
+  ) {
+    return this.platformService.deleteManager(syndicId, managerId);
   }
 }
