@@ -142,8 +142,12 @@
 - GET    /condominiums/:id
 - PATCH  /condominiums/:id
 - DELETE /condominiums/:id
-- GET    /owners
-- POST   /owners
+- GET    /owners                       # List owners for tenant
+- POST   /owners                       # Create owner (status = invited)
+- GET    /owners/:id
+- GET    /owners/search?q=             # Search orphan owners (no tenant)
+- POST   /owners/:id/associate         # Associate orphan owner to tenant
+- POST   /owners/:id/resend-invite     # Resend invitation email (future: via N8N)
 - GET    /documents
 - POST   /documents
 - GET    /bank/accounts

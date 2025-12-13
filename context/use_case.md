@@ -21,6 +21,33 @@ Platform Admin (you)
 
 ---
 
+## 1.3 User Status Flow
+
+### Manager Status
+| Status | Description | Access |
+|--------|-------------|--------|
+| `pending` | Registered, waiting for syndic association | ❌ No access to /app |
+| `active` | Associated to a syndic, account validated | ✅ Full access |
+| `suspended` | Account disabled by admin | ❌ No access |
+
+### Owner Status
+| Status | Description | Access |
+|--------|-------------|--------|
+| `invited` | Invited by syndic, waiting for account creation | ❌ No access |
+| `pending` | Self-registered, waiting for syndic association | ❌ No access |
+| `active` | Account validated and associated | ✅ Full portal access |
+| `managed` | Account managed by syndic (no self-access) | ❌ No portal access |
+| `suspended` | Account disabled | ❌ No access |
+
+### Invitation Flow (Owner)
+1. Manager enters: firstName, lastName, email (+ optional: condominiums, lots)
+2. Owner record created with status = `invited`
+3. Email sent via N8N (Part 8 - Automation)
+4. Owner clicks link → creates password
+5. Status changes to `active`
+
+---
+
 ## 2. Platform Admin – Use Cases
 > Scope: Manage Syndics (property management companies) and their admin users
 
@@ -38,6 +65,11 @@ Platform Admin (you)
 - Resend invitation email
 - Force password reset (optional)
 
+### 2.3 Pending Users Management
+- View list of pending users (registered but not associated to any syndic)
+- Associate a pending user to a syndic
+- View user details before association
+
 ---
 
 ## 3. Manager (Gestionnaire) – Use Cases
@@ -51,11 +83,14 @@ Platform Admin (you)
 - Manage lots (create/update, assign owners/tenants)
 
 ### 3.2 People Management
-- Invite a property owner (email invitation)
+- Search for existing orphan owners (not yet associated to any syndic)
+- Associate an orphan owner to the syndic
+- Invite a new owner (sends email invitation, status = invited)
+- Create a managed account for owners who cannot self-register (future: status = managed)
 - Add / remove an owner from a condominium
 - Add / remove a tenant from a condominium
 - Assign lots to owners and tenants
-- View owners list for a condominium
+- View owners list for a condominium (with status badges: active, invited, pending)
 
 ### 3.3 Dues & Payment Plans
 - Define monthly advance payments (acompte)

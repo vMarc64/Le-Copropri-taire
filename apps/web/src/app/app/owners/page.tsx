@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -14,6 +15,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import {
   Users,
   Search,
@@ -31,6 +46,7 @@ import {
   Eye,
   Send,
   Receipt,
+  UserPlus,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -97,23 +113,99 @@ export default function OwnersPage() {
   const [owners, setOwners] = useState<Owner[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTab, setModalTab] = useState<"search" | "invite">("search");
+  const [orphanSearchQuery, setOrphanSearchQuery] = useState("");
+  const [orphanResults, setOrphanResults] = useState<any[]>([]);
+  const [isSearchingOrphans, setIsSearchingOrphans] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newOwnerForm, setNewOwnerForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+  });
+
+  const fetchOwners = async () => {
+    try {
+      setLoading(true);
+      const data = await getOwners();
+      setOwners(data);
+      setError(null);
+    } catch (err) {
+      setError("Erreur lors du chargement des propriétaires");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const data = await getOwners();
-        setOwners(data);
-        setError(null);
-      } catch (err) {
-        setError("Erreur lors du chargement des propriétaires");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
+    fetchOwners();
   }, []);
+
+  const handleSearchOrphans = async () => {
+    if (!orphanSearchQuery.trim() || orphanSearchQuery.trim().length < 2) return;
+    
+    setIsSearchingOrphans(true);
+    setHasSearched(true);
+    try {
+      const response = await fetch(`/api/owners/search?q=${encodeURIComponent(orphanSearchQuery)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setOrphanResults(data);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la recherche:", error);
+    } finally {
+      setIsSearchingOrphans(false);
+    }
+  };
+
+  const handleAssociate = async (ownerId: string) => {
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/owners/${ownerId}/associate`, {
+        method: "POST",
+      });
+      
+      if (response.ok) {
+        setIsModalOpen(false);
+        setOrphanSearchQuery("");
+        setOrphanResults([]);
+        fetchOwners();
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'association:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCreateOwner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch("/api/owners", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newOwnerForm),
+      });
+      
+      if (response.ok) {
+        setIsModalOpen(false);
+        setNewOwnerForm({ firstName: "", lastName: "", email: "" });
+        fetchOwners();
+      }
+    } catch (error) {
+      console.error("Erreur lors de la création:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const filteredOwners = owners.filter((owner) => {
     const fullName = `${owner.firstName} ${owner.lastName}`.toLowerCase();
@@ -160,12 +252,185 @@ export default function OwnersPage() {
             Gérez les {owners.length} propriétaire{owners.length > 1 ? "s" : ""} de votre portefeuille
           </p>
         </div>
-        <Button asChild>
-          <Link href="/app/owners/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Nouveau propriétaire
-          </Link>
-        </Button>
+        <Dialog 
+          open={isModalOpen} 
+          onOpenChange={(open) => {
+            setIsModalOpen(open);
+            if (!open) {
+              // Reset modal state on close
+              setOrphanSearchQuery("");
+              setOrphanResults([]);
+              setHasSearched(false);
+              setModalTab("search");
+              setNewOwnerForm({ firstName: "", lastName: "", email: "" });
+            }
+          }}
+        >
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Nouveau propriétaire
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Ajouter un propriétaire</DialogTitle>
+              <DialogDescription>
+                Recherchez un propriétaire existant ou invitez-en un nouveau
+              </DialogDescription>
+            </DialogHeader>
+            
+            <Tabs value={modalTab} onValueChange={(v) => setModalTab(v as "search" | "invite")} className="mt-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="search" className="gap-2">
+                  <Search className="h-4 w-4" />
+                  Rechercher
+                </TabsTrigger>
+                <TabsTrigger value="invite" className="gap-2">
+                  <Mail className="h-4 w-4" />
+                  Inviter
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="search" className="space-y-4 mt-4">
+                <p className="text-sm text-muted-foreground">
+                  Recherchez parmi les propriétaires qui ne sont pas encore associés à un syndic.
+                </p>
+                
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Nom, prénom ou email..."
+                    value={orphanSearchQuery}
+                    onChange={(e) => setOrphanSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSearchOrphans()}
+                  />
+                  <Button 
+                    onClick={handleSearchOrphans} 
+                    disabled={isSearchingOrphans || orphanSearchQuery.length < 2}
+                    size="icon"
+                  >
+                    {isSearchingOrphans ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Search className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+
+                {orphanResults.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">{orphanResults.length} résultat(s)</p>
+                    <div className="max-h-[200px] overflow-y-auto divide-y rounded-lg border">
+                      {orphanResults.map((owner) => (
+                        <div
+                          key={owner.id}
+                          className="flex items-center justify-between p-3 hover:bg-muted/50"
+                        >
+                          <div>
+                            <p className="font-medium">
+                              {owner.firstName} {owner.lastName}
+                            </p>
+                            <p className="text-sm text-muted-foreground">{owner.email}</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => handleAssociate(owner.id)}
+                            disabled={isSubmitting}
+                          >
+                            {isSubmitting ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              "Associer"
+                            )}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {hasSearched && !isSearchingOrphans && orphanResults.length === 0 && (
+                  <div className="text-center py-6 text-sm text-muted-foreground">
+                    <UserX className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    Aucun propriétaire orphelin trouvé.
+                    <br />
+                    <Button 
+                      variant="link" 
+                      className="mt-1 p-0 h-auto"
+                      onClick={() => setModalTab("invite")}
+                    >
+                      Inviter un nouveau propriétaire
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="invite" className="mt-4">
+                <div className="mb-4 rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
+                  <Mail className="inline h-4 w-4 mr-1.5" />
+                  Une invitation sera envoyée par email pour créer son compte.
+                </div>
+                <form onSubmit={handleCreateOwner} className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">Prénom</Label>
+                      <Input
+                        id="firstName"
+                        value={newOwnerForm.firstName}
+                        onChange={(e) => setNewOwnerForm({ ...newOwnerForm, firstName: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Nom</Label>
+                      <Input
+                        id="lastName"
+                        value={newOwnerForm.lastName}
+                        onChange={(e) => setNewOwnerForm({ ...newOwnerForm, lastName: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={newOwnerForm.email}
+                      onChange={(e) => setNewOwnerForm({ ...newOwnerForm, email: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => setIsModalOpen(false)}
+                    >
+                      Annuler
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting} className="flex-1">
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Envoi...
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="mr-2 h-4 w-4" />
+                          Envoyer l'invitation
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </TabsContent>
+            </Tabs>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Stats Cards */}

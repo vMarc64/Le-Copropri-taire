@@ -36,24 +36,27 @@
 | ✅ | API Gestion Managers | 🔴 Haute | CRUD managers d'un syndic (PR #89) | [#84](https://github.com/vMarc64/Le-Copropri-taire/issues/84) |
 | ✅ | BFF Routes Platform | 🔴 Haute | /api/platform/* pour sécuriser les appels | - |
 | ⬜ | Page détail Syndic | 🟡 Moyenne | /platform/tenants/[id] | [#85](https://github.com/vMarc64/Le-Copropri-taire/issues/85) |
-| ⬜ | Association users pending → syndic | 🔴 Haute | /platform/users | - |
+| ✅ | Page users pending + association | 🔴 Haute | /platform/users | - |
 
 ---
 
-## ��� Manager Backoffice
+## 🏢 Manager Backoffice
 
 | Statut | Tâche | Priorité | Notes | Issue |
 |--------|-------|----------|-------|-------|
-| ⬜ | Layout (Sidebar + Header) | ��� Haute | Composants réutilisables | [#17](https://github.com/vMarc64/Le-Copropri-taire/issues/17) |
-| ⬜ | Dashboard Manager | ��� Haute | KPIs, impayés | [#18](https://github.com/vMarc64/Le-Copropri-taire/issues/18) |
-| ⬜ | Liste des copropriétés | ��� Haute | | [#19](https://github.com/vMarc64/Le-Copropri-taire/issues/19) |
-| ⬜ | Création copropriété (modal) | ��� Haute | | [#20](https://github.com/vMarc64/Le-Copropri-taire/issues/20) |
-| ⬜ | Dashboard copropriété | ��� Haute | | [#21](https://github.com/vMarc64/Le-Copropri-taire/issues/21) |
-| ⬜ | Liste des propriétaires (modal/panel) | ��� Haute | | [#22](https://github.com/vMarc64/Le-Copropri-taire/issues/22) |
-| ⬜ | Profil propriétaire | ��� Haute | Tabs: overview, payments, documents, consumption | [#23](https://github.com/vMarc64/Le-Copropri-taire/issues/23) |
-| ⬜ | Gestion des lots | ��� Moyenne | | [#24](https://github.com/vMarc64/Le-Copropri-taire/issues/24) |
-| ⬜ | Transactions bancaires (modal) | �� Moyenne | Vue open banking | [#25](https://github.com/vMarc64/Le-Copropri-taire/issues/25) |
-| ⬜ | Rapprochement bancaire | ��� Moyenne | Matching transactions ↔ paiements | [#26](https://github.com/vMarc64/Le-Copropri-taire/issues/26) |
+| ✅ | Layout (Sidebar + Header) | 🔴 Haute | Composants réutilisables | [#17](https://github.com/vMarc64/Le-Copropri-taire/issues/17) |
+| ⬜ | Dashboard Manager | 🔴 Haute | KPIs, impayés | [#18](https://github.com/vMarc64/Le-Copropri-taire/issues/18) |
+| ✅ | Liste des copropriétés | 🔴 Haute | Redesign avec shadcn Data Table | [#19](https://github.com/vMarc64/Le-Copropri-taire/issues/19) |
+| ⬜ | Création copropriété (modal) | 🔴 Haute | | [#20](https://github.com/vMarc64/Le-Copropri-taire/issues/20) |
+| ✅ | Page détail copropriété | 🔴 Haute | Cards redesignées | [#21](https://github.com/vMarc64/Le-Copropri-taire/issues/21) |
+| ✅ | Liste des propriétaires | 🔴 Haute | Redesign + modal recherche/invitation | [#22](https://github.com/vMarc64/Le-Copropri-taire/issues/22) |
+| ✅ | API recherche propriétaires orphelins | 🔴 Haute | GET /owners/search?q= | [#95](https://github.com/vMarc64/Le-Copropri-taire/issues/95) |
+| ✅ | API association propriétaire au syndic | 🔴 Haute | POST /owners/:id/associate | [#96](https://github.com/vMarc64/Le-Copropri-taire/issues/96) |
+| ⬜ | Système invitation propriétaire | 🔴 Haute | statut "invited", email via N8N (Partie 8) | - |
+| ⬜ | Profil propriétaire | 🔴 Haute | Tabs: overview, payments, documents, consumption | [#23](https://github.com/vMarc64/Le-Copropri-taire/issues/23) |
+| ⬜ | Gestion des lots | 🟡 Moyenne | | [#24](https://github.com/vMarc64/Le-Copropri-taire/issues/24) |
+| ⬜ | Transactions bancaires (modal) | 🟡 Moyenne | Vue open banking | [#25](https://github.com/vMarc64/Le-Copropri-taire/issues/25) |
+| ⬜ | Rapprochement bancaire | 🟡 Moyenne | Matching transactions ↔ paiements | [#26](https://github.com/vMarc64/Le-Copropri-taire/issues/26) |
 | ⬜ | Gestion documents | 🟢 Basse | Upload, catégories | [#27](https://github.com/vMarc64/Le-Copropri-taire/issues/27) |
 | ⬜ | Paramètres copropriété | 🟢 Basse | | [#28](https://github.com/vMarc64/Le-Copropri-taire/issues/28) |
 
