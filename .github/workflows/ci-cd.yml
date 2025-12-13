@@ -139,6 +139,19 @@ jobs:
     environment: uat
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Copy files to VPS
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.UAT_HOST }}
+          username: ${{ secrets.UAT_USERNAME }}
+          key: ${{ secrets.UAT_SSH_KEY }}
+          source: "docker-compose.yml,nginx/,.env.uat,scripts/"
+          target: "/opt/lecopro"
+          overwrite: true
+
       - name: Deploy to UAT VPS
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -147,6 +160,15 @@ jobs:
           key: ${{ secrets.UAT_SSH_KEY }}
           script: |
             cd /opt/lecopro
+            
+            # Setup .env if not exists
+            if [ ! -f .env ]; then
+              cp .env.uat .env
+              echo "⚠️  Created .env from .env.uat - please configure it!"
+            fi
+            
+            # Login to GitHub Container Registry
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
             # Pull latest images
             docker compose pull
