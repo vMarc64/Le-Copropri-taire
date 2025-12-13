@@ -6,34 +6,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
-
-interface Stats {
-  totalTenants: number;
-  activeTenants: number;
-  suspendedTenants: number;
-  totalUsers: number;
-  totalCondominiums: number;
-  monthlyRevenue: number;
-}
-
-interface Tenant {
-  id: string;
-  name: string;
-  email: string;
-  status: string;
-  createdAt: string;
-}
+import { getPlatformStats, getSyndics, type PlatformStats, type Syndic } from "@/lib/api";
 
 export default function PlatformAdminDashboard() {
-  const [stats, setStats] = useState<Stats>({
-    totalTenants: 0,
-    activeTenants: 0,
-    suspendedTenants: 0,
-    totalUsers: 0,
-    totalCondominiums: 0,
-    monthlyRevenue: 0,
+  const [stats, setStats] = useState<PlatformStats>({
+    syndics: 0,
+    users: 0,
+    condominiums: 0,
+    owners: 0,
   });
-  const [recentTenants, setRecentTenants] = useState<Tenant[]>([]);
+  const [recentTenants, setRecentTenants] = useState<Syndic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,16 +23,12 @@ export default function PlatformAdminDashboard() {
     async function fetchData() {
       try {
         setLoading(true);
-        // TODO: Fetch from API
-        setStats({
-          totalTenants: 0,
-          activeTenants: 0,
-          suspendedTenants: 0,
-          totalUsers: 0,
-          totalCondominiums: 0,
-          monthlyRevenue: 0,
-        });
-        setRecentTenants([]);
+        const [statsData, syndicsData] = await Promise.all([
+          getPlatformStats(),
+          getSyndics({ limit: 5 }),
+        ]);
+        setStats(statsData);
+        setRecentTenants(syndicsData.data);
         setError(null);
       } catch (err) {
         setError("Erreur lors du chargement des données");
@@ -108,9 +86,9 @@ export default function PlatformAdminDashboard() {
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalTenants}</div>
+            <div className="text-2xl font-bold">{stats.syndics}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.activeTenants} actifs, {stats.suspendedTenants} suspendus
+              Syndics sur la plateforme
             </p>
           </CardContent>
         </Card>
@@ -135,7 +113,7 @@ export default function PlatformAdminDashboard() {
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{stats.users.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
               Tous les utilisateurs de la plateforme
             </p>
@@ -160,7 +138,7 @@ export default function PlatformAdminDashboard() {
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCondominiums}</div>
+            <div className="text-2xl font-bold">{stats.condominiums}</div>
             <p className="text-xs text-muted-foreground">
               Immeubles gérés sur la plateforme
             </p>
@@ -169,7 +147,7 @@ export default function PlatformAdminDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenus mensuels</CardTitle>
+            <CardTitle className="text-sm font-medium">Copropriétaires</CardTitle>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -180,14 +158,14 @@ export default function PlatformAdminDashboard() {
               strokeLinejoin="round"
               className="h-4 w-4 text-muted-foreground"
             >
-              <line x1="12" y1="1" x2="12" y2="23" />
-              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.monthlyRevenue.toLocaleString()} €</div>
+            <div className="text-2xl font-bold">{stats.owners.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
-              +12% par rapport au mois dernier
+              Propriétaires inscrits
             </p>
           </CardContent>
         </Card>

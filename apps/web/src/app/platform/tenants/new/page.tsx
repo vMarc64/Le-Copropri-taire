@@ -10,20 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { createSyndic } from "@/lib/api";
 
 const tenantSchema = z.object({
   name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
   email: z.string().email("Email invalide"),
-  siret: z.string().length(14, "Le SIRET doit contenir 14 chiffres").regex(/^\d+$/, "Le SIRET ne doit contenir que des chiffres"),
+  siret: z.string().optional().refine(val => !val || (val.length === 14 && /^\d+$/.test(val)), "Le SIRET doit contenir 14 chiffres"),
   phone: z.string().optional(),
   address: z.string().optional(),
-  city: z.string().optional(),
-  postalCode: z.string().optional(),
-  // Admin user info
-  adminFirstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
-  adminLastName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
-  adminEmail: z.string().email("Email invalide"),
-  adminPassword: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
 });
 
 type TenantFormData = z.infer<typeof tenantSchema>;
@@ -46,18 +40,13 @@ export default function NewTenantPage() {
     setError(null);
 
     try {
-      // TODO: Replace with actual API call
-      const response = await fetch("/api/admin/tenants", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+      await createSyndic({
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        siret: data.siret,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erreur lors de la création");
-      }
-
       router.push("/platform/tenants");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Une erreur est survenue");
@@ -165,98 +154,15 @@ export default function NewTenantPage() {
                 disabled={isLoading}
               />
             </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="city">Ville</Label>
-                <Input
-                  id="city"
-                  placeholder="Paris"
-                  {...register("city")}
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="postalCode">Code postal</Label>
-                <Input
-                  id="postalCode"
-                  placeholder="75001"
-                  maxLength={5}
-                  {...register("postalCode")}
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
           </CardContent>
         </Card>
 
-        {/* Admin User */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Administrateur du compte</CardTitle>
-            <CardDescription>
-              Utilisateur principal qui gérera ce compte gestionnaire
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="adminFirstName">Prénom *</Label>
-                <Input
-                  id="adminFirstName"
-                  placeholder="Jean"
-                  {...register("adminFirstName")}
-                  disabled={isLoading}
-                />
-                {errors.adminFirstName && (
-                  <p className="text-sm text-destructive">{errors.adminFirstName.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="adminLastName">Nom *</Label>
-                <Input
-                  id="adminLastName"
-                  placeholder="Dupont"
-                  {...register("adminLastName")}
-                  disabled={isLoading}
-                />
-                {errors.adminLastName && (
-                  <p className="text-sm text-destructive">{errors.adminLastName.message}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="adminEmail">Email *</Label>
-                <Input
-                  id="adminEmail"
-                  type="email"
-                  placeholder="jean.dupont@syndic.fr"
-                  {...register("adminEmail")}
-                  disabled={isLoading}
-                />
-                {errors.adminEmail && (
-                  <p className="text-sm text-destructive">{errors.adminEmail.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="adminPassword">Mot de passe *</Label>
-                <Input
-                  id="adminPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  {...register("adminPassword")}
-                  disabled={isLoading}
-                />
-                {errors.adminPassword && (
-                  <p className="text-sm text-destructive">{errors.adminPassword.message}</p>
-                )}
-              </div>
-            </div>
+        {/* Info */}
+        <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
+          <CardContent className="pt-6">
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              💡 Après la création du gestionnaire, vous pourrez ajouter des managers depuis la page de détails.
+            </p>
           </CardContent>
         </Card>
 

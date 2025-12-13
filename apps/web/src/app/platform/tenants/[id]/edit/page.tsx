@@ -20,34 +20,15 @@ import {
 import Link from "next/link";
 import { use } from "react";
 import { Loader2 } from "lucide-react";
+import { getSyndic, updateSyndic, deleteSyndic, type SyndicDetail } from "@/lib/api";
 
 const editTenantSchema = z.object({
   name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
   email: z.string().email("Email invalide"),
-  siret: z.string().length(14, "Le SIRET doit contenir 14 chiffres").regex(/^\d+$/, "Le SIRET ne doit contenir que des chiffres"),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  city: z.string().optional(),
-  postalCode: z.string().optional(),
   status: z.enum(["active", "pending", "suspended"]),
 });
 
 type EditTenantFormData = z.infer<typeof editTenantSchema>;
-
-interface Tenant {
-  id: string;
-  name: string;
-  email: string;
-  siret: string;
-  phone: string;
-  address: string;
-  city: string;
-  postalCode: string;
-  status: "active" | "pending" | "suspended";
-  condominiums: number;
-  users: number;
-  createdAt: string;
-}
 
 export default function EditTenantPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -55,7 +36,7 @@ export default function EditTenantPage({ params }: { params: Promise<{ id: strin
   const [isLoading, setIsLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tenant, setTenant] = useState<Tenant | null>(null);
+  const [tenant, setTenant] = useState<SyndicDetail | null>(null);
 
   const {
     register,
@@ -74,8 +55,8 @@ export default function EditTenantPage({ params }: { params: Promise<{ id: strin
     async function fetchTenant() {
       try {
         setFetchLoading(true);
-        // TODO: Fetch tenant data from API
-        setTenant(null);
+        const data = await getSyndic(id);
+        setTenant(data);
         setError(null);
       } catch (err) {
         setError("Erreur lors du chargement du gestionnaire");
@@ -89,7 +70,11 @@ export default function EditTenantPage({ params }: { params: Promise<{ id: strin
 
   useEffect(() => {
     if (tenant) {
-      reset(tenant);
+      reset({
+        name: tenant.name,
+        email: tenant.email,
+        status: tenant.status as "active" | "pending" | "suspended",
+      });
     }
   }, [tenant, reset]);
 
@@ -98,21 +83,26 @@ export default function EditTenantPage({ params }: { params: Promise<{ id: strin
     setError(null);
 
     try {
-      // TODO: Replace with actual API call
-      const response = await fetch(`/api/admin/tenants/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erreur lors de la mise à jour");
-      }
-
+      await updateSyndic(id, data);
       router.push("/platform/tenants");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Une erreur est survenue");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer ce gestionnaire ? Cette action est irréversible.")) {
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      await deleteSyndic(id);
+      router.push("/platform/tenants");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur lors de la suppression");
     } finally {
       setIsLoading(false);
     }
@@ -151,7 +141,7 @@ export default function EditTenantPage({ params }: { params: Promise<{ id: strin
           <div>
             <h1 className="text-3xl font-bold">Modifier le Gestionnaire</h1>
             <p className="text-muted-foreground">
-              {tenant.name} • Créé le {tenant.createdAt}
+              {tenant.name} • Créé le {new Date(tenant.createdAt).toLocaleDateString("fr-FR")}
             </p>
           </div>
         </div>
@@ -168,20 +158,20 @@ export default function EditTenantPage({ params }: { params: Promise<{ id: strin
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{tenant.condominiums}</div>
+            <div className="text-2xl font-bold">{tenant.condominiumsCount ?? 0}</div>
             <p className="text-sm text-muted-foreground">Copropriétés gérées</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{tenant.users}</div>
-            <p className="text-sm text-muted-foreground">Utilisateurs</p>
+            <div className="text-2xl font-bold">{tenant.managersCount ?? 0}</div>
+            <p className="text-sm text-muted-foreground">Managers</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{tenant.createdAt}</div>
-            <p className="text-sm text-muted-foreground">Date de création</p>
+            <div className="text-2xl font-bold">{tenant.ownersCount ?? 0}</div>
+            <p className="text-sm text-muted-foreground">Copropriétaires</p>
           </CardContent>
         </Card>
       </div>
@@ -200,7 +190,7 @@ export default function EditTenantPage({ params }: { params: Promise<{ id: strin
           <CardHeader>
             <CardTitle>Informations de l&apos;entreprise</CardTitle>
             <CardDescription>
-              Informations légales du cabinet de gestion
+              Informations du cabinet de gestion
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -219,22 +209,6 @@ export default function EditTenantPage({ params }: { params: Promise<{ id: strin
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="siret">SIRET *</Label>
-                <Input
-                  id="siret"
-                  placeholder="12345678901234"
-                  maxLength={14}
-                  {...register("siret")}
-                  disabled={isLoading}
-                />
-                {errors.siret && (
-                  <p className="text-sm text-destructive">{errors.siret.message}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
                 <Label htmlFor="email">Email entreprise *</Label>
                 <Input
                   id="email"
@@ -246,49 +220,6 @@ export default function EditTenantPage({ params }: { params: Promise<{ id: strin
                 {errors.email && (
                   <p className="text-sm text-destructive">{errors.email.message}</p>
                 )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="phone">Téléphone</Label>
-                <Input
-                  id="phone"
-                  placeholder="01 23 45 67 89"
-                  {...register("phone")}
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="address">Adresse</Label>
-              <Input
-                id="address"
-                placeholder="123 rue de Paris"
-                {...register("address")}
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="city">Ville</Label>
-                <Input
-                  id="city"
-                  placeholder="Paris"
-                  {...register("city")}
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="postalCode">Code postal</Label>
-                <Input
-                  id="postalCode"
-                  placeholder="75001"
-                  maxLength={5}
-                  {...register("postalCode")}
-                  disabled={isLoading}
-                />
               </div>
             </div>
           </CardContent>
@@ -330,7 +261,7 @@ export default function EditTenantPage({ params }: { params: Promise<{ id: strin
 
         {/* Actions */}
         <div className="flex justify-between">
-          <Button type="button" variant="destructive" disabled={isLoading}>
+          <Button type="button" variant="destructive" disabled={isLoading} onClick={handleDelete}>
             🗑️ Supprimer le gestionnaire
           </Button>
           <div className="flex gap-4">
