@@ -469,4 +469,140 @@ export class PlatformService {
 
     return { message: `Manager ${managerId} has been revoked` };
   }
+
+  // ==========================================================================
+  // PENDING USERS MANAGEMENT
+  // ==========================================================================
+
+  /**
+   * Get all pending users (not associated with any syndic)
+   */
+  async findPendingUsers(options: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    role?: string;
+  } = {}) {
+    const {
+      page = 1,
+      limit = 20,
+      search,
+      role,
+    } = options;
+
+    const offset = (page - 1) * limit;
+
+    // Build where conditions
+    const conditions = [
+      eq(users.status, 'pending'),
+      sql`${users.tenantId} IS NULL`,
+    ];
+
+    if (search) {
+      conditions.push(
+        sql`(${users.firstName} ILIKE ${'%' + search + '%'} OR ${users.lastName} ILIKE ${'%' + search + '%'} OR ${users.email} ILIKE ${'%' + search + '%'})`
+      );
+    }
+
+    if (role) {
+      conditions.push(eq(users.role, role));
+    }
+
+    // Get total count
+    const [{ count: total }] = await db
+      .select({ count: count() })
+      .from(users)
+      .where(and(...conditions));
+
+    // Get users
+    const pendingUsers = await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        role: users.role,
+        status: users.status,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .where(and(...conditions))
+      .orderBy(desc(users.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return {
+      data: pendingUsers,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  /**
+   * Associate a pending user with a syndic
+   */
+  async associateUserToSyndic(userId: string, syndicId: string) {
+    // Check user exists and is pending
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    if (user.status !== 'pending') {
+      throw new BadRequestException(`User is not in pending status`);
+    }
+
+    if (user.tenantId) {
+      throw new BadRequestException(`User is already associated with a syndic`);
+    }
+
+    // Check syndic exists
+    const [syndic] = await db
+      .select()
+      .from(tenants)
+      .where(eq(tenants.id, syndicId))
+      .limit(1);
+
+    if (!syndic) {
+      throw new NotFoundException(`Syndic with ID ${syndicId} not found`);
+    }
+
+    // Associate user to syndic and activate
+    await db
+      .update(users)
+      .set({
+        tenantId: syndicId,
+        status: 'active',
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
+    this.logger.log(`Associated user ${userId} to syndic ${syndicId}`);
+
+    // Return updated user with syndic info
+    const [updatedUser] = await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        role: users.role,
+        status: users.status,
+        tenantId: users.tenantId,
+        syndicName: tenants.name,
+      })
+      .from(users)
+      .leftJoin(tenants, eq(users.tenantId, tenants.id))
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    return updatedUser;
+  }
 }

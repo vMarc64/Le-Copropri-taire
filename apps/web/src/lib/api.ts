@@ -273,3 +273,45 @@ export async function deleteManager(syndicId: string, managerId: string): Promis
   });
 }
 
+// =============================================================================
+// Pending Users API (Platform Admin)
+// =============================================================================
+
+export interface PendingUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface PendingUsersResponse {
+  data: PendingUser[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export async function getPendingUsers(options?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: string;
+}): Promise<PendingUsersResponse> {
+  const params = new URLSearchParams();
+  if (options?.page) params.append('page', options.page.toString());
+  if (options?.limit) params.append('limit', options.limit.toString());
+  if (options?.search) params.append('search', options.search);
+  if (options?.role) params.append('role', options.role);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return fetchApi<PendingUsersResponse>(`/platform/users/pending${query}`);
+}
+
+export async function associateUserToSyndic(userId: string, syndicId: string): Promise<PendingUser> {
+  return fetchApi<PendingUser>(`/platform/users/${userId}/associate/${syndicId}`, {
+    method: 'POST',
+  });
+}
+
