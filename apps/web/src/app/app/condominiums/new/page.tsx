@@ -23,8 +23,8 @@ const condominiumSchema = z.object({
   description: z.string().optional(),
   siret: z.string().optional(),
   // Settings
-  sepaEnabled: z.boolean().default(false),
-  cbEnabled: z.boolean().default(false),
+  sepaEnabled: z.boolean(),
+  cbEnabled: z.boolean(),
 });
 
 type CondominiumFormData = z.infer<typeof condominiumSchema>;

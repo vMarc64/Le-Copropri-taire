@@ -1,10 +1,28 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { db } from '../database/client';
 import { condominiums, lots, users, payments } from '../database/schema';
 import { eq, and, count, sum, sql } from 'drizzle-orm';
+import { CreateCondominiumDto } from './dto';
 
 @Injectable()
 export class CondominiumsService {
+  async create(tenantId: string, data: CreateCondominiumDto) {
+    const [newCondominium] = await db
+      .insert(condominiums)
+      .values({
+        tenantId,
+        name: data.name,
+        address: data.address,
+        city: data.city,
+        postalCode: data.postalCode,
+        siret: data.siret,
+        sepaEnabled: data.sepaEnabled ?? false,
+      })
+      .returning();
+
+    return newCondominium;
+  }
+
   async findAll(tenantId: string) {
     const results = await db
       .select({
