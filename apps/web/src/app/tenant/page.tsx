@@ -195,7 +195,7 @@ export default function TenantDashboardPage() {
                 <Droplets className="h-5 w-5 text-cyan-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{consumptions.water.current} {consumptions.water.unit}</p>
+                <p className="text-2xl font-bold">{consumptions?.water.current ?? '-'} {consumptions?.water.unit ?? ''}</p>
                 <p className="text-xs text-muted-foreground">
                   Eau ce mois 
                   <span className={waterVariation > 0 ? "text-red-500" : "text-green-500"}>
@@ -213,7 +213,7 @@ export default function TenantDashboardPage() {
                 <Flame className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{consumptions.heating.current} {consumptions.heating.unit}</p>
+                <p className="text-2xl font-bold">{consumptions?.heating.current ?? '-'} {consumptions?.heating.unit ?? ''}</p>
                 <p className="text-xs text-muted-foreground">
                   Chauffage ce mois
                   <span className={heatingVariation > 0 ? "text-red-500" : "text-green-500"}>
