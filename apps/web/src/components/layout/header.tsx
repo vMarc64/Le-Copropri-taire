@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -12,26 +13,69 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { Bell, Search, User, Settings, HelpCircle, LogOut, ChevronDown } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Bell, Search, User, HelpCircle, LogOut, ChevronDown } from "lucide-react";
 
-interface HeaderProps {
-  tenantName?: string;
-  userName?: string;
-  userEmail?: string;
-  userRole?: string;
+// Role labels for display
+const roleLabels: Record<string, string> = {
+  owner: "Copropriétaire",
+  manager: "Gestionnaire",
+  syndic_admin: "Administrateur Syndic",
+  platform_admin: "Admin Plateforme",
+};
+
+interface UserData {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  tenantId: string | null;
+  tenantName?: string | null;
 }
 
-export function Header({ 
-  userName = "Jean Dupont",
-  userEmail = "jean.dupont@syndic.fr",
-  userRole = "Gestionnaire"
-}: HeaderProps) {
+export function Header() {
+  const router = useRouter();
+  const [user, setUser] = useState<UserData | null>(null);
+
+  useEffect(() => {
+    // Get user data from localStorage
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      try {
+        setUser(JSON.parse(userData));
+      } catch {
+        // Invalid JSON, ignore
+      }
+    }
+  }, []);
+
+  const userName = user ? `${user.firstName} ${user.lastName}` : "Utilisateur";
+  const userEmail = user?.email || "";
+  const userRole = user?.role ? (roleLabels[user.role] || user.role) : "";
+
+  const handleLogout = async () => {
+    // Clear localStorage
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("user");
+    
+    // Call logout API to clear httpOnly cookie
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Ignore errors, still redirect
+    }
+    
+    // Force redirect using window.location to ensure full page reload
+    window.location.href = "/";
+  };
+
   const initials = userName
     .split(" ")
     .map((n) => n[0])
     .join("")
     .toUpperCase()
-    .slice(0, 2);
+    .slice(0, 2) || "U";
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
@@ -74,7 +118,10 @@ export function Header({
               </Avatar>
               <div className="hidden md:flex flex-col items-start">
                 <span className="text-[14px] font-medium text-foreground">{userName}</span>
-                <span className="text-[12px] text-muted-foreground">{userRole}</span>
+                <span className="text-[12px] text-muted-foreground">
+                  {userRole}
+                  {user?.tenantName && <span className="ml-1">• {user.tenantName}</span>}
+                </span>
               </div>
               <ChevronDown className="hidden md:block h-4 w-4 text-muted-foreground" />
             </Button>
@@ -83,6 +130,9 @@ export function Header({
             <DropdownMenuLabel className="px-3 py-2">
               <p className="text-[14px] font-medium text-foreground">{userName}</p>
               <p className="text-[12px] text-muted-foreground">{userEmail}</p>
+              {user?.tenantName && (
+                <p className="text-[11px] text-primary font-medium mt-0.5">{user.tenantName}</p>
+              )}
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="my-1.5" />
             <DropdownMenuItem asChild className="rounded-lg px-3 py-2 text-[13px]">
@@ -91,21 +141,18 @@ export function Header({
                 Mon profil
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className="rounded-lg px-3 py-2 text-[13px]">
-              <Link href="/app/settings" className="flex items-center gap-2.5">
-                <Settings className="h-4 w-4 text-muted-foreground" />
-                Paramètres
-              </Link>
-            </DropdownMenuItem>
             <DropdownMenuSeparator className="my-1.5" />
             <DropdownMenuItem asChild className="rounded-lg px-3 py-2 text-[13px]">
-              <Link href="/app/help" className="flex items-center gap-2.5">
+              <Link href="/support" className="flex items-center gap-2.5">
                 <HelpCircle className="h-4 w-4 text-muted-foreground" />
                 Aide
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator className="my-1.5" />
-            <DropdownMenuItem className="rounded-lg px-3 py-2 text-[13px] text-rose-600 focus:text-rose-600 dark:text-rose-400 dark:focus:text-rose-400">
+            <DropdownMenuItem 
+              onSelect={handleLogout}
+              className="rounded-lg px-3 py-2 text-[13px] text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:text-rose-400 dark:focus:text-rose-400 dark:focus:bg-rose-950/20 cursor-pointer"
+            >
               <LogOut className="mr-2.5 h-4 w-4" />
               Déconnexion
             </DropdownMenuItem>

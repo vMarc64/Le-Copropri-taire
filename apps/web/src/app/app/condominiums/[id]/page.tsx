@@ -126,84 +126,63 @@ export default function CondominiumDashboardPage({ params }: { params: Promise<{
         </Link>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Uniform height */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Solde actuel</p>
-                <p className={`text-2xl font-bold ${condominium.balance < 0 ? 'text-destructive' : ''}`}>
-                  {condominium.balance.toLocaleString("fr-FR")} €
-                </p>
+        {[
+          {
+            label: "Solde actuel",
+            value: `${condominium.balance.toLocaleString("fr-FR")} €`,
+            icon: DollarSign,
+            valueClass: condominium.balance < 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400",
+          },
+          {
+            label: "Lots",
+            value: condominium.lots.toString(),
+            icon: Building2,
+          },
+          {
+            label: "Propriétaires",
+            value: condominium.owners.toString(),
+            icon: Users,
+          },
+          {
+            label: "SEPA",
+            value: condominium.sepaEnabled ? "Actif" : "Inactif",
+            icon: Landmark,
+            valueClass: condominium.sepaEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
+          },
+        ].map((stat, index) => (
+          <Card key={index} className="relative overflow-hidden">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
+                  <p className={`text-2xl font-bold tabular-nums ${stat.valueClass || ""}`}>
+                    {stat.value}
+                  </p>
+                </div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                  <stat.icon className="h-6 w-6 text-primary" />
+                </div>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <DollarSign className="h-5 w-5 text-primary" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Nombre de lots</p>
-                <p className="text-2xl font-bold">{condominium.lots}</p>
-              </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <Building2 className="h-5 w-5 text-primary" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Propriétaires</p>
-                <p className="text-2xl font-bold">{condominium.owners}</p>
-              </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <Users className="h-5 w-5 text-primary" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">SEPA</p>
-                <p className="text-2xl font-bold">{condominium.sepaEnabled ? "Actif" : "Inactif"}</p>
-              </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                <Landmark className="h-5 w-5 text-primary" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Quick Actions */}
-      <div>
-        <h2 className="mb-4 text-lg font-semibold">Actions rapides</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Quick Actions - Grid with consistent sizing */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">Actions rapides</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {quickActions.map((action) => (
             <Link key={action.href} href={`/app/condominiums/${id}/${action.href}`}>
-              <Card className="cursor-pointer transition-colors hover:bg-muted/50">
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-4">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${action.iconBg}`}>
-                      <action.icon className={`h-5 w-5 ${action.iconColor}`} />
-                    </div>
-                    <div>
-                      <p className="font-medium">{action.title}</p>
-                      <p className="text-sm text-muted-foreground">{action.description}</p>
-                    </div>
+              <Card className="group h-full cursor-pointer border-transparent bg-muted/50 transition-all hover:border-primary/30 hover:bg-muted">
+                <CardContent className="flex h-full flex-col p-4">
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/20">
+                    <action.icon className="h-5 w-5 text-primary" />
                   </div>
+                  <p className="font-medium leading-tight">{action.title}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{action.description}</p>
                 </CardContent>
               </Card>
             </Link>
@@ -212,29 +191,27 @@ export default function CondominiumDashboardPage({ params }: { params: Promise<{
       </div>
 
       {/* Recent Activity */}
-      <div>
-        <h2 className="mb-4 text-lg font-semibold">Activité récente</h2>
-        {activities.length === 0 ? (
-          <Card>
-            <CardContent className="py-8 text-center text-muted-foreground">
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">Activité récente</h2>
+        <Card>
+          {activities.length === 0 ? (
+            <CardContent className="flex h-32 items-center justify-center text-muted-foreground">
               Aucune activité récente
             </CardContent>
-          </Card>
-        ) : (
-          <Card>
+          ) : (
             <CardContent className="divide-y p-0">
               {activities.map((activity) => (
-                <div key={activity.id} className="flex items-center gap-4 p-4">
-                  <div className={`h-2 w-2 rounded-full ${activity.color}`} />
-                  <div>
-                    <p className="font-medium">{activity.title}</p>
-                    <p className="text-sm text-muted-foreground">{activity.details}</p>
+                <div key={activity.id} className="flex items-center gap-4 px-4 py-3">
+                  <div className={`h-2 w-2 shrink-0 rounded-full ${activity.color}`} />
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{activity.title}</p>
+                    <p className="text-sm text-muted-foreground truncate">{activity.details}</p>
                   </div>
                 </div>
               ))}
             </CardContent>
-          </Card>
-        )}
+          )}
+        </Card>
       </div>
     </div>
   );

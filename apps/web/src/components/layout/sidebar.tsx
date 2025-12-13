@@ -36,7 +36,6 @@ const navigation: NavItem[] = [
   { title: "Propriétaires", href: "/app/owners", icon: Users },
   { title: "Banque", href: "/app/bank", icon: Landmark },
   { title: "Documents", href: "/app/documents", icon: FileText },
-  { title: "Paramètres", href: "/app/settings", icon: Settings },
 ];
 
 interface SidebarProps {

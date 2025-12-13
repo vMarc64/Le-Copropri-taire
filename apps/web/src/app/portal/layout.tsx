@@ -45,6 +45,11 @@ export default function PortalLayout({
     fetchData();
   }, []);
 
+  // For pending page, render without layout (no header/nav)
+  if (pathname === "/portal/pending") {
+    return <>{children}</>;
+  }
+
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Header */}
