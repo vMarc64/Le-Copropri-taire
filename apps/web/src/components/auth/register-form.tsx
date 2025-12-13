@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Eye, EyeOff, Check, X } from "lucide-react";
 
 const registerSchema = z.object({
   // Informations personnelles
@@ -15,10 +16,6 @@ const registerSchema = z.object({
   lastName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
   email: z.string().email("Email invalide"),
   phone: z.string().min(10, "Numéro de téléphone invalide").optional().or(z.literal("")),
-  
-  // Informations entreprise
-  companyName: z.string().min(2, "Le nom de l'entreprise doit contenir au moins 2 caractères"),
-  siret: z.string().length(14, "Le SIRET doit contenir 14 chiffres").regex(/^\d+$/, "Le SIRET ne doit contenir que des chiffres"),
   
   // Mot de passe
   password: z.string()
@@ -41,18 +38,28 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     trigger,
+    watch,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
 
+  const password = watch("password", "");
+  
+  // Password validation checks
+  const hasMinLength = password.length >= 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+
   const handleNextStep = async () => {
-    const isValid = await trigger(["firstName", "lastName", "email", "phone", "companyName", "siret"]);
+    const isValid = await trigger(["firstName", "lastName", "email", "phone"]);
     if (isValid) {
       setStep(2);
     }
@@ -71,8 +78,6 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           lastName: data.lastName,
           email: data.email,
           phone: data.phone || undefined,
-          companyName: data.companyName,
-          siret: data.siret,
           password: data.password,
         }),
       });
@@ -175,35 +180,6 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
                 )}
               </div>
 
-              {/* Entreprise */}
-              <div className="space-y-2">
-                <Label htmlFor="companyName">Nom de l&apos;entreprise *</Label>
-                <Input
-                  id="companyName"
-                  placeholder="Syndic ABC"
-                  {...register("companyName")}
-                  disabled={isLoading}
-                />
-                {errors.companyName && (
-                  <p className="text-sm text-error-foreground">{errors.companyName.message}</p>
-                )}
-              </div>
-
-              {/* SIRET */}
-              <div className="space-y-2">
-                <Label htmlFor="siret">SIRET *</Label>
-                <Input
-                  id="siret"
-                  placeholder="12345678901234"
-                  maxLength={14}
-                  {...register("siret")}
-                  disabled={isLoading}
-                />
-                {errors.siret && (
-                  <p className="text-sm text-error-foreground">{errors.siret.message}</p>
-                )}
-              </div>
-
               <Button type="button" className="w-full" onClick={handleNextStep}>
                 Continuer
               </Button>
@@ -215,31 +191,60 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
               {/* Mot de passe */}
               <div className="space-y-2">
                 <Label htmlFor="password">Mot de passe *</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  {...register("password")}
-                  disabled={isLoading}
-                />
-                {errors.password && (
-                  <p className="text-sm text-error-foreground">{errors.password.message}</p>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Min. 8 caractères, 1 majuscule, 1 chiffre
-                </p>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    {...register("password")}
+                    disabled={isLoading}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {/* Password requirements */}
+                <div className="space-y-1 pt-1">
+                  <div className={`flex items-center gap-2 text-xs transition-colors ${hasMinLength ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {hasMinLength ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                    Min. 8 caractères
+                  </div>
+                  <div className={`flex items-center gap-2 text-xs transition-colors ${hasUppercase ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {hasUppercase ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                    1 majuscule
+                  </div>
+                  <div className={`flex items-center gap-2 text-xs transition-colors ${hasNumber ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {hasNumber ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                    1 chiffre
+                  </div>
+                </div>
               </div>
 
               {/* Confirmation */}
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirmer le mot de passe *</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  {...register("confirmPassword")}
-                  disabled={isLoading}
-                />
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    {...register("confirmPassword")}
+                    disabled={isLoading}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {errors.confirmPassword && (
                   <p className="text-sm text-error-foreground">{errors.confirmPassword.message}</p>
                 )}

@@ -28,6 +28,10 @@ export class RegisterDto {
   @IsString()
   @IsOptional()
   companyName?: string;
+
+  @IsString()
+  @IsOptional()
+  userType?: 'owner' | 'manager';
 }
 
 export class AuthResponse {
@@ -39,5 +43,6 @@ export class AuthResponse {
     lastName: string;
     role: string;
     tenantId: string | null;
+    tenantName?: string | null;
   };
 }

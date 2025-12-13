@@ -13,11 +13,15 @@
 | Statut | Tâche | Priorité | Notes | Issue |
 |--------|-------|----------|-------|-------|
 | ✅ | Configurer authentification | ��� Haute | JWT avec Passport | [#7](https://github.com/vMarc64/Le-Copropri-taire/issues/7) |
-| ✅ | Page Login | ��� Haute | Formulaire fonctionnel | [#9](https://github.com/vMarc64/Le-Copropri-taire/issues/9) |
-| ✅ | Page Register (Property Manager) | ��� Haute | Crée tenant + user en DB | [#10](https://github.com/vMarc64/Le-Copropri-taire/issues/10) |
-| ✅ | Système RBAC (rôles) | ��� Haute | platform_admin, manager, owner, resident | [#11](https://github.com/vMarc64/Le-Copropri-taire/issues/11) |
-| ✅ | Middleware multi-tenant | ��� Haute | Isolation par tenant_id (PR #82) | [#12](https://github.com/vMarc64/Le-Copropri-taire/issues/12) |
-| ✅ | Guards par zone (/platform, /app, /portal, /resident) | ��� Haute | ZoneGuard implémenté | [#13](https://github.com/vMarc64/Le-Copropri-taire/issues/13) |
+| ✅ | Page Login | 🔴 Haute | Séparé: /owner/login et /manager/login | [#9](https://github.com/vMarc64/Le-Copropri-taire/issues/9) |
+| ✅ | Page Register (Property Manager) | 🔴 Haute | /manager/register (crée user pending, pas de tenant) | [#10](https://github.com/vMarc64/Le-Copropri-taire/issues/10) |
+| ✅ | Page Register (Owner) | 🔴 Haute | /owner/register (crée user pending) | - |
+| ✅ | Système RBAC (rôles) | 🔴 Haute | platform_admin, manager, owner, resident | [#11](https://github.com/vMarc64/Le-Copropri-taire/issues/11) |
+| ✅ | Middleware multi-tenant | 🔴 Haute | Isolation par tenant_id (PR #82) | [#12](https://github.com/vMarc64/Le-Copropri-taire/issues/12) |
+| ✅ | Guards par zone (/platform, /app, /portal, /resident) | 🔴 Haute | ZoneGuard + Next.js middleware (PR #93) | [#13](https://github.com/vMarc64/Le-Copropri-taire/issues/13) |
+| ✅ | Pages pending (attente association) | 🔴 Haute | /app/pending et /portal/pending | - |
+| ✅ | Logout sécurisé (httpOnly cookie) | 🔴 Haute | API route /api/auth/logout | - |
+| ✅ | Home page avec 3 blocs | 🟡 Moyenne | Produit, Espace Copro, Espace Gestionnaire | - |
 
 ---
 
@@ -25,12 +29,14 @@
 
 | Statut | Tâche | Priorité | Notes | Issue |
 |--------|-------|----------|-------|-------|
-| ⬜ | Dashboard Platform Admin | ��� Moyenne | KPIs globaux (nb syndics, users, copros) | [#14](https://github.com/vMarc64/Le-Copropri-taire/issues/14) |
-| ⬜ | Liste des Syndics (Frontend) | ��� Haute | /platform/syndics | [#15](https://github.com/vMarc64/Le-Copropri-taire/issues/15) |
-| ⬜ | Création / édition Syndic | ��� Haute | Modal ou page dédiée | [#16](https://github.com/vMarc64/Le-Copropri-taire/issues/16) |
+| ✅ | Dashboard Platform Admin | 🟡 Moyenne | KPIs + liste syndics + modal création | [#14](https://github.com/vMarc64/Le-Copropri-taire/issues/14) |
+| ✅ | Liste des Syndics (Frontend) | 🔴 Haute | Intégré au dashboard /platform | [#15](https://github.com/vMarc64/Le-Copropri-taire/issues/15) |
+| ✅ | Création Syndic | 🔴 Haute | Modal de création | [#16](https://github.com/vMarc64/Le-Copropri-taire/issues/16) |
 | ✅ | API CRUD Syndics | 🔴 Haute | GET/POST/PATCH/DELETE /platform/syndics (PR #88) | [#83](https://github.com/vMarc64/Le-Copropri-taire/issues/83) |
 | ✅ | API Gestion Managers | 🔴 Haute | CRUD managers d'un syndic (PR #89) | [#84](https://github.com/vMarc64/Le-Copropri-taire/issues/84) |
-| ⬜ | Gestion Managers d'un Syndic | ��� Haute | /platform/syndics/[id]/managers | [#85](https://github.com/vMarc64/Le-Copropri-taire/issues/85) |
+| ✅ | BFF Routes Platform | 🔴 Haute | /api/platform/* pour sécuriser les appels | - |
+| ⬜ | Page détail Syndic | 🟡 Moyenne | /platform/tenants/[id] | [#85](https://github.com/vMarc64/Le-Copropri-taire/issues/85) |
+| ⬜ | Association users pending → syndic | 🔴 Haute | /platform/users | - |
 
 ---
 

@@ -129,4 +129,38 @@ export class PlatformController {
   ) {
     return this.platformService.deleteManager(syndicId, managerId);
   }
+
+  // ==========================================================================
+  // PENDING USERS ENDPOINTS
+  // ==========================================================================
+
+  /**
+   * List all pending users (not associated with any syndic)
+   */
+  @Get('users/pending')
+  async listPendingUsers(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('role') role?: string,
+  ) {
+    return this.platformService.findPendingUsers({
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+      search,
+      role,
+    });
+  }
+
+  /**
+   * Associate a pending user with a syndic
+   */
+  @Post('users/:userId/associate/:syndicId')
+  @HttpCode(HttpStatus.OK)
+  async associateUser(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Param('syndicId', ParseUUIDPipe) syndicId: string,
+  ) {
+    return this.platformService.associateUserToSyndic(userId, syndicId);
+  }
 }

@@ -1,21 +1,34 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+
+// Use relative URLs for browser (Next.js proxy) and absolute for server
+const getApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    // Browser: use relative URL (goes through Next.js API routes)
+    return '/api';
+  }
+  // Server: use backend URL directly
+  return API_URL;
+};
 
 /**
  * Fetch API for direct backend calls (used by server components)
  */
 export async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${API_URL}${endpoint}`;
+  const baseUrl = getApiUrl();
+  const url = `${baseUrl}${endpoint}`;
   
   const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
       ...options?.headers,
     },
+    credentials: 'include', // Include cookies
     ...options,
   });
 
   if (!response.ok) {
-    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`);
   }
 
   return response.json();
@@ -62,6 +75,26 @@ export async function getOwners(): Promise<Owner[]> {
 
 export async function getOwner(id: string): Promise<Owner | null> {
   return fetchBffApi<Owner | null>(`/owners/${id}`);
+}
+
+export interface OrphanOwner {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  status: string;
+  createdAt: string;
+}
+
+export async function searchOrphanOwners(query: string): Promise<OrphanOwner[]> {
+  if (!query || query.length < 2) return [];
+  return fetchApi<OrphanOwner[]>(`/owners/search?q=${encodeURIComponent(query)}`);
+}
+
+export async function associateOwnerToSyndic(ownerId: string): Promise<Owner> {
+  return fetchApi<Owner>(`/owners/${ownerId}/associate`, {
+    method: 'POST',
+  });
 }
 
 // Documents API
@@ -285,6 +318,48 @@ export async function createManager(syndicId: string, data: {
 export async function deleteManager(syndicId: string, managerId: string): Promise<{ message: string }> {
   return fetchApi<{ message: string }>(`/platform/syndics/${syndicId}/managers/${managerId}`, {
     method: 'DELETE',
+  });
+}
+
+// =============================================================================
+// Pending Users API (Platform Admin)
+// =============================================================================
+
+export interface PendingUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface PendingUsersResponse {
+  data: PendingUser[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export async function getPendingUsers(options?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: string;
+}): Promise<PendingUsersResponse> {
+  const params = new URLSearchParams();
+  if (options?.page) params.append('page', options.page.toString());
+  if (options?.limit) params.append('limit', options.limit.toString());
+  if (options?.search) params.append('search', options.search);
+  if (options?.role) params.append('role', options.role);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return fetchApi<PendingUsersResponse>(`/platform/users/pending${query}`);
+}
+
+export async function associateUserToSyndic(userId: string, syndicId: string): Promise<PendingUser> {
+  return fetchApi<PendingUser>(`/platform/users/${userId}/associate/${syndicId}`, {
+    method: 'POST',
   });
 }
 
