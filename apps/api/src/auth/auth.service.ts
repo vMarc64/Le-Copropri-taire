@@ -32,6 +32,15 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // Get tenant name if user has a tenantId
+    let tenantName: string | null = null;
+    if (user.tenantId) {
+      const tenant = await db.query.tenants.findFirst({
+        where: eq(tenants.id, user.tenantId),
+      });
+      tenantName = tenant?.name || null;
+    }
+
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
@@ -52,6 +61,7 @@ export class AuthService {
         lastName: user.lastName,
         role: user.role as UserRole,
         tenantId: user.tenantId,
+        tenantName,
       },
     };
   }

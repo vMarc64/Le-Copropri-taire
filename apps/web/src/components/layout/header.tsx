@@ -31,6 +31,7 @@ interface UserData {
   lastName: string;
   role: string;
   tenantId: string | null;
+  tenantName?: string | null;
 }
 
 export function Header() {
@@ -117,7 +118,10 @@ export function Header() {
               </Avatar>
               <div className="hidden md:flex flex-col items-start">
                 <span className="text-[14px] font-medium text-foreground">{userName}</span>
-                <span className="text-[12px] text-muted-foreground">{userRole}</span>
+                <span className="text-[12px] text-muted-foreground">
+                  {userRole}
+                  {user?.tenantName && <span className="ml-1">• {user.tenantName}</span>}
+                </span>
               </div>
               <ChevronDown className="hidden md:block h-4 w-4 text-muted-foreground" />
             </Button>
@@ -126,6 +130,9 @@ export function Header() {
             <DropdownMenuLabel className="px-3 py-2">
               <p className="text-[14px] font-medium text-foreground">{userName}</p>
               <p className="text-[12px] text-muted-foreground">{userEmail}</p>
+              {user?.tenantName && (
+                <p className="text-[11px] text-primary font-medium mt-0.5">{user.tenantName}</p>
+              )}
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="my-1.5" />
             <DropdownMenuItem asChild className="rounded-lg px-3 py-2 text-[13px]">

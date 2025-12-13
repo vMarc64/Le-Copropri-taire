@@ -43,5 +43,6 @@ export class AuthResponse {
     lastName: string;
     role: string;
     tenantId: string | null;
+    tenantName?: string | null;
   };
 }
