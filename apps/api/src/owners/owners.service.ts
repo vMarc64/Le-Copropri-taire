@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { db } from '../database';
 import { users, lots, condominiums, sepaMandates, payments } from '../database/schema';
 import { eq, and, sql, isNull, or, ilike } from 'drizzle-orm';
@@ -127,5 +127,51 @@ export class OwnersService {
       .limit(20);
 
     return orphanOwners;
+  }
+
+  /**
+   * Associate an orphan owner to a syndic
+   */
+  async associateToSyndic(ownerId: string, tenantId: string) {
+    // Find the owner
+    const [owner] = await db
+      .select()
+      .from(users)
+      .where(and(eq(users.id, ownerId), eq(users.role, 'owner')))
+      .limit(1);
+
+    if (!owner) {
+      throw new NotFoundException('Propriétaire non trouvé');
+    }
+
+    if (owner.tenantId) {
+      throw new BadRequestException('Ce propriétaire est déjà associé à un syndic');
+    }
+
+    // Associate owner to syndic
+    await db
+      .update(users)
+      .set({
+        tenantId: tenantId,
+        status: 'active',
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, ownerId));
+
+    // Return updated owner
+    const [updatedOwner] = await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        status: users.status,
+        tenantId: users.tenantId,
+      })
+      .from(users)
+      .where(eq(users.id, ownerId))
+      .limit(1);
+
+    return updatedOwner;
   }
 }
