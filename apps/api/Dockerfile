@@ -12,8 +12,8 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 # Copy API package.json
 COPY apps/api/package.json ./apps/api/
 
-# Install dependencies
-RUN pnpm install
+# Install all dependencies (needed for build)
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
@@ -21,25 +21,22 @@ COPY . .
 # Build the API
 RUN pnpm --filter api run build
 
+# Prune dev dependencies, keep only prod
+RUN pnpm prune --prod
+
 # Production stage
 FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@9 --activate
-
-# Copy root package files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-
-# Copy API package.json
-COPY apps/api/package.json ./apps/api/
-
-# Install production dependencies only
-RUN pnpm install --prod
+# Copy the pruned node_modules from builder (monorepo structure)
+COPY --from=builder /app/node_modules ./node_modules
 
 # Copy built application from builder
 COPY --from=builder /app/apps/api/dist ./dist
+
+# Copy package.json for reference
+COPY --from=builder /app/apps/api/package.json ./package.json
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -54,9 +51,5 @@ EXPOSE 3002
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3002/ || exit 1
 
-# Start the application (NestJS compiles to dist/src/main.js in this repo)
-# Start API with compiled entrypoint
-CMD ["node", "dist/src/main.js"]
-
 # Start the application
-## Note: legacy path removed; Nest outputs to dist/src/main.js
+CMD ["node", "dist/src/main.js"]
