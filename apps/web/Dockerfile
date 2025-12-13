@@ -13,7 +13,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web/package.json ./apps/web/
 
 # Install dependencies
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
@@ -26,10 +26,15 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Copy necessary files from builder (Next.js standalone)
+# Next.js standalone copies the app structure, server.js is in apps/web/
+# Copy the entire standalone output
 COPY --from=builder /app/apps/web/.next/standalone ./
-COPY --from=builder /app/apps/web/.next/static ./.next/static
-COPY --from=builder /app/apps/web/public ./public
+
+# Copy static files to the correct location
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+
+# Copy public folder
+COPY --from=builder /app/apps/web/public ./apps/web/public
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -40,9 +45,13 @@ USER nextjs
 # Expose port
 EXPOSE 3000
 
+# Set environment
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
-# Start the application
-CMD ["node", "server.js"]
+# Start the application - server.js is in apps/web/ for monorepo
+CMD ["node", "apps/web/server.js"]
