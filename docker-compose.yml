@@ -3,9 +3,7 @@ version: '3.8'
 services:
   # API NestJS
   api:
-    build:
-      context: ./apps/api
-      dockerfile: Dockerfile
+    image: ghcr.io/vmarc64/le-copropri-taire/api:main
     container_name: lecopro-api
     restart: unless-stopped
     ports:
@@ -38,9 +36,7 @@ services:
 
   # Frontend Next.js
   web:
-    build:
-      context: ./apps/web
-      dockerfile: Dockerfile
+    image: ghcr.io/vmarc64/le-copropri-taire/web:main
     container_name: lecopro-web
     restart: unless-stopped
     ports:
