@@ -4,13 +4,13 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@9 --activate
 
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
+# Copy package files (no lockfile in app directory for monorepo)
+COPY package.json ./
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # Copy source code
 COPY . .
@@ -22,9 +22,6 @@ RUN pnpm run build
 FROM node:20-alpine AS production
 
 WORKDIR /app
-
-# Install pnpm for running the app
-RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Copy necessary files from builder
 COPY --from=builder /app/.next/standalone ./
