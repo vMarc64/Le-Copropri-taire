@@ -5,7 +5,10 @@ import type { NextRequest } from 'next/server';
 const protectedRoutes = ['/app', '/portal', '/platform'];
 
 // Public routes (no auth required)
-const publicRoutes = ['/login', '/register', '/forgot-password'];
+const publicRoutes = ['/owner', '/manager', '/forgot-password', '/product'];
+
+// Pending pages (accessible even without tenant)
+const pendingPages = ['/app/pending', '/portal/pending'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -13,30 +16,63 @@ export function middleware(request: NextRequest) {
   // Get the access token from cookies
   const accessToken = request.cookies.get('accessToken')?.value;
   
-  // Check if trying to access a protected route
+  // Check route types
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+  const isPendingPage = pendingPages.some(route => pathname === route);
+  const isHomePage = pathname === '/';
   
-  // If accessing a protected route without auth, redirect to login
+  // If accessing a protected route without auth, redirect to home
   if (isProtectedRoute && !accessToken) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
+    const homeUrl = new URL('/', request.url);
+    return NextResponse.redirect(homeUrl);
   }
   
-  // If authenticated and trying to access login/register, redirect to app
-  if (isPublicRoute && accessToken) {
-    // Decode token to check role (basic decode, not verification)
+  // If authenticated, check tenant and role
+  if (accessToken) {
     try {
       const payload = JSON.parse(atob(accessToken.split('.')[1]));
       const role = payload.role;
+      const tenantId = payload.tenantId;
       
+      // Platform admin always has access
       if (role === 'platform_admin') {
-        return NextResponse.redirect(new URL('/platform', request.url));
-      } else if (role === 'manager' || role === 'syndic_admin') {
-        return NextResponse.redirect(new URL('/app', request.url));
+        if (isPublicRoute) {
+          return NextResponse.redirect(new URL('/platform', request.url));
+        }
+        return NextResponse.next();
+      }
+      
+      // Check if user has no tenant (pending state)
+      const hasTenant = tenantId && tenantId !== null;
+      
+      if (!hasTenant) {
+        // User without tenant can only access pending pages
+        if (!isPendingPage && isProtectedRoute) {
+          if (role === 'manager' || role === 'syndic_admin') {
+            return NextResponse.redirect(new URL('/app/pending', request.url));
+          } else {
+            return NextResponse.redirect(new URL('/portal/pending', request.url));
+          }
+        }
       } else {
-        return NextResponse.redirect(new URL('/portal', request.url));
+        // User with tenant should not access pending pages
+        if (isPendingPage) {
+          if (role === 'manager' || role === 'syndic_admin') {
+            return NextResponse.redirect(new URL('/app', request.url));
+          } else {
+            return NextResponse.redirect(new URL('/portal', request.url));
+          }
+        }
+      }
+      
+      // Redirect from login/register/home if authenticated
+      if (isPublicRoute || isHomePage) {
+        if (role === 'manager' || role === 'syndic_admin') {
+          return NextResponse.redirect(new URL(hasTenant ? '/app' : '/app/pending', request.url));
+        } else {
+          return NextResponse.redirect(new URL(hasTenant ? '/portal' : '/portal/pending', request.url));
+        }
       }
     } catch {
       // If token is invalid, let them access login

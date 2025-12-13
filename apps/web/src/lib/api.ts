@@ -1,18 +1,31 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+
+// Use relative URLs for browser (Next.js proxy) and absolute for server
+const getApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    // Browser: use relative URL (goes through Next.js API routes)
+    return '/api';
+  }
+  // Server: use backend URL directly
+  return API_URL;
+};
 
 export async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const url = `${API_URL}${endpoint}`;
+  const baseUrl = getApiUrl();
+  const url = `${baseUrl}${endpoint}`;
   
   const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
       ...options?.headers,
     },
+    credentials: 'include', // Include cookies
     ...options,
   });
 
   if (!response.ok) {
-    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`);
   }
 
   return response.json();

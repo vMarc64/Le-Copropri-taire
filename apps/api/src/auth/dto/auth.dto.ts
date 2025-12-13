@@ -28,6 +28,10 @@ export class RegisterDto {
   @IsString()
   @IsOptional()
   companyName?: string;
+
+  @IsString()
+  @IsOptional()
+  userType?: 'owner' | 'manager';
 }
 
 export class AuthResponse {

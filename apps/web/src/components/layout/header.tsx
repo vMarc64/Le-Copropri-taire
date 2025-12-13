@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -13,32 +14,59 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, Search, User, Settings, HelpCircle, LogOut, ChevronDown } from "lucide-react";
+import { Bell, Search, User, HelpCircle, LogOut, ChevronDown } from "lucide-react";
 
-interface HeaderProps {
-  tenantName?: string;
-  userName?: string;
-  userEmail?: string;
-  userRole?: string;
+// Role labels for display
+const roleLabels: Record<string, string> = {
+  owner: "Copropriétaire",
+  manager: "Gestionnaire",
+  syndic_admin: "Administrateur Syndic",
+  platform_admin: "Admin Plateforme",
+};
+
+interface UserData {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  tenantId: string | null;
 }
 
-export function Header({ 
-  userName = "Utilisateur",
-  userEmail = "",
-  userRole = ""
-}: HeaderProps) {
+export function Header() {
   const router = useRouter();
+  const [user, setUser] = useState<UserData | null>(null);
 
-  const handleLogout = () => {
+  useEffect(() => {
+    // Get user data from localStorage
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      try {
+        setUser(JSON.parse(userData));
+      } catch {
+        // Invalid JSON, ignore
+      }
+    }
+  }, []);
+
+  const userName = user ? `${user.firstName} ${user.lastName}` : "Utilisateur";
+  const userEmail = user?.email || "";
+  const userRole = user?.role ? (roleLabels[user.role] || user.role) : "";
+
+  const handleLogout = async () => {
     // Clear localStorage
     localStorage.removeItem("accessToken");
     localStorage.removeItem("user");
     
-    // Clear cookie by setting expired date
-    document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    // Call logout API to clear httpOnly cookie
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Ignore errors, still redirect
+    }
     
-    // Redirect to login
-    router.push("/login");
+    // Force redirect using window.location to ensure full page reload
+    window.location.href = "/";
   };
 
   const initials = userName
@@ -106,23 +134,17 @@ export function Header({
                 Mon profil
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className="rounded-lg px-3 py-2 text-[13px]">
-              <Link href="/app/settings" className="flex items-center gap-2.5">
-                <Settings className="h-4 w-4 text-muted-foreground" />
-                Paramètres
-              </Link>
-            </DropdownMenuItem>
             <DropdownMenuSeparator className="my-1.5" />
             <DropdownMenuItem asChild className="rounded-lg px-3 py-2 text-[13px]">
-              <Link href="/app/help" className="flex items-center gap-2.5">
+              <Link href="/support" className="flex items-center gap-2.5">
                 <HelpCircle className="h-4 w-4 text-muted-foreground" />
                 Aide
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator className="my-1.5" />
             <DropdownMenuItem 
-              onClick={handleLogout}
-              className="rounded-lg px-3 py-2 text-[13px] text-rose-600 focus:text-rose-600 dark:text-rose-400 dark:focus:text-rose-400 cursor-pointer"
+              onSelect={handleLogout}
+              className="rounded-lg px-3 py-2 text-[13px] text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:text-rose-400 dark:focus:text-rose-400 dark:focus:bg-rose-950/20 cursor-pointer"
             >
               <LogOut className="mr-2.5 h-4 w-4" />
               Déconnexion
