@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { db } from '../database';
 import { users, lots, condominiums, sepaMandates, payments } from '../database/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, isNull, or, ilike } from 'drizzle-orm';
 
 @Injectable()
 export class OwnersService {
@@ -83,6 +83,50 @@ export class OwnersService {
       .limit(1);
 
     return owner[0] || null;
+  }
+
+  /**
+   * Search for orphan owners (owners without a tenantId)
+   * Matches by: firstName + lastName OR phone OR email
+   */
+  async searchOrphanOwners(query: string) {
+    if (!query || query.trim().length < 2) {
+      return [];
+    }
+
+    const searchTerm = query.trim();
+    const searchPattern = `%${searchTerm}%`;
+
+    // Search orphan owners (no tenantId) by name, phone, or email
+    const orphanOwners = await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        status: users.status,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .where(
+        and(
+          eq(users.role, 'owner'),
+          isNull(users.tenantId),
+          or(
+            // Match firstName + lastName combination
+            sql`CONCAT(${users.firstName}, ' ', ${users.lastName}) ILIKE ${searchPattern}`,
+            // Match email
+            ilike(users.email, searchPattern),
+            // Match firstName alone
+            ilike(users.firstName, searchPattern),
+            // Match lastName alone
+            ilike(users.lastName, searchPattern)
+          )
+        )
+      )
+      .limit(20);
+
+    return orphanOwners;
   }
 
   /**

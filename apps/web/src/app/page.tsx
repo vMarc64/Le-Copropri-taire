@@ -1,11 +1,12 @@
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Building2, Home, Sparkles } from "lucide-react";
+import Link from "next/link";
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
       <header className="border-b border-border">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <h1 className="text-xl font-semibold text-foreground">Le Copropriétaire</h1>
@@ -13,76 +14,89 @@ export default function Home() {
         </div>
       </header>
       
-      <main className="container mx-auto p-8">
-        <div className="space-y-8">
-          <div>
-            <h2 className="text-3xl font-bold text-foreground mb-2">Design System Demo</h2>
-            <p className="text-muted-foreground">
-              Test du thème clair/sombre avec nos design tokens
+      {/* Main content - Centered */}
+      <main className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-5xl">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-foreground mb-4">
+              Bienvenue sur Le Copropriétaire
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              La plateforme de gestion de copropriété moderne et intuitive
             </p>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Composants de base</CardTitle>
-              <CardDescription>Boutons et badges avec les différentes variantes</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                <Button>Primary</Button>
-                <Button variant="secondary">Secondary</Button>
-                <Button variant="ghost">Ghost</Button>
-                <Button variant="destructive">Destructive</Button>
-                <Button variant="outline">Outline</Button>
-              </div>
-              
-              <div className="flex flex-wrap gap-2">
-                <Badge className="bg-success text-success-foreground">Payé</Badge>
-                <Badge className="bg-warning text-warning-foreground">En attente</Badge>
-                <Badge className="bg-error text-error-foreground">Impayé</Badge>
-                <Badge variant="outline">Neutre</Badge>
-              </div>
-            </CardContent>
-          </Card>
+          {/* 3 Blocks */}
+          <div className="grid gap-6 md:grid-cols-3">
+            {/* Block 1 - Notre produit */}
+            <Link href="/product" className="group">
+              <Card className="h-full transition-all duration-200 hover:shadow-xl hover:border-primary/50 hover:-translate-y-1 cursor-pointer">
+                <CardHeader className="text-center pb-4">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 group-hover:from-violet-500/30 group-hover:to-purple-500/30 transition-colors">
+                    <Sparkles className="h-8 w-8 text-violet-500" />
+                  </div>
+                  <CardTitle className="text-xl">Notre produit</CardTitle>
+                  <CardDescription>
+                    Découvrez comment Le Copropriétaire simplifie la gestion de copropriété
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <span className="text-sm font-medium text-violet-500 group-hover:underline">
+                    En savoir plus →
+                  </span>
+                </CardContent>
+              </Card>
+            </Link>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle>Card 1</CardTitle>
-                <CardDescription>Une carte avec du contenu</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Le thème change automatiquement selon vos préférences système.
-                </p>
-              </CardContent>
-            </Card>
+            {/* Block 2 - Espace Copropriétaire */}
+            <Link href="/owner/login" className="group">
+              <Card className="h-full transition-all duration-200 hover:shadow-xl hover:border-foreground/30 hover:-translate-y-1 cursor-pointer">
+                <CardHeader className="text-center pb-4">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted group-hover:bg-muted/80 transition-colors">
+                    <Home className="h-8 w-8 text-foreground" />
+                  </div>
+                  <CardTitle className="text-xl">Espace Copropriétaire</CardTitle>
+                  <CardDescription>
+                    Accédez à vos informations, paiements et documents
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <span className="text-sm font-medium text-foreground group-hover:underline">
+                    Connexion / Inscription →
+                  </span>
+                </CardContent>
+              </Card>
+            </Link>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Card 2</CardTitle>
-                <CardDescription>Avec des badges</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-2">
-                  <Badge>Tag 1</Badge>
-                  <Badge variant="secondary">Tag 2</Badge>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Card 3</CardTitle>
-                <CardDescription>Actions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full">Action</Button>
-              </CardContent>
-            </Card>
+            {/* Block 3 - Espace Gestionnaire */}
+            <Link href="/manager/login" className="group">
+              <Card className="h-full transition-all duration-200 hover:shadow-xl hover:border-primary/50 hover:-translate-y-1 cursor-pointer">
+                <CardHeader className="text-center pb-4">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                    <Building2 className="h-8 w-8 text-primary" />
+                  </div>
+                  <CardTitle className="text-xl">Espace Gestionnaire</CardTitle>
+                  <CardDescription>
+                    Gérez vos copropriétés, propriétaires et paiements
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <span className="text-sm font-medium text-primary group-hover:underline">
+                    Connexion / Inscription →
+                  </span>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-border py-6">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+          © 2025 Le Copropriétaire. Tous droits réservés.
+        </div>
+      </footer>
     </div>
   );
 }

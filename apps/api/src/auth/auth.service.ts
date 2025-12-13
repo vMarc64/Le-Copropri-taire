@@ -20,7 +20,9 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (user.status !== 'active') {
+    // Allow 'active' and 'pending' users to login
+    // 'pending' users will see a waiting page until associated with a tenant
+    if (user.status !== 'active' && user.status !== 'pending') {
       throw new UnauthorizedException('Account is not active');
     }
 
@@ -28,6 +30,15 @@ export class AuthService {
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Get tenant name if user has a tenantId
+    let tenantName: string | null = null;
+    if (user.tenantId) {
+      const tenant = await db.query.tenants.findFirst({
+        where: eq(tenants.id, user.tenantId),
+      });
+      tenantName = tenant?.name || null;
     }
 
     const payload: JwtPayload = {
@@ -50,6 +61,7 @@ export class AuthService {
         lastName: user.lastName,
         role: user.role as UserRole,
         tenantId: user.tenantId,
+        tenantName,
       },
     };
   }
@@ -63,22 +75,20 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
-    // Create tenant (property management company) for the new manager
-    const [newTenant] = await db.insert(tenants).values({
-      name: dto.companyName || `${dto.firstName} ${dto.lastName}`,
-      email: dto.email,
-      status: 'active',
-    }).returning();
+    // Determine role based on userType
+    // owner -> 'owner' role (copropriétaire)
+    // manager -> 'manager' role (gestionnaire)
+    const role = dto.userType === 'owner' ? 'owner' : 'manager';
 
-    // Create the user with manager role linked to the tenant
+    // Create the user WITHOUT a tenant - will be associated later by platform admin
     const [newUser] = await db.insert(users).values({
-      tenantId: newTenant.id,
+      tenantId: null, // No tenant yet - pending association
       email: dto.email,
       passwordHash,
       firstName: dto.firstName,
       lastName: dto.lastName,
-      role: 'manager',
-      status: 'active',
+      role, // 'owner' or 'manager' based on userType
+      status: 'pending', // Pending until associated with a syndic/copropriété
     }).returning();
 
     const payload: JwtPayload = {
@@ -90,7 +100,7 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload);
 
-    this.logger.log(`User ${newUser.email} registered successfully with tenant ${newTenant.id}`);
+    this.logger.log(`User ${newUser.email} registered successfully (pending association)`);
 
     return {
       accessToken,
