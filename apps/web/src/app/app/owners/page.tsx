@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -29,6 +30,28 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { DialogFooter } from "@/components/ui/dialog";
+import {
   Users,
   Search,
   UserPlus,
@@ -45,6 +68,10 @@ import {
   Eye,
   Send,
   Receipt,
+  Check,
+  ChevronsUpDown,
+  Home,
+  Plus,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -53,7 +80,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getOwners, type Owner } from "@/lib/api";
+import { getOwners, getCondominiums, updateOwnerCondominiums, getAvailableLotsForOwner, updateOwnerLots, type Owner, type Condominium, type AvailableLot } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; bgColor: string; textColor: string; icon: React.ReactNode }> = {
@@ -130,9 +158,458 @@ function formatBalance(balance: number): { text: string; className: string } {
   };
 }
 
+interface CondominiumSelectorProps {
+  owner: Owner;
+  allCondominiums: Condominium[];
+  onUpdate: () => void;
+}
+
+function CondominiumSelector({ owner, allCondominiums, onUpdate }: CondominiumSelectorProps) {
+  const [open, setOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>(owner.condominiumIds || []);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Reset selectedIds when owner changes
+  useEffect(() => {
+    setSelectedIds(owner.condominiumIds || []);
+  }, [owner.condominiumIds]);
+
+  const handleToggle = async (condoId: string) => {
+    const newSelection = selectedIds.includes(condoId)
+      ? selectedIds.filter((id) => id !== condoId)
+      : [...selectedIds, condoId];
+
+    setSelectedIds(newSelection);
+    setIsSaving(true);
+
+    try {
+      await updateOwnerCondominiums(owner.id, newSelection);
+      onUpdate();
+    } catch (error) {
+      console.error("Error updating condominiums:", error);
+      // Revert on error
+      setSelectedIds(owner.condominiumIds || []);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const displayText = owner.condominiums.length === 0
+    ? "Aucune"
+    : owner.condominiums.length === 1
+      ? owner.condominiums[0]
+      : `${owner.condominiums[0]} +${owner.condominiums.length - 1}`;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "h-auto py-1 px-2 font-normal justify-start gap-1.5",
+            owner.condominiums.length === 0 && "text-muted-foreground italic"
+          )}
+        >
+          <Building2 className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate max-w-[120px]">{displayText}</span>
+          <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
+          {isSaving && <Loader2 className="h-3 w-3 animate-spin" />}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[280px] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Rechercher..." />
+          <CommandList>
+            <CommandEmpty>Aucune copropriété trouvée</CommandEmpty>
+            <CommandGroup>
+              {allCondominiums.map((condo) => {
+                const isSelected = selectedIds.includes(condo.id);
+                return (
+                  <CommandItem
+                    key={condo.id}
+                    value={condo.name}
+                    onSelect={() => handleToggle(condo.id)}
+                    className="cursor-pointer"
+                  >
+                    <div className={cn(
+                      "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border",
+                      isSelected
+                        ? "bg-primary border-primary text-primary-foreground"
+                        : "border-muted-foreground/50"
+                    )}>
+                      {isSelected && <Check className="h-3 w-3" />}
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-sm">{condo.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {condo.city}
+                      </span>
+                    </div>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+interface LotSelectorProps {
+  owner: Owner;
+  ownerCondominiums: Condominium[];
+  onUpdate: () => void;
+}
+
+const LOT_TYPES = [
+  { value: "appartement", label: "Appartement" },
+  { value: "parking", label: "Parking" },
+  { value: "cave", label: "Cave" },
+  { value: "commerce", label: "Commerce" },
+  { value: "bureau", label: "Bureau" },
+  { value: "box", label: "Box" },
+  { value: "autre", label: "Autre" },
+];
+
+function LotSelector({ owner, ownerCondominiums, onUpdate }: LotSelectorProps) {
+  const [open, setOpen] = useState(false);
+  const [availableLots, setAvailableLots] = useState<AvailableLot[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newLot, setNewLot] = useState({
+    condominiumId: "",
+    reference: "",
+    type: "appartement",
+    floor: "",
+    surface: "",
+    tantiemes: "",
+  });
+
+  const hasCondominiums = (owner.condominiumIds?.length || 0) > 0;
+
+  const loadAvailableLots = async () => {
+    if (!hasCondominiums) return;
+    
+    setIsLoading(true);
+    try {
+      const lots = await getAvailableLotsForOwner(owner.id);
+      setAvailableLots(lots);
+    } catch (error) {
+      console.error("Error loading available lots:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open && hasCondominiums) {
+      loadAvailableLots();
+    }
+  }, [open, owner.id, hasCondominiums]);
+
+  const handleToggle = async (lotId: string) => {
+    const currentlyAssigned = availableLots.filter(l => l.isAssigned).map(l => l.id);
+    const newSelection = currentlyAssigned.includes(lotId)
+      ? currentlyAssigned.filter(id => id !== lotId)
+      : [...currentlyAssigned, lotId];
+
+    setIsSaving(true);
+    
+    // Optimistic update
+    setAvailableLots(prev => prev.map(lot => ({
+      ...lot,
+      isAssigned: newSelection.includes(lot.id)
+    })));
+
+    try {
+      await updateOwnerLots(owner.id, newSelection);
+      onUpdate();
+    } catch (error) {
+      console.error("Error updating lots:", error);
+      // Revert on error
+      loadAvailableLots();
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCreateLot = async () => {
+    if (!newLot.reference.trim() || !newLot.type || !newLot.condominiumId) return;
+
+    setIsCreating(true);
+    try {
+      const response = await fetch(`/api/condominiums/${newLot.condominiumId}/lots`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reference: newLot.reference.trim(),
+          type: newLot.type,
+          floor: newLot.floor ? parseInt(newLot.floor) : undefined,
+          surface: newLot.surface ? parseFloat(newLot.surface) : undefined,
+          tantiemes: newLot.tantiemes ? parseInt(newLot.tantiemes) : undefined,
+          ownerId: owner.id, // Auto-assign to current owner
+        }),
+      });
+
+      if (response.ok) {
+        // Reset form
+        setNewLot({
+          condominiumId: ownerCondominiums.length === 1 ? ownerCondominiums[0].id : "",
+          reference: "",
+          type: "appartement",
+          floor: "",
+          surface: "",
+          tantiemes: "",
+        });
+        setShowCreateDialog(false);
+        // Reload available lots (new lot will be auto-selected since assigned to this owner)
+        await loadAvailableLots();
+        onUpdate();
+      }
+    } catch (error) {
+      console.error("Error creating lot:", error);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  // Set default condominium when dialog opens
+  useEffect(() => {
+    if (showCreateDialog && ownerCondominiums.length === 1) {
+      setNewLot(prev => ({ ...prev, condominiumId: ownerCondominiums[0].id }));
+    }
+  }, [showCreateDialog, ownerCondominiums]);
+
+  const assignedCount = owner.lots.length;
+  const displayText = assignedCount === 0
+    ? "Aucun"
+    : assignedCount === 1
+      ? owner.lots[0]
+      : `${owner.lots[0]} +${assignedCount - 1}`;
+
+  // If no condominiums, show disabled state
+  if (!hasCondominiums) {
+    return (
+      <span className="text-sm text-muted-foreground italic flex items-center gap-1.5">
+        <Home className="h-3.5 w-3.5" />
+        -
+      </span>
+    );
+  }
+
+  return (
+    <>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "h-auto py-1 px-2 font-normal justify-start gap-1.5",
+            assignedCount === 0 && "text-muted-foreground italic"
+          )}
+        >
+          <Home className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate max-w-[100px]">{displayText}</span>
+          <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
+          {isSaving && <Loader2 className="h-3 w-3 animate-spin" />}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[320px] p-0" align="start">
+        <Command>
+          <CommandInput placeholder="Rechercher un lot..." />
+          <CommandList>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : availableLots.length === 0 ? (
+              <CommandEmpty>Aucun lot disponible</CommandEmpty>
+            ) : (
+              <CommandGroup>
+                {availableLots.map((lot) => (
+                  <CommandItem
+                    key={lot.id}
+                    value={`${lot.reference} ${lot.type} ${lot.condominiumName}`}
+                    onSelect={() => handleToggle(lot.id)}
+                    className="cursor-pointer"
+                  >
+                    <div className={cn(
+                      "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border",
+                      lot.isAssigned
+                        ? "bg-primary border-primary text-primary-foreground"
+                        : "border-muted-foreground/50"
+                    )}>
+                      {lot.isAssigned && <Check className="h-3 w-3" />}
+                    </div>
+                    <div className="flex flex-col flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{lot.reference}</span>
+                        <Badge variant="outline" className="text-xs py-0 h-5">
+                          {lot.type}
+                        </Badge>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {lot.condominiumName}
+                        {lot.tantiemes && ` • ${lot.tantiemes} tantièmes`}
+                      </span>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+            <CommandSeparator />
+            <CommandGroup>
+              <CommandItem
+                onSelect={() => {
+                  setOpen(false);
+                  setShowCreateDialog(true);
+                }}
+                className="cursor-pointer text-primary"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Créer un lot
+              </CommandItem>
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+
+    <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Créer un lot</DialogTitle>
+          <DialogDescription>
+            Créez un nouveau lot qui sera automatiquement assigné à {owner.firstName} {owner.lastName}.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          {ownerCondominiums.length > 1 && (
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="condominium" className="text-right">
+                Copropriété *
+              </Label>
+              <Select
+                value={newLot.condominiumId}
+                onValueChange={(value) => setNewLot({ ...newLot, condominiumId: value })}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Sélectionner une copropriété" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ownerCondominiums.map((condo) => (
+                    <SelectItem key={condo.id} value={condo.id}>
+                      {condo.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="reference" className="text-right">
+              Référence *
+            </Label>
+            <Input
+              id="reference"
+              value={newLot.reference}
+              onChange={(e) => setNewLot({ ...newLot, reference: e.target.value })}
+              className="col-span-3"
+              placeholder="Ex: A12, B05"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="type" className="text-right">
+              Type *
+            </Label>
+            <Select
+              value={newLot.type}
+              onValueChange={(value) => setNewLot({ ...newLot, type: value })}
+            >
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Sélectionner un type" />
+              </SelectTrigger>
+              <SelectContent>
+                {LOT_TYPES.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="floor" className="text-right">
+              Étage
+            </Label>
+            <Input
+              id="floor"
+              type="number"
+              value={newLot.floor}
+              onChange={(e) => setNewLot({ ...newLot, floor: e.target.value })}
+              className="col-span-3"
+              placeholder="Ex: 0, 1, -1"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="surface" className="text-right">
+              Surface (m²)
+            </Label>
+            <Input
+              id="surface"
+              type="number"
+              step="0.01"
+              value={newLot.surface}
+              onChange={(e) => setNewLot({ ...newLot, surface: e.target.value })}
+              className="col-span-3"
+              placeholder="Ex: 65.50"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="tantiemes" className="text-right">
+              Tantièmes
+            </Label>
+            <Input
+              id="tantiemes"
+              type="number"
+              value={newLot.tantiemes}
+              onChange={(e) => setNewLot({ ...newLot, tantiemes: e.target.value })}
+              className="col-span-3"
+              placeholder="Ex: 150"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => setShowCreateDialog(false)}
+            disabled={isCreating}
+          >
+            Annuler
+          </Button>
+          <Button
+            onClick={handleCreateLot}
+            disabled={!newLot.reference.trim() || !newLot.type || !newLot.condominiumId || isCreating}
+          >
+            {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Créer
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
+  );
+}
+
 export default function OwnersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [owners, setOwners] = useState<Owner[]>([]);
+  const [condominiums, setCondominiums] = useState<Condominium[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -150,14 +627,18 @@ export default function OwnersPage() {
     email: "",
   });
 
-  const fetchOwners = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const data = await getOwners();
-      setOwners(data);
+      const [ownersData, condosData] = await Promise.all([
+        getOwners(),
+        getCondominiums(),
+      ]);
+      setOwners(ownersData);
+      setCondominiums(condosData);
       setError(null);
     } catch (err) {
-      setError("Erreur lors du chargement des propriétaires");
+      setError("Erreur lors du chargement des données");
       console.error(err);
     } finally {
       setLoading(false);
@@ -165,7 +646,7 @@ export default function OwnersPage() {
   };
 
   useEffect(() => {
-    fetchOwners();
+    fetchData();
   }, []);
 
   const handleSearchOrphans = async () => {
@@ -197,7 +678,7 @@ export default function OwnersPage() {
         setIsModalOpen(false);
         setOrphanSearchQuery("");
         setOrphanResults([]);
-        fetchOwners();
+        fetchData();
       }
     } catch (error) {
       console.error("Erreur lors de l'association:", error);
@@ -220,7 +701,7 @@ export default function OwnersPage() {
       if (response.ok) {
         setIsModalOpen(false);
         setNewOwnerForm({ firstName: "", lastName: "", email: "" });
-        fetchOwners();
+        fetchData();
       }
     } catch (error) {
       console.error("Erreur lors de la création:", error);
@@ -531,10 +1012,10 @@ export default function OwnersPage() {
               <TableHead className="font-medium">Propriétaire</TableHead>
               <TableHead className="font-medium">Contact</TableHead>
               <TableHead className="font-medium">Copropriétés</TableHead>
-              <TableHead className="font-medium text-center">Lots</TableHead>
-              <TableHead className="font-medium text-right">Solde</TableHead>
-              <TableHead className="font-medium text-center">SEPA</TableHead>
-              <TableHead className="font-medium text-center">Statut</TableHead>
+              <TableHead className="font-medium">Lots</TableHead>
+              <TableHead className="font-medium text-right w-[100px]">Solde</TableHead>
+              <TableHead className="font-medium text-center w-[100px]">SEPA</TableHead>
+              <TableHead className="font-medium text-center w-[100px]">Statut</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -600,22 +1081,18 @@ export default function OwnersPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1.5 text-sm">
-                        <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="truncate max-w-[150px]">
-                          {owner.condominiums[0] || "Aucune"}
-                        </span>
-                        {owner.condominiums.length > 1 && (
-                          <Badge variant="secondary" className="text-xs">
-                            +{owner.condominiums.length - 1}
-                          </Badge>
-                        )}
-                      </div>
+                      <CondominiumSelector
+                        owner={owner}
+                        allCondominiums={condominiums}
+                        onUpdate={fetchData}
+                      />
                     </TableCell>
-                    <TableCell className="text-center">
-                      <span className="text-sm text-muted-foreground">
-                        {owner.lots.length > 0 ? owner.lots.join(", ") : "-"}
-                      </span>
+                    <TableCell>
+                      <LotSelector
+                        owner={owner}
+                        ownerCondominiums={condominiums.filter(c => owner.condominiumIds?.includes(c.id))}
+                        onUpdate={fetchData}
+                      />
                     </TableCell>
                     <TableCell className="text-right">
                       <span className={balance.className}>{balance.text}</span>

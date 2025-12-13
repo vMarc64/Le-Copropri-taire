@@ -69,6 +69,18 @@ export const lots = pgTable('lots', {
 });
 
 // ============================================================================
+// OWNER CONDOMINIUMS (Association table)
+// ============================================================================
+
+export const ownerCondominiums = pgTable('owner_condominiums', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  ownerId: uuid('owner_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  condominiumId: uuid('condominium_id').notNull().references(() => condominiums.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+// ============================================================================
 // DOCUMENTS
 // ============================================================================
 

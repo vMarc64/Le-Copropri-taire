@@ -40,6 +40,7 @@ export interface Owner {
   phone: string;
   status: string;
   condominiums: string[];
+  condominiumIds?: string[];
   lots: string[];
   balance: number;
   hasSepaMandateActive: boolean;
@@ -47,6 +48,13 @@ export interface Owner {
 
 export async function getOwners(): Promise<Owner[]> {
   return fetchApi<Owner[]>('/owners');
+}
+
+export async function updateOwnerCondominiums(ownerId: string, condominiumIds: string[]): Promise<{ success: boolean; count: number }> {
+  return fetchApi<{ success: boolean; count: number }>(`/owners/${ownerId}/condominiums`, {
+    method: 'POST',
+    body: JSON.stringify({ condominiumIds }),
+  });
 }
 
 export interface OrphanOwner {
@@ -66,6 +74,31 @@ export async function searchOrphanOwners(query: string): Promise<OrphanOwner[]> 
 export async function associateOwnerToSyndic(ownerId: string): Promise<Owner> {
   return fetchApi<Owner>(`/owners/${ownerId}/associate`, {
     method: 'POST',
+  });
+}
+
+// Lots API for owners
+export interface AvailableLot {
+  id: string;
+  reference: string;
+  type: string;
+  floor: number | null;
+  surface: string | null;
+  tantiemes: number | null;
+  condominiumId: string;
+  condominiumName: string;
+  ownerId: string | null;
+  isAssigned: boolean;
+}
+
+export async function getAvailableLotsForOwner(ownerId: string): Promise<AvailableLot[]> {
+  return fetchApi<AvailableLot[]>(`/owners/${ownerId}/lots/available`);
+}
+
+export async function updateOwnerLots(ownerId: string, lotIds: string[]): Promise<{ success: boolean }> {
+  return fetchApi<{ success: boolean }>(`/owners/${ownerId}/lots`, {
+    method: 'POST',
+    body: JSON.stringify({ lotIds }),
   });
 }
 

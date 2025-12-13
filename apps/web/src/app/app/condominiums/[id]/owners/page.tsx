@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -21,6 +22,35 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   ArrowLeft,
   Users,
   CheckCircle2,
@@ -33,7 +63,22 @@ import {
   Mail,
   Receipt,
   Loader2,
+  Home,
+  Check,
+  ChevronsUpDown,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface CondoLot {
+  id: string;
+  reference: string;
+  type: string;
+  floor: number | null;
+  surface: string | null;
+  tantiemes: number | null;
+  ownerId: string | null;
+  isAssigned: boolean;
+}
 
 interface Owner {
   id: string;
@@ -41,10 +86,328 @@ interface Owner {
   email: string;
   phone: string;
   lots: string[];
+  lotIds?: string[];
   tantiemes: number;
   balance: number;
   status: string;
   sepaMandate: boolean;
+}
+
+interface LotSelectorProps {
+  owner: Owner;
+  condoId: string;
+  onUpdate: () => void;
+}
+
+const LOT_TYPES = [
+  { value: "appartement", label: "Appartement" },
+  { value: "parking", label: "Parking" },
+  { value: "cave", label: "Cave" },
+  { value: "commerce", label: "Commerce" },
+  { value: "bureau", label: "Bureau" },
+  { value: "box", label: "Box" },
+  { value: "autre", label: "Autre" },
+];
+
+function LotSelector({ owner, condoId, onUpdate }: LotSelectorProps) {
+  const [open, setOpen] = useState(false);
+  const [availableLots, setAvailableLots] = useState<CondoLot[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newLot, setNewLot] = useState({
+    reference: "",
+    type: "appartement",
+    floor: "",
+    surface: "",
+    tantiemes: "",
+  });
+
+  const loadAvailableLots = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/condominiums/${condoId}/lots/available?forOwner=${owner.id}`);
+      if (response.ok) {
+        const lots = await response.json();
+        setAvailableLots(lots);
+      }
+    } catch (error) {
+      console.error("Error loading available lots:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      loadAvailableLots();
+    }
+  }, [open, owner.id, condoId]);
+
+  const handleToggle = async (lotId: string) => {
+    const currentlyAssigned = availableLots.filter(l => l.isAssigned).map(l => l.id);
+    const newSelection = currentlyAssigned.includes(lotId)
+      ? currentlyAssigned.filter(id => id !== lotId)
+      : [...currentlyAssigned, lotId];
+
+    setIsSaving(true);
+    
+    // Optimistic update
+    setAvailableLots(prev => prev.map(lot => ({
+      ...lot,
+      isAssigned: newSelection.includes(lot.id)
+    })));
+
+    try {
+      const response = await fetch(`/api/condominiums/${condoId}/owners/${owner.id}/lots`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lotIds: newSelection }),
+      });
+      
+      if (response.ok) {
+        onUpdate();
+      } else {
+        // Revert on error
+        loadAvailableLots();
+      }
+    } catch (error) {
+      console.error("Error updating lots:", error);
+      loadAvailableLots();
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCreateLot = async () => {
+    if (!newLot.reference.trim() || !newLot.type) return;
+
+    setIsCreating(true);
+    try {
+      const response = await fetch(`/api/condominiums/${condoId}/lots`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reference: newLot.reference.trim(),
+          type: newLot.type,
+          floor: newLot.floor ? parseInt(newLot.floor) : undefined,
+          surface: newLot.surface ? parseFloat(newLot.surface) : undefined,
+          tantiemes: newLot.tantiemes ? parseInt(newLot.tantiemes) : undefined,
+          ownerId: owner.id, // Auto-assign to current owner
+        }),
+      });
+
+      if (response.ok) {
+        // Reset form
+        setNewLot({
+          reference: "",
+          type: "appartement",
+          floor: "",
+          surface: "",
+          tantiemes: "",
+        });
+        setShowCreateDialog(false);
+        // Reload available lots (new lot will be auto-selected since assigned to this owner)
+        await loadAvailableLots();
+        onUpdate();
+      }
+    } catch (error) {
+      console.error("Error creating lot:", error);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const assignedCount = owner.lots.length;
+  const displayText = assignedCount === 0
+    ? "Aucun"
+    : assignedCount === 1
+      ? owner.lots[0]
+      : `${owner.lots[0]} +${assignedCount - 1}`;
+
+  return (
+    <>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "h-auto py-1 px-2 font-normal justify-start gap-1.5",
+              assignedCount === 0 && "text-muted-foreground italic"
+            )}
+          >
+            <Home className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate max-w-[100px]">{displayText}</span>
+            <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
+            {isSaving && <Loader2 className="h-3 w-3 animate-spin" />}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[280px] p-0" align="start">
+          <Command>
+            <CommandInput placeholder="Rechercher un lot..." />
+            <CommandList>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : availableLots.length === 0 ? (
+                <CommandEmpty>Aucun lot disponible</CommandEmpty>
+              ) : (
+                <CommandGroup>
+                  {availableLots.map((lot) => (
+                    <CommandItem
+                      key={lot.id}
+                      value={`${lot.reference} ${lot.type}`}
+                      onSelect={() => handleToggle(lot.id)}
+                      className="cursor-pointer"
+                    >
+                      <div className={cn(
+                        "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border",
+                        lot.isAssigned
+                          ? "bg-primary border-primary text-primary-foreground"
+                          : "border-muted-foreground/50"
+                      )}>
+                        {lot.isAssigned && <Check className="h-3 w-3" />}
+                      </div>
+                      <div className="flex flex-col flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">{lot.reference}</span>
+                          <Badge variant="outline" className="text-xs py-0 h-5">
+                            {lot.type}
+                          </Badge>
+                        </div>
+                        {lot.tantiemes && (
+                          <span className="text-xs text-muted-foreground">
+                            {lot.tantiemes} tantièmes
+                          </span>
+                        )}
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+              <CommandSeparator />
+              <CommandGroup>
+                <CommandItem
+                  onSelect={() => {
+                    setOpen(false);
+                    setShowCreateDialog(true);
+                  }}
+                  className="cursor-pointer text-primary"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Créer un lot
+                </CommandItem>
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Créer un lot</DialogTitle>
+            <DialogDescription>
+              Créez un nouveau lot qui sera automatiquement assigné à {owner.name}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="reference" className="text-right">
+                Référence *
+              </Label>
+              <Input
+                id="reference"
+                value={newLot.reference}
+                onChange={(e) => setNewLot({ ...newLot, reference: e.target.value })}
+                className="col-span-3"
+                placeholder="Ex: A12, B05"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="type" className="text-right">
+                Type *
+              </Label>
+              <Select
+                value={newLot.type}
+                onValueChange={(value) => setNewLot({ ...newLot, type: value })}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Sélectionner un type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LOT_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="floor" className="text-right">
+                Étage
+              </Label>
+              <Input
+                id="floor"
+                type="number"
+                value={newLot.floor}
+                onChange={(e) => setNewLot({ ...newLot, floor: e.target.value })}
+                className="col-span-3"
+                placeholder="Ex: 0, 1, -1"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="surface" className="text-right">
+                Surface (m²)
+              </Label>
+              <Input
+                id="surface"
+                type="number"
+                step="0.01"
+                value={newLot.surface}
+                onChange={(e) => setNewLot({ ...newLot, surface: e.target.value })}
+                className="col-span-3"
+                placeholder="Ex: 65.50"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="tantiemes" className="text-right">
+                Tantièmes
+              </Label>
+              <Input
+                id="tantiemes"
+                type="number"
+                value={newLot.tantiemes}
+                onChange={(e) => setNewLot({ ...newLot, tantiemes: e.target.value })}
+                className="col-span-3"
+                placeholder="Ex: 150"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowCreateDialog(false)}
+              disabled={isCreating}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={handleCreateLot}
+              disabled={!newLot.reference.trim() || !newLot.type || isCreating}
+            >
+              {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Créer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 }
 
 export default function OwnersPage({ params }: { params: Promise<{ id: string }> }) {
@@ -54,20 +417,25 @@ export default function OwnersPage({ params }: { params: Promise<{ id: string }>
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        // TODO: Fetch from API
-        setOwners([]);
-        setError(null);
-      } catch (err) {
-        setError("Erreur lors du chargement des propriétaires");
-        console.error(err);
-      } finally {
-        setLoading(false);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/condominiums/${condoId}/owners`);
+      if (!response.ok) {
+        throw new Error("Erreur lors du chargement");
       }
+      const data = await response.json();
+      setOwners(data);
+      setError(null);
+    } catch (err) {
+      setError("Erreur lors du chargement des propriétaires");
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchData();
   }, [condoId]);
 
@@ -240,13 +608,11 @@ export default function OwnersPage({ params }: { params: Promise<{ id: string }>
                     </div>
                   </TableCell>
                   <TableCell className="h-12 px-4">
-                    <div className="flex gap-1 flex-wrap">
-                      {owner.lots.map((lot) => (
-                        <Badge key={lot} variant="outline" className="text-xs">
-                          {lot}
-                        </Badge>
-                      ))}
-                    </div>
+                    <LotSelector
+                      owner={owner}
+                      condoId={condoId}
+                      onUpdate={fetchData}
+                    />
                   </TableCell>
                   <TableCell className="h-12 px-4 text-center tabular-nums">
                     {owner.tantiemes}
