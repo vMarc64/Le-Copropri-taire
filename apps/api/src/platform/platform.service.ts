@@ -1,8 +1,18 @@
-import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException, Logger } from '@nestjs/common';
 import { eq, sql, desc, asc, ilike, and, count } from 'drizzle-orm';
+import * as bcrypt from 'bcrypt';
 import { db } from '../database';
 import { tenants, users, condominiums } from '../database/schema';
-import { CreateSyndicDto, UpdateSyndicDto, SyndicResponseDto, SyndicListResponseDto, SyndicDetailResponseDto } from './dto';
+import { 
+  CreateSyndicDto, 
+  UpdateSyndicDto, 
+  SyndicResponseDto, 
+  SyndicListResponseDto, 
+  SyndicDetailResponseDto,
+  CreateManagerDto,
+  ManagerResponseDto,
+  ManagerListResponseDto,
+} from './dto';
 
 @Injectable()
 export class PlatformService {
@@ -306,5 +316,157 @@ export class PlatformService {
       condominiums: condominiumsCount?.count || 0,
       owners: ownersCount?.count || 0,
     };
+  }
+
+  // ==========================================================================
+  // MANAGERS MANAGEMENT
+  // ==========================================================================
+
+  /**
+   * Get all managers of a syndic
+   */
+  async findManagersBySyndic(syndicId: string): Promise<ManagerListResponseDto> {
+    // Check syndic exists
+    const [syndic] = await db
+      .select()
+      .from(tenants)
+      .where(eq(tenants.id, syndicId))
+      .limit(1);
+
+    if (!syndic) {
+      throw new NotFoundException(`Syndic with ID ${syndicId} not found`);
+    }
+
+    const managers = await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        role: users.role,
+        status: users.status,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .where(and(eq(users.tenantId, syndicId), eq(users.role, 'manager')))
+      .orderBy(desc(users.createdAt));
+
+    return {
+      data: managers,
+      total: managers.length,
+    };
+  }
+
+  /**
+   * Create a manager for a syndic (invite)
+   */
+  async createManager(syndicId: string, dto: CreateManagerDto): Promise<ManagerResponseDto> {
+    // Check syndic exists
+    const [syndic] = await db
+      .select()
+      .from(tenants)
+      .where(eq(tenants.id, syndicId))
+      .limit(1);
+
+    if (!syndic) {
+      throw new NotFoundException(`Syndic with ID ${syndicId} not found`);
+    }
+
+    // Check if email already exists
+    const [existingUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, dto.email))
+      .limit(1);
+
+    if (existingUser) {
+      throw new ConflictException(`A user with email ${dto.email} already exists`);
+    }
+
+    // Generate a temporary password (in production, send email with reset link)
+    const tempPassword = Math.random().toString(36).slice(-12);
+    const passwordHash = await bcrypt.hash(tempPassword, 10);
+
+    const [created] = await db
+      .insert(users)
+      .values({
+        tenantId: syndicId,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        email: dto.email,
+        passwordHash,
+        role: 'manager',
+        status: 'pending', // Pending until they set their password
+      })
+      .returning();
+
+    this.logger.log(`Created manager ${created.id} for syndic ${syndicId}`);
+    // TODO: Send invitation email with password reset link
+
+    return {
+      id: created.id,
+      firstName: created.firstName,
+      lastName: created.lastName,
+      email: created.email,
+      role: created.role,
+      status: created.status,
+      createdAt: created.createdAt,
+      updatedAt: created.updatedAt,
+    };
+  }
+
+  /**
+   * Delete (revoke) a manager from a syndic
+   */
+  async deleteManager(syndicId: string, managerId: string): Promise<{ message: string }> {
+    // Check syndic exists
+    const [syndic] = await db
+      .select()
+      .from(tenants)
+      .where(eq(tenants.id, syndicId))
+      .limit(1);
+
+    if (!syndic) {
+      throw new NotFoundException(`Syndic with ID ${syndicId} not found`);
+    }
+
+    // Check manager exists and belongs to syndic
+    const [manager] = await db
+      .select()
+      .from(users)
+      .where(and(
+        eq(users.id, managerId),
+        eq(users.tenantId, syndicId),
+        eq(users.role, 'manager')
+      ))
+      .limit(1);
+
+    if (!manager) {
+      throw new NotFoundException(`Manager with ID ${managerId} not found in syndic ${syndicId}`);
+    }
+
+    // Check if this is the last manager
+    const [{ count: managerCount }] = await db
+      .select({ count: count() })
+      .from(users)
+      .where(and(eq(users.tenantId, syndicId), eq(users.role, 'manager')));
+
+    if (managerCount <= 1) {
+      throw new BadRequestException('Cannot delete the last manager of a syndic');
+    }
+
+    // Soft delete: set status to 'suspended'
+    await db
+      .update(users)
+      .set({
+        status: 'suspended',
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, managerId));
+
+    this.logger.log(`Revoked manager ${managerId} from syndic ${syndicId}`);
+
+    return { message: `Manager ${managerId} has been revoked` };
   }
 }
