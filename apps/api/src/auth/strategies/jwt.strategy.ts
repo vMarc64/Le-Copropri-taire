@@ -2,10 +2,12 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
+export type UserRole = 'platform_admin' | 'admin' | 'manager' | 'council' | 'owner' | 'tenant';
+
 export interface JwtPayload {
   sub: string; // user id
   email: string;
-  role: 'platform_admin' | 'manager' | 'owner' | 'tenant';
+  role: UserRole;
   tenantId: string | null; // null for platform_admin
 }
 
