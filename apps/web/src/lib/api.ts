@@ -1,5 +1,8 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+/**
+ * Fetch API for direct backend calls (used by server components)
+ */
 export async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const url = `${API_URL}${endpoint}`;
   
@@ -13,6 +16,27 @@ export async function fetchApi<T>(endpoint: string, options?: RequestInit): Prom
 
   if (!response.ok) {
     throw new Error(`API Error: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Fetch BFF API for client components (uses httpOnly cookie auth)
+ */
+export async function fetchBffApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(`/api${endpoint}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    credentials: 'include',
+    ...options,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `API Error: ${response.status} ${response.statusText}`);
   }
 
   return response.json();
@@ -33,7 +57,11 @@ export interface Owner {
 }
 
 export async function getOwners(): Promise<Owner[]> {
-  return fetchApi<Owner[]>('/owners');
+  return fetchBffApi<Owner[]>('/owners');
+}
+
+export async function getOwner(id: string): Promise<Owner | null> {
+  return fetchBffApi<Owner | null>(`/owners/${id}`);
 }
 
 // Documents API
