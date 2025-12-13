@@ -23,6 +23,9 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const redirectUrl = searchParams.get('redirect');
+  
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
@@ -53,9 +56,24 @@ export default function LoginPage() {
 
       const result = await response.json();
       localStorage.setItem("accessToken", result.accessToken);
+      localStorage.setItem("user", JSON.stringify(result.user));
       
-      // Redirect based on user role
-      router.push("/portal");
+      // If there's a redirect URL, use it
+      if (redirectUrl) {
+        router.push(redirectUrl);
+        return;
+      }
+      
+      // Otherwise redirect based on user role
+      const role = result.user?.role;
+      if (role === 'platform_admin') {
+        router.push("/platform");
+      } else if (role === 'manager' || role === 'syndic_admin') {
+        router.push("/app");
+      } else {
+        // owner or other roles go to portal
+        router.push("/portal");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Une erreur est survenue");
     } finally {
@@ -179,12 +197,12 @@ export default function LoginPage() {
               </Button>
 
               <p className="text-center text-sm text-muted-foreground pt-2">
-                Don&apos;t have an account?{" "}
+                Vous n&apos;avez pas de compte ?{" "}
                 <Link 
-                  href="/contact-sales" 
+                  href="/register" 
                   className="text-primary hover:text-primary/80 font-medium"
                 >
-                  Contact sales
+                  S&apos;inscrire
                 </Link>
               </p>
             </form>

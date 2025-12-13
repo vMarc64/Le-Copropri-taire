@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Bell, Search, User, Settings, HelpCircle, LogOut, ChevronDown } from "lucide-react";
 
 interface HeaderProps {
@@ -22,16 +23,30 @@ interface HeaderProps {
 }
 
 export function Header({ 
-  userName = "Jean Dupont",
-  userEmail = "jean.dupont@syndic.fr",
-  userRole = "Gestionnaire"
+  userName = "Utilisateur",
+  userEmail = "",
+  userRole = ""
 }: HeaderProps) {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    // Clear localStorage
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("user");
+    
+    // Clear cookie by setting expired date
+    document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    
+    // Redirect to login
+    router.push("/login");
+  };
+
   const initials = userName
     .split(" ")
     .map((n) => n[0])
     .join("")
     .toUpperCase()
-    .slice(0, 2);
+    .slice(0, 2) || "U";
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
@@ -105,7 +120,10 @@ export function Header({
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator className="my-1.5" />
-            <DropdownMenuItem className="rounded-lg px-3 py-2 text-[13px] text-rose-600 focus:text-rose-600 dark:text-rose-400 dark:focus:text-rose-400">
+            <DropdownMenuItem 
+              onClick={handleLogout}
+              className="rounded-lg px-3 py-2 text-[13px] text-rose-600 focus:text-rose-600 dark:text-rose-400 dark:focus:text-rose-400 cursor-pointer"
+            >
               <LogOut className="mr-2.5 h-4 w-4" />
               Déconnexion
             </DropdownMenuItem>
