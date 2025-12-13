@@ -81,6 +81,17 @@ export class CondominiumsController {
     );
   }
 
+  @Get(':id/lots')
+  async getLots(
+    @Param('id', ParseUUIDPipe) condoId: string,
+    @CurrentTenantId() tenantId: string,
+  ) {
+    if (!tenantId) {
+      throw new ForbiddenException('Tenant context is required');
+    }
+    return this.condominiumsService.getLots(condoId, tenantId);
+  }
+
   @Post(':id/lots')
   async createLot(
     @Param('id', ParseUUIDPipe) condoId: string,

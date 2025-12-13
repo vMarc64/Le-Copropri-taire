@@ -295,7 +295,7 @@ function LotSelector({ owner, condoId, onUpdate }: LotSelectorProps) {
                     setOpen(false);
                     setShowCreateDialog(true);
                   }}
-                  className="cursor-pointer text-primary"
+                  className="cursor-pointer !bg-primary/10 !text-primary data-[selected=true]:!bg-primary/20 data-[selected=true]:!text-primary font-medium"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Créer un lot

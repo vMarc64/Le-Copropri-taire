@@ -333,4 +333,57 @@ export class CondominiumsService {
 
     return newLot;
   }
+
+  /**
+   * Get all lots of a condominium with owner info
+   */
+  async getLots(condominiumId: string, tenantId: string) {
+    // Verify the condominium exists and belongs to the tenant
+    const [condo] = await db
+      .select({ id: condominiums.id })
+      .from(condominiums)
+      .where(and(
+        eq(condominiums.id, condominiumId),
+        eq(condominiums.tenantId, tenantId)
+      ));
+
+    if (!condo) {
+      throw new NotFoundException('Copropriété non trouvée');
+    }
+
+    const lotsData = await db
+      .select({
+        id: lots.id,
+        reference: lots.reference,
+        type: lots.type,
+        floor: lots.floor,
+        surface: lots.surface,
+        tantiemes: lots.tantiemes,
+        ownerId: lots.ownerId,
+        ownerFirstName: users.firstName,
+        ownerLastName: users.lastName,
+        createdAt: lots.createdAt,
+      })
+      .from(lots)
+      .leftJoin(users, eq(lots.ownerId, users.id))
+      .where(and(
+        eq(lots.condominiumId, condominiumId),
+        eq(lots.tenantId, tenantId)
+      ))
+      .orderBy(lots.reference);
+
+    return lotsData.map(lot => ({
+      id: lot.id,
+      reference: lot.reference,
+      type: lot.type,
+      floor: lot.floor,
+      surface: lot.surface ? parseFloat(lot.surface) : null,
+      tantiemes: lot.tantiemes,
+      owner: lot.ownerId ? {
+        id: lot.ownerId,
+        name: `${lot.ownerFirstName} ${lot.ownerLastName}`,
+      } : null,
+      createdAt: lot.createdAt,
+    }));
+  }
 }
