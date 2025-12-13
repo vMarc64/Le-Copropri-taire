@@ -20,7 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, LayoutGrid, List, Eye, DoorOpen, Users, Settings, MoreVertical } from "lucide-react";
 import { getCondominiums, type Condominium } from "@/lib/api";
 
 export default function CondominiumsListPage() {
@@ -82,7 +82,10 @@ export default function CondominiumsListPage() {
           </p>
         </div>
         <Button asChild>
-          <Link href="/app/condominiums/new">🏢 Nouvelle copropriété</Link>
+          <Link href="/app/condominiums/new">
+            <Plus className="mr-2 h-4 w-4" />
+            Nouvelle copropriété
+          </Link>
         </Button>
       </div>
 
@@ -94,20 +97,24 @@ export default function CondominiumsListPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-sm"
         />
-        <div className="flex gap-2">
+        <div className="flex gap-1 rounded-lg border p-1">
           <Button
-            variant={viewMode === "table" ? "default" : "outline"}
+            variant={viewMode === "table" ? "secondary" : "ghost"}
             size="sm"
             onClick={() => setViewMode("table")}
+            className="h-8 px-3"
           >
-            📋 Tableau
+            <List className="mr-1.5 h-4 w-4" />
+            Tableau
           </Button>
           <Button
-            variant={viewMode === "cards" ? "default" : "outline"}
+            variant={viewMode === "cards" ? "secondary" : "ghost"}
             size="sm"
             onClick={() => setViewMode("cards")}
+            className="h-8 px-3"
           >
-            🎴 Cartes
+            <LayoutGrid className="mr-1.5 h-4 w-4" />
+            Cartes
           </Button>
         </div>
       </div>
@@ -116,77 +123,102 @@ export default function CondominiumsListPage() {
       {viewMode === "table" && (
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nom</TableHead>
-                  <TableHead>Adresse</TableHead>
-                  <TableHead className="text-center">Lots</TableHead>
-                  <TableHead className="text-center">Propriétaires</TableHead>
-                  <TableHead className="text-right">Solde</TableHead>
-                  <TableHead className="text-center">SEPA</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCondos.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                      Aucune copropriété trouvée
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-[180px]">Nom</TableHead>
+                    <TableHead className="min-w-[200px]">Adresse</TableHead>
+                    <TableHead className="w-[80px] text-center">Lots</TableHead>
+                    <TableHead className="w-[100px] text-center">Propriétaires</TableHead>
+                    <TableHead className="w-[100px] text-right">Solde</TableHead>
+                    <TableHead className="w-[80px] text-center">SEPA</TableHead>
+                    <TableHead className="w-[60px]"></TableHead>
                   </TableRow>
-                ) : (
-                  filteredCondos.map((condo) => (
-                    <TableRow key={condo.id}>
-                      <TableCell>
-                        <Link
-                          href={`/app/condominiums/${condo.id}`}
-                          className="font-medium hover:underline"
-                        >
-                          {condo.name}
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        {condo.address}, {condo.postalCode} {condo.city}
-                      </TableCell>
-                      <TableCell className="text-center">{condo.lots}</TableCell>
-                      <TableCell className="text-center">{condo.owners}</TableCell>
-                      <TableCell className={`text-right font-medium ${condo.balance < 0 ? "text-destructive" : "text-green-600"}`}>
-                        {condo.balance.toLocaleString()} €
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {condo.sepaEnabled ? (
-                          <Badge variant="default">Actif</Badge>
-                        ) : (
-                          <Badge variant="secondary">Inactif</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">⋮</Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link href={`/app/condominiums/${condo.id}`}>👁️ Voir</Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/app/condominiums/${condo.id}/lots`}>🚪 Lots</Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/app/condominiums/${condo.id}/owners`}>👥 Propriétaires</Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/app/condominiums/${condo.id}/settings`}>⚙️ Paramètres</Link>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                </TableHeader>
+                <TableBody>
+                  {filteredCondos.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                        Aucune copropriété trouvée
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    filteredCondos.map((condo) => (
+                      <TableRow key={condo.id} className="group">
+                        <TableCell className="font-medium">
+                          <Link
+                            href={`/app/condominiums/${condo.id}`}
+                            className="hover:text-primary hover:underline"
+                          >
+                            {condo.name}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {condo.address}, {condo.postalCode} {condo.city}
+                        </TableCell>
+                        <TableCell className="text-center tabular-nums">{condo.lots}</TableCell>
+                        <TableCell className="text-center tabular-nums">{condo.owners}</TableCell>
+                        <TableCell className={`text-right font-medium tabular-nums ${condo.balance < 0 ? "text-destructive" : "text-emerald-600"}`}>
+                          {condo.balance.toLocaleString('fr-FR')} €
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {condo.sepaEnabled ? (
+                            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                              Actif
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="text-muted-foreground">
+                              Inactif
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <span className="sr-only">Actions</span>
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40">
+                              <DropdownMenuItem asChild>
+                                <Link href={`/app/condominiums/${condo.id}`} className="flex items-center">
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Voir
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link href={`/app/condominiums/${condo.id}/lots`} className="flex items-center">
+                                  <DoorOpen className="mr-2 h-4 w-4" />
+                                  Lots
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link href={`/app/condominiums/${condo.id}/owners`} className="flex items-center">
+                                  <Users className="mr-2 h-4 w-4" />
+                                  Propriétaires
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link href={`/app/condominiums/${condo.id}/settings`} className="flex items-center">
+                                  <Settings className="mr-2 h-4 w-4" />
+                                  Paramètres
+                                </Link>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       )}
