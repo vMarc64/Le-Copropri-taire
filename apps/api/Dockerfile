@@ -54,8 +54,8 @@ EXPOSE 3002
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3002/ || exit 1
 
-# Start the application
-CMD ["node", "dist/main.js"]
+# Start the application (NestJS compiles to dist/src/main.js in this repo)
+CMD ["node", "dist/src/main.js"]
 
 # Start the application
 CMD ["node", "dist/main.js"]
