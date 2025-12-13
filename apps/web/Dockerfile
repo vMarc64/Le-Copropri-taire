@@ -6,8 +6,11 @@ WORKDIR /app
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9 --activate
 
-# Copy package files (no lockfile in app directory for monorepo)
-COPY package.json ./
+# Copy root package files for monorepo
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Copy Web package.json
+COPY apps/web/package.json ./apps/web/
 
 # Install dependencies
 RUN pnpm install
@@ -15,18 +18,18 @@ RUN pnpm install
 # Copy source code
 COPY . .
 
-# Build the application
-RUN pnpm run build
+# Build the application with Next.js
+RUN pnpm --filter web run build
 
 # Production stage
 FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Copy necessary files from builder
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
+# Copy necessary files from builder (Next.js standalone)
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./.next/static
+COPY --from=builder /app/apps/web/public ./public
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
