@@ -171,6 +171,7 @@ export interface Condominium {
   lots: number;
   owners: number;
   balance: number;
+  hasBankAccount: boolean;
 }
 
 export async function getCondominiums(): Promise<Condominium[]> {
@@ -195,9 +196,9 @@ export interface CondominiumWithUnpaid {
   id: string;
   name: string;
   address: string;
-  latePayments: number;
   unpaidAmount: number;
   ownersInArrears: number;
+  failedDirectDebits: number;
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {

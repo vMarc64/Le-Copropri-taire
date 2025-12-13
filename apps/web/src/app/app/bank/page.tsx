@@ -103,6 +103,7 @@ export default function BankPage() {
   });
 
   const totalBalance = bankAccounts.reduce((sum, acc) => sum + acc.balance, 0);
+  const hasBankAccounts = bankAccounts.length > 0;
   const unmatchedCount = transactions.filter((tx) => tx.reconciliationStatus === "unmatched").length;
   const pendingCount = transactions.filter((tx) => tx.reconciliationStatus === "pending").length;
 
@@ -160,17 +161,21 @@ export default function BankPage() {
                 </div>
                 <div>
                   <p className="text-[13px] font-medium text-muted-foreground">Solde total</p>
-                  <p className="text-2xl font-semibold text-foreground">
-                    {totalBalance.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
+                  <p className={`text-2xl font-semibold ${hasBankAccounts ? "text-foreground" : "text-muted-foreground"}`}>
+                    {hasBankAccounts 
+                      ? `${totalBalance.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €`
+                      : "N/A"}
                   </p>
                 </div>
               </div>
-              <div className="mt-4 flex items-center gap-4 text-[13px]">
-                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                  <TrendingUp className="h-4 w-4" />
-                  +2.5% ce mois
-                </span>
-              </div>
+              {hasBankAccounts && (
+                <div className="mt-4 flex items-center gap-4 text-[13px]">
+                  <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                    <TrendingUp className="h-4 w-4" />
+                    +2.5% ce mois
+                  </span>
+                </div>
+              )}
             </CardContent>
           </Card>
 
