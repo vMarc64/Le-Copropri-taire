@@ -21,22 +21,26 @@ COPY . .
 # Build the API
 RUN pnpm --filter api run build
 
-# Prune dev dependencies, keep only prod
-RUN pnpm prune --prod
-
 # Production stage
 FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Copy the pruned node_modules from builder (monorepo structure)
+# Install pnpm for running with proper module resolution
+RUN corepack enable && corepack prepare pnpm@9 --activate
+
+# Copy the full node_modules from builder (includes .pnpm with all deps)
 COPY --from=builder /app/node_modules ./node_modules
+
+# Copy API-specific node_modules (symlinks to production deps)
+COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
 
 # Copy built application from builder
 COPY --from=builder /app/apps/api/dist ./dist
 
-# Copy package.json for reference
-COPY --from=builder /app/apps/api/package.json ./package.json
+# Copy package files for module resolution
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -51,5 +55,6 @@ EXPOSE 3002
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3002/ || exit 1
 
-# Start the application
+# Start the application with proper NODE_PATH
+ENV NODE_PATH=/app/apps/api/node_modules:/app/node_modules
 CMD ["node", "dist/src/main.js"]
