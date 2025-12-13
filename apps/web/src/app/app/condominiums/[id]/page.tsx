@@ -131,9 +131,15 @@ export default function CondominiumDashboardPage({ params }: { params: Promise<{
         {[
           {
             label: "Solde actuel",
-            value: `${condominium.balance.toLocaleString("fr-FR")} €`,
+            value: condominium.hasBankAccount 
+              ? `${condominium.balance.toLocaleString("fr-FR")} €`
+              : "N/A",
             icon: DollarSign,
-            valueClass: condominium.balance < 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400",
+            valueClass: !condominium.hasBankAccount 
+              ? "text-muted-foreground"
+              : condominium.balance < 0 
+                ? "text-destructive" 
+                : "text-emerald-600 dark:text-emerald-400",
           },
           {
             label: "Lots",

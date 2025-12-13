@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { db } from '../database/client';
-import { condominiums, lots, users, payments, ownerCondominiums, sepaMandates } from '../database/schema';
+import { condominiums, lots, users, payments, ownerCondominiums, sepaMandates, powensConnections } from '../database/schema';
 import { eq, and, count, sum, sql, inArray, or, isNull } from 'drizzle-orm';
 import { CreateCondominiumDto, CreateLotDto } from './dto';
 
@@ -78,11 +78,21 @@ export class CondominiumsService {
             eq(payments.status, 'completed')
           ));
 
+        // Check if condominium has a bank connection
+        const [bankConnectionResult] = await db
+          .select({ count: count() })
+          .from(powensConnections)
+          .where(and(
+            eq(powensConnections.condominiumId, condo.id),
+            eq(powensConnections.status, 'active')
+          ));
+
         return {
           ...condo,
           lots: lotsResult?.count || 0,
           owners: totalOwnersResult[0]?.count || 0,
           balance: parseFloat(balanceResult?.balance?.toString() || '0'),
+          hasBankAccount: (bankConnectionResult?.count || 0) > 0,
         };
       })
     );
@@ -125,11 +135,21 @@ export class CondominiumsService {
         eq(payments.status, 'completed')
       ));
 
+    // Check if condominium has a bank connection
+    const [bankConnectionResult] = await db
+      .select({ count: count() })
+      .from(powensConnections)
+      .where(and(
+        eq(powensConnections.condominiumId, id),
+        eq(powensConnections.status, 'active')
+      ));
+
     return {
       ...condo,
       lots: lotsResult?.count || 0,
       owners: totalOwnersResult[0]?.count || 0,
       balance: parseFloat(balanceResult?.balance?.toString() || '0'),
+      hasBankAccount: (bankConnectionResult?.count || 0) > 0,
     };
   }
 
@@ -205,7 +225,7 @@ export class CondominiumsService {
             eq(payments.status, 'completed')
           ));
 
-        const totalTantiemes = ownerLots.reduce((acc, lot) => acc + (lot.tantiemes || 0), 0);
+        const totalTantiemes = ownerLots.reduce((acc, lot) => acc + parseFloat(String(lot.tantiemes || 0)), 0);
         const balanceValue = parseFloat(balanceResult?.balance?.toString() || '0');
 
         return {
@@ -326,7 +346,7 @@ export class CondominiumsService {
         type: data.type,
         floor: data.floor,
         surface: data.surface?.toString(),
-        tantiemes: data.tantiemes,
+        tantiemes: data.tantiemes?.toString(),
         ownerId: data.ownerId || null,
       })
       .returning();
@@ -378,12 +398,101 @@ export class CondominiumsService {
       type: lot.type,
       floor: lot.floor,
       surface: lot.surface ? parseFloat(lot.surface) : null,
-      tantiemes: lot.tantiemes,
+      tantiemes: lot.tantiemes ? parseFloat(lot.tantiemes) : null,
       owner: lot.ownerId ? {
         id: lot.ownerId,
         name: `${lot.ownerFirstName} ${lot.ownerLastName}`,
       } : null,
       createdAt: lot.createdAt,
     }));
+  }
+
+  /**
+   * Update a lot (except reference)
+   */
+  async updateLot(lotId: string, tenantId: string, data: Partial<{
+    type: string;
+    floor: number;
+    surface: number;
+    tantiemes: number;
+    ownerId: string | null;
+  }>) {
+    // Verify the lot exists and belongs to the tenant
+    const [existingLot] = await db
+      .select({ id: lots.id })
+      .from(lots)
+      .where(and(
+        eq(lots.id, lotId),
+        eq(lots.tenantId, tenantId)
+      ));
+
+    if (!existingLot) {
+      throw new NotFoundException('Lot non trouvé');
+    }
+
+    const updateData: Record<string, unknown> = {};
+    if (data.type !== undefined) updateData.type = data.type;
+    if (data.floor !== undefined) updateData.floor = data.floor;
+    if (data.surface !== undefined) updateData.surface = data.surface?.toString();
+    if (data.tantiemes !== undefined) updateData.tantiemes = data.tantiemes?.toString();
+    if (data.ownerId !== undefined) updateData.ownerId = data.ownerId;
+
+    const [updatedLot] = await db
+      .update(lots)
+      .set(updateData)
+      .where(eq(lots.id, lotId))
+      .returning();
+
+    return updatedLot;
+  }
+
+  /**
+   * Delete a lot
+   */
+  async deleteLot(lotId: string, tenantId: string) {
+    // Verify the lot exists and belongs to the tenant
+    const [existingLot] = await db
+      .select({ id: lots.id })
+      .from(lots)
+      .where(and(
+        eq(lots.id, lotId),
+        eq(lots.tenantId, tenantId)
+      ));
+
+    if (!existingLot) {
+      throw new NotFoundException('Lot non trouvé');
+    }
+
+    await db
+      .delete(lots)
+      .where(eq(lots.id, lotId));
+
+    return { success: true };
+  }
+
+  /**
+   * Assign a lot to an owner
+   */
+  async assignLot(lotId: string, ownerId: string | null, tenantId: string) {
+    // Verify the lot exists and belongs to the tenant
+    const [existingLot] = await db
+      .select({ id: lots.id })
+      .from(lots)
+      .where(and(
+        eq(lots.id, lotId),
+        eq(lots.tenantId, tenantId)
+      ));
+
+    if (!existingLot) {
+      throw new NotFoundException('Lot non trouvé');
+    }
+
+    const [updatedLot] = await db
+      .update(lots)
+      .set({ ownerId })
+      .where(eq(lots.id, lotId))
+      .returning();
+
+    return updatedLot;
   }
 }
