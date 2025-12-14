@@ -14,7 +14,8 @@ import {
   Plus,
   Building2,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Users
 } from "lucide-react";
 import { 
   getDashboardStats, 
@@ -108,30 +109,30 @@ export default function ManagerDashboardPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto space-y-8 px-6 py-8 lg:px-8">
+      <div className="mx-auto space-y-6 md:space-y-8 px-0 md:px-6 py-4 md:py-8 lg:px-8">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard</h1>
-          <p className="mt-1 text-[15px] text-muted-foreground">Vue d&apos;ensemble de votre portefeuille immobilier</p>
+        <div className="px-4 md:px-0">
+          <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-foreground">Dashboard</h1>
+          <p className="mt-1 text-[14px] md:text-[15px] text-muted-foreground">Vue d&apos;ensemble de votre portefeuille immobilier</p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 px-4 md:px-0">
           {/* Late Payments */}
           <Card className="p-0">
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-start justify-between">
-                <div className="space-y-3">
-                  <p className="text-[13px] font-medium text-muted-foreground">Retards de paiement</p>
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-4xl font-semibold tracking-tight text-foreground">
+                <div className="space-y-2 md:space-y-3">
+                  <p className="text-[12px] md:text-[13px] font-medium text-muted-foreground">Retards de paiement</p>
+                  <div className="flex items-baseline gap-2 md:gap-3">
+                    <span className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
                       {stats.latePayments}
                     </span>
                     <TrendBadge value={stats.latePaymentsTrend} />
                   </div>
                 </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                  <Clock className="h-6 w-6 text-primary" />
+                <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full bg-primary/10">
+                  <Clock className="h-5 w-5 md:h-6 md:w-6 text-primary" />
                 </div>
               </div>
             </CardContent>
@@ -139,39 +140,39 @@ export default function ManagerDashboardPage() {
 
           {/* Total Unpaid */}
           <Card className="p-0">
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-start justify-between">
-                <div className="space-y-3">
-                  <p className="text-[13px] font-medium text-muted-foreground">Total impayés</p>
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-4xl font-semibold tracking-tight text-foreground">
+                <div className="space-y-2 md:space-y-3">
+                  <p className="text-[12px] md:text-[13px] font-medium text-muted-foreground">Total impayés</p>
+                  <div className="flex items-baseline gap-2 md:gap-3">
+                    <span className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
                       {stats.totalUnpaid.toLocaleString("fr-FR")} €
                     </span>
                     <TrendBadge value={stats.totalUnpaidTrend} inverted />
                   </div>
                 </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                  <Euro className="h-6 w-6 text-primary" />
+                <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full bg-primary/10">
+                  <Euro className="h-5 w-5 md:h-6 md:w-6 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Failed Direct Debits */}
-          <Card className="p-0">
-            <CardContent className="p-6">
+          <Card className="p-0 sm:col-span-2 lg:col-span-1">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-start justify-between">
-                <div className="space-y-3">
-                  <p className="text-[13px] font-medium text-muted-foreground">Prélèvements échoués</p>
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-4xl font-semibold tracking-tight text-foreground">
+                <div className="space-y-2 md:space-y-3">
+                  <p className="text-[12px] md:text-[13px] font-medium text-muted-foreground">Prélèvements échoués</p>
+                  <div className="flex items-baseline gap-2 md:gap-3">
+                    <span className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
                       {stats.failedDirectDebits}
                     </span>
                     <TrendBadge value={stats.failedDirectDebitsTrend} />
                   </div>
                 </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-                  <AlertTriangle className="h-6 w-6 text-destructive" />
+                <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-full bg-destructive/10">
+                  <AlertTriangle className="h-5 w-5 md:h-6 md:w-6 text-destructive" />
                 </div>
               </div>
             </CardContent>
@@ -179,12 +180,12 @@ export default function ManagerDashboardPage() {
         </div>
 
         {/* Main Content Grid - Responsive 2 columns on 2xl+ */}
-        <div className="grid gap-8 2xl:grid-cols-2">
+        <div className="grid gap-6 md:gap-8 2xl:grid-cols-2 px-4 md:px-0">
           {/* Condominiums Section */}
-          <div className="space-y-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-foreground">Copropriétés</h2>
-              <Button size="sm" className="h-9 gap-2 rounded-lg px-4 text-[13px] font-medium" asChild>
+          <div className="space-y-4 md:space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h2 className="text-base md:text-lg font-semibold text-foreground">Copropriétés</h2>
+              <Button size="sm" className="h-9 gap-2 rounded-lg px-4 text-[13px] font-medium w-full sm:w-auto" asChild>
                 <Link href="/app/condominiums/new">
                   <Plus className="h-4 w-4" />
                   Nouvelle copropriété
@@ -194,23 +195,65 @@ export default function ManagerDashboardPage() {
 
             {/* Filter Tabs */}
             <Tabs value={filter} onValueChange={(v) => setFilter(v as "all" | "up-to-date" | "late")} defaultValue="late">
-              <TabsList>
-                <TabsTrigger value="late" className="gap-2 data-[state=active]:!text-destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  En retard ({condominiums.filter(c => c.unpaidAmount > 0 || c.ownersInArrears > 0).length})
+              <TabsList className="w-full sm:w-auto flex">
+                <TabsTrigger value="late" className="gap-1 sm:gap-2 data-[state=active]:!text-destructive flex-1 sm:flex-initial text-xs sm:text-sm">
+                  <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">En retard</span> ({condominiums.filter(c => c.unpaidAmount > 0 || c.ownersInArrears > 0).length})
                 </TabsTrigger>
-                <TabsTrigger value="all" className="gap-2">
-                  <Building2 className="h-4 w-4" />
-                  Toutes ({condominiums.length})
+                <TabsTrigger value="all" className="gap-1 sm:gap-2 flex-1 sm:flex-initial text-xs sm:text-sm">
+                  <Building2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Toutes</span> ({condominiums.length})
                 </TabsTrigger>
-                <TabsTrigger value="up-to-date" className="gap-2 data-[state=active]:!text-emerald-600">
-                  <CheckCircle2 className="h-4 w-4" />
-                  À jour ({condominiums.filter(c => c.unpaidAmount === 0 && c.ownersInArrears === 0).length})
+                <TabsTrigger value="up-to-date" className="gap-1 sm:gap-2 data-[state=active]:!text-emerald-600 flex-1 sm:flex-initial text-xs sm:text-sm">
+                  <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">À jour</span> ({condominiums.filter(c => c.unpaidAmount === 0 && c.ownersInArrears === 0).length})
                 </TabsTrigger>
               </TabsList>
             </Tabs>
 
-            <Card className="overflow-hidden p-0">
+            {/* Mobile Cards View */}
+            <div className="md:hidden space-y-3">
+              {filteredCondominiums.length === 0 ? (
+                <Card className="p-6">
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Building2 className="h-12 w-12 text-muted-foreground/50" />
+                    <p className="mt-4 text-sm text-muted-foreground">
+                      {filter === "all" && "Aucune copropriété"}
+                      {filter === "up-to-date" && "Aucune copropriété à jour"}
+                      {filter === "late" && "Aucune copropriété en retard"}
+                    </p>
+                  </div>
+                </Card>
+              ) : (
+                filteredCondominiums.map((condo) => (
+                  <Link key={condo.id} href={`/app/condominiums/${condo.id}`}>
+                    <Card className="p-4 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary">
+                          <Building2 className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[14px] font-medium text-foreground truncate">{condo.name}</p>
+                          <p className="text-[13px] text-muted-foreground truncate">{condo.address}</p>
+                          <div className="flex items-center gap-4 mt-2">
+                            <span className={`text-[13px] font-semibold ${condo.unpaidAmount > 0 ? 'text-destructive' : 'text-emerald-600'}`}>
+                              {condo.unpaidAmount.toLocaleString("fr-FR")} €
+                            </span>
+                            <span className={`inline-flex items-center gap-1 text-[12px] ${condo.ownersInArrears > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                              <Users className="h-3 w-3" />
+                              {condo.ownersInArrears} en retard
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  </Link>
+                ))
+              )}
+            </div>
+
+            {/* Desktop Table View */}
+            <Card className="overflow-hidden p-0 hidden md:block">
               <div className="overflow-x-auto">
                 {/* Table Header */}
                 <div className="grid min-w-[600px] grid-cols-12 gap-4 border-b border-border bg-muted/50 px-6 py-3">

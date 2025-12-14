@@ -172,62 +172,62 @@ export default function DocumentsPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto max-w-7xl space-y-8 px-6 py-8 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-6 md:space-y-8 px-0 md:px-6 py-4 md:py-8 lg:px-8">
         {/* Header */}
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 px-4 md:px-0">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-foreground">
               Documents
             </h1>
-            <p className="mt-1 text-[15px] text-muted-foreground">
+            <p className="mt-1 text-[14px] md:text-[15px] text-muted-foreground">
               Gérez et partagez les documents de vos copropriétés
             </p>
           </div>
-          <Button className="h-10 gap-2 rounded-lg px-4 text-[13px] font-medium">
+          <Button className="h-10 gap-2 rounded-lg px-4 text-[13px] font-medium w-full sm:w-auto">
             <Upload className="h-4 w-4" />
             Ajouter un document
           </Button>
         </div>
 
         {/* Stats */}
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-3 px-4 md:px-0">
           <Card className="p-0">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
-                  <FolderOpen className="h-5 w-5 text-primary" />
+            <CardContent className="p-4 md:p-5">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-xl bg-primary/10">
+                  <FolderOpen className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-2xl font-semibold text-foreground">{stats.total}</p>
-                  <p className="text-[13px] text-muted-foreground">Documents totaux</p>
+                  <p className="text-xl md:text-2xl font-semibold text-foreground">{stats.total}</p>
+                  <p className="text-[12px] md:text-[13px] text-muted-foreground">Documents totaux</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="p-0">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10">
-                  <Calendar className="h-5 w-5 text-emerald-500" />
+            <CardContent className="p-4 md:p-5">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-xl bg-emerald-500/10">
+                  <Calendar className="h-4 w-4 md:h-5 md:w-5 text-emerald-500" />
                 </div>
                 <div>
-                  <p className="text-2xl font-semibold text-foreground">{stats.thisMonth}</p>
-                  <p className="text-[13px] text-muted-foreground">Ajoutés ce mois</p>
+                  <p className="text-xl md:text-2xl font-semibold text-foreground">{stats.thisMonth}</p>
+                  <p className="text-[12px] md:text-[13px] text-muted-foreground">Ajoutés ce mois</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="p-0">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500/10">
-                  <FileText className="h-5 w-5 text-blue-500" />
+            <CardContent className="p-4 md:p-5">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="flex h-10 w-10 md:h-11 md:w-11 items-center justify-center rounded-xl bg-blue-500/10">
+                  <FileText className="h-4 w-4 md:h-5 md:w-5 text-blue-500" />
                 </div>
                 <div>
-                  <p className="text-2xl font-semibold text-foreground">{formatFileSize(stats.totalSize)}</p>
-                  <p className="text-[13px] text-muted-foreground">Espace utilisé</p>
+                  <p className="text-xl md:text-2xl font-semibold text-foreground">{formatFileSize(stats.totalSize)}</p>
+                  <p className="text-[12px] md:text-[13px] text-muted-foreground">Espace utilisé</p>
                 </div>
               </div>
             </CardContent>
@@ -235,51 +235,116 @@ export default function DocumentsPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 md:gap-4 px-4 md:px-0">
+          <div className="relative flex-1 min-w-0 sm:max-w-md">
             <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Rechercher un document..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 pl-10 rounded-lg"
+              className="h-10 pl-10 rounded-lg w-full"
             />
           </div>
-          <Select value={selectedType} onValueChange={setSelectedType}>
-            <SelectTrigger className="w-[180px] h-10 rounded-lg">
-              <SelectValue placeholder="Type" />
-            </SelectTrigger>
-            <SelectContent>
-              {documentTypes.map((type) => (
-                <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-[200px] h-10 rounded-lg">
-              <SelectValue placeholder="Catégorie" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((cat) => (
-                <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={selectedCondominium} onValueChange={setSelectedCondominium}>
-            <SelectTrigger className="w-[220px] h-10 rounded-lg">
-              <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
-              <SelectValue placeholder="Résidence" />
-            </SelectTrigger>
-            <SelectContent>
-              {condominiums.map((condo) => (
-                <SelectItem key={condo.value} value={condo.value}>{condo.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2 sm:gap-3">
+            <Select value={selectedType} onValueChange={setSelectedType}>
+              <SelectTrigger className="w-full sm:w-[180px] h-10 rounded-lg">
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                {documentTypes.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-full sm:w-[160px] md:w-[200px] h-10 rounded-lg">
+                <SelectValue placeholder="Catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedCondominium} onValueChange={setSelectedCondominium}>
+              <SelectTrigger className="w-full sm:w-[180px] md:w-[220px] h-10 rounded-lg">
+                <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Résidence" />
+              </SelectTrigger>
+              <SelectContent>
+                {condominiums.map((condo) => (
+                  <SelectItem key={condo.value} value={condo.value}>{condo.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {/* Documents List */}
-        <Card className="overflow-hidden p-0">
+        {/* Mobile Cards View */}
+        <div className="md:hidden space-y-3 px-4">
+          {filteredDocuments.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 rounded-lg border bg-card">
+              <FolderOpen className="h-10 w-10 text-muted-foreground/50" />
+              <p className="mt-4 text-[14px] font-medium text-foreground">Aucun document trouvé</p>
+              <p className="mt-1 text-[12px] text-muted-foreground text-center px-4">
+                Essayez de modifier vos filtres ou ajoutez un nouveau document
+              </p>
+            </div>
+          ) : (
+            filteredDocuments.map((doc) => {
+              const FileIcon = getFileIcon(doc.mimeType);
+              return (
+                <div key={doc.id} className="rounded-lg border bg-card p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                        <FileIcon className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-medium text-foreground truncate">{doc.name}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {formatFileSize(doc.fileSize)} • {new Date(doc.createdAt).toLocaleDateString("fr-FR")}
+                        </p>
+                      </div>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem className="gap-2">
+                          <Eye className="h-4 w-4" />
+                          Aperçu
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2">
+                          <Download className="h-4 w-4" />
+                          Télécharger
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="gap-2 text-destructive focus:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                          Supprimer
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <TypeBadge type={doc.type} />
+                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <Building2 className="h-3 w-3" />
+                      {doc.condominiumName}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop Documents List */}
+        <Card className="overflow-hidden p-0 mx-4 md:mx-0 hidden md:block">
           <div className="overflow-x-auto">
             {/* Table Header */}
             <div className="grid min-w-[800px] grid-cols-12 gap-4 border-b border-border bg-muted/50 px-6 py-3">

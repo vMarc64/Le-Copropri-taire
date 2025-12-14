@@ -746,11 +746,11 @@ export default function OwnersPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Propriétaires</h1>
+          <h1 className="text-xl md:text-2xl font-semibold tracking-tight">Propriétaires</h1>
           <p className="text-sm text-muted-foreground">
             Gérez les {owners.length} propriétaire{owners.length > 1 ? "s" : ""} de votre portefeuille
           </p>
@@ -769,12 +769,12 @@ export default function OwnersPage() {
           }}
         >
           <DialogTrigger asChild>
-            <Button size="sm">
+            <Button size="sm" className="w-full sm:w-auto">
               <UserPlus className="mr-2 h-4 w-4" />
               Ajouter
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Ajouter un propriétaire</DialogTitle>
               <DialogDescription>
@@ -943,58 +943,58 @@ export default function OwnersPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-lg border bg-card p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10">
-              <Users className="h-5 w-5 text-blue-500" />
+      <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-lg border bg-card p-3 md:p-4">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full bg-blue-500/10">
+              <Users className="h-4 w-4 md:h-5 md:w-5 text-blue-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{stats.total}</p>
-              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="text-xl md:text-2xl font-bold">{stats.total}</p>
+              <p className="text-[11px] md:text-xs text-muted-foreground">Total</p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-lg border bg-card p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10">
-              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+        <div className="rounded-lg border bg-card p-3 md:p-4">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full bg-emerald-500/10">
+              <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5 text-emerald-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{stats.active}</p>
-              <p className="text-xs text-muted-foreground">Actifs</p>
+              <p className="text-xl md:text-2xl font-bold">{stats.active}</p>
+              <p className="text-[11px] md:text-xs text-muted-foreground">Actifs</p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-lg border bg-card p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10">
-              <AlertTriangle className="h-5 w-5 text-red-500" />
+        <div className="rounded-lg border bg-card p-3 md:p-4">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full bg-red-500/10">
+              <AlertTriangle className="h-4 w-4 md:h-5 md:w-5 text-red-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{stats.withArrears}</p>
-              <p className="text-xs text-muted-foreground">Avec impayés</p>
+              <p className="text-xl md:text-2xl font-bold">{stats.withArrears}</p>
+              <p className="text-[11px] md:text-xs text-muted-foreground">Impayés</p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-lg border bg-card p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/10">
-              <CreditCard className="h-5 w-5 text-amber-500" />
+        <div className="rounded-lg border bg-card p-3 md:p-4">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full bg-amber-500/10">
+              <CreditCard className="h-4 w-4 md:h-5 md:w-5 text-amber-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{stats.pendingMandate}</p>
-              <p className="text-xs text-muted-foreground">Sans mandat SEPA</p>
+              <p className="text-xl md:text-2xl font-bold">{stats.pendingMandate}</p>
+              <p className="text-[11px] md:text-xs text-muted-foreground">Sans SEPA</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Search */}
-      <div className="relative max-w-sm">
+      <div className="relative w-full md:max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Rechercher par nom, email ou lot..."
@@ -1004,15 +1004,95 @@ export default function OwnersPage() {
         />
       </div>
 
-      {/* Owners Table */}
-      <div className="rounded-md border bg-card">
+      {/* Mobile Cards View */}
+      <div className="md:hidden space-y-3">
+        {filteredOwners.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-12 text-center rounded-lg border bg-card">
+            <Users className="h-10 w-10 text-muted-foreground/50" />
+            <p className="text-muted-foreground text-sm">
+              {searchQuery ? "Aucun propriétaire trouvé" : "Aucun propriétaire"}
+            </p>
+            {!searchQuery && (
+              <Button variant="outline" size="sm" onClick={() => setIsModalOpen(true)}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Ajouter
+              </Button>
+            )}
+          </div>
+        ) : (
+          filteredOwners.map((owner) => {
+            const balance = formatBalance(owner.balance);
+            return (
+              <div key={owner.id} className="rounded-lg border bg-card p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <Link href={`/app/owners/${owner.id}`} className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <span className="text-sm font-semibold text-primary">
+                        {owner.firstName[0]}{owner.lastName[0]}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">{owner.firstName} {owner.lastName}</p>
+                      <p className="text-xs text-muted-foreground truncate">{owner.email}</p>
+                    </div>
+                  </Link>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={owner.status} />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <Link href={`/app/owners/${owner.id}`}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            Voir le profil
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Send className="mr-2 h-4 w-4" />
+                          Envoyer un message
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>
+                          <Receipt className="mr-2 h-4 w-4" />
+                          Voir les paiements
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <CreditCard className="mr-2 h-4 w-4" />
+                          Gérer le mandat SEPA
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
+                  <span className={`font-medium ${balance.className}`}>{balance.text}</span>
+                  <SepaBadge hasMandate={owner.hasSepaMandateActive} />
+                  {owner.condominiums && owner.condominiums.length > 0 && (
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <Building2 className="h-3 w-3" />
+                      {owner.condominiums.length} copro.
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop Owners Table */}
+      <div className="rounded-md border bg-card hidden md:block overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="border-b bg-muted/50 hover:bg-muted/50">
               <TableHead className="font-medium">Propriétaire</TableHead>
-              <TableHead className="font-medium">Contact</TableHead>
-              <TableHead className="font-medium">Copropriétés</TableHead>
-              <TableHead className="font-medium">Lots</TableHead>
+              <TableHead className="font-medium hidden lg:table-cell">Contact</TableHead>
+              <TableHead className="font-medium hidden xl:table-cell">Copropriétés</TableHead>
+              <TableHead className="font-medium hidden xl:table-cell">Lots</TableHead>
               <TableHead className="font-medium text-right w-[100px]">Solde</TableHead>
               <TableHead className="font-medium text-center w-[100px]">SEPA</TableHead>
               <TableHead className="font-medium text-center w-[100px]">Statut</TableHead>
@@ -1066,7 +1146,7 @@ export default function OwnersPage() {
                         </Link>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       <div className="flex flex-col gap-1 text-sm">
                         <div className="flex items-center gap-1.5 text-muted-foreground">
                           <Mail className="h-3.5 w-3.5" />
@@ -1080,14 +1160,14 @@ export default function OwnersPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden xl:table-cell">
                       <CondominiumSelector
                         owner={owner}
                         allCondominiums={condominiums}
                         onUpdate={fetchData}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden xl:table-cell">
                       <LotSelector
                         owner={owner}
                         ownerCondominiums={condominiums.filter(c => owner.condominiumIds?.includes(c.id))}
@@ -1109,7 +1189,7 @@ export default function OwnersPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
+                            className="h-8 w-8 opacity-100 md:opacity-0 transition-opacity md:group-hover:opacity-100"
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>

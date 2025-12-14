@@ -127,41 +127,42 @@ export default function BankPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto max-w-7xl space-y-8 px-6 py-8 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-6 md:space-y-8 px-0 md:px-6 py-4 md:py-8 lg:px-8">
         {/* Header */}
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 px-4 md:px-0">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-foreground">
               Banque
             </h1>
-            <p className="mt-1 text-[15px] text-muted-foreground">
+            <p className="mt-1 text-[14px] md:text-[15px] text-muted-foreground">
               Gérez vos comptes bancaires et transactions
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <Button variant="outline" className="h-10 gap-2 rounded-lg px-4 text-[13px] font-medium">
               <RefreshCw className="h-4 w-4" />
               Synchroniser
             </Button>
             <Button className="h-10 gap-2 rounded-lg px-4 text-[13px] font-medium">
               <Plus className="h-4 w-4" />
-              Connecter un compte
+              <span className="hidden sm:inline">Connecter un compte</span>
+              <span className="sm:hidden">Connecter</span>
             </Button>
           </div>
         </div>
 
         {/* Bank Accounts */}
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 px-4 md:px-0">
           {/* Total Balance Card */}
-          <Card className="p-0 lg:col-span-1">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                  <Landmark className="h-6 w-6 text-primary" />
+          <Card className="p-0 md:col-span-1">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-xl bg-primary/10">
+                  <Landmark className="h-5 w-5 md:h-6 md:w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-[13px] font-medium text-muted-foreground">Solde total</p>
-                  <p className={`text-2xl font-semibold ${hasBankAccounts ? "text-foreground" : "text-muted-foreground"}`}>
+                  <p className="text-[12px] md:text-[13px] font-medium text-muted-foreground">Solde total</p>
+                  <p className={`text-xl md:text-2xl font-semibold ${hasBankAccounts ? "text-foreground" : "text-muted-foreground"}`}>
                     {hasBankAccounts 
                       ? `${totalBalance.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €`
                       : "N/A"}
@@ -169,7 +170,7 @@ export default function BankPage() {
                 </div>
               </div>
               {hasBankAccounts && (
-                <div className="mt-4 flex items-center gap-4 text-[13px]">
+                <div className="mt-3 md:mt-4 flex items-center gap-4 text-[12px] md:text-[13px]">
                   <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
                     <TrendingUp className="h-4 w-4" />
                     +2.5% ce mois
@@ -182,22 +183,22 @@ export default function BankPage() {
           {/* Bank Accounts List */}
           {filteredAccounts.map((account) => (
             <Card key={account.id} className="p-0">
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                      <Landmark className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-lg bg-muted">
+                      <Landmark className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
                     </div>
                     <div>
-                      <p className="text-[14px] font-medium text-foreground">{account.bankName}</p>
-                      <p className="text-[12px] text-muted-foreground">{account.accountName}</p>
+                      <p className="text-[13px] md:text-[14px] font-medium text-foreground">{account.bankName}</p>
+                      <p className="text-[11px] md:text-[12px] text-muted-foreground">{account.accountName}</p>
                     </div>
                   </div>
                   <Button variant="ghost" size="icon" className="h-8 w-8">
                     <ExternalLink className="h-4 w-4" />
                   </Button>
                 </div>
-                <div className="mt-4">
+                <div className="mt-3 md:mt-4">
                   <p className="text-xl font-semibold text-foreground">
                     {account.balance.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €
                   </p>
@@ -212,14 +213,15 @@ export default function BankPage() {
         </div>
 
         {/* Transactions */}
-        <Tabs defaultValue="transactions" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <TabsList>
-              <TabsTrigger value="transactions">Transactions</TabsTrigger>
-              <TabsTrigger value="reconciliation">
-                Rapprochement
+        <Tabs defaultValue="transactions" className="space-y-4 md:space-y-6 px-4 md:px-0">
+          <div className="flex items-center justify-between overflow-x-auto">
+            <TabsList className="w-full sm:w-auto">
+              <TabsTrigger value="transactions" className="text-xs sm:text-sm">Transactions</TabsTrigger>
+              <TabsTrigger value="reconciliation" className="text-xs sm:text-sm">
+                <span className="hidden sm:inline">Rapprochement</span>
+                <span className="sm:hidden">Rappro.</span>
                 {(unmatchedCount + pendingCount) > 0 && (
-                  <span className="ml-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-white">
+                  <span className="ml-1 sm:ml-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-white">
                     {unmatchedCount + pendingCount}
                   </span>
                 )}
@@ -229,49 +231,51 @@ export default function BankPage() {
 
           <TabsContent value="transactions" className="space-y-4">
             {/* Filters */}
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="relative flex-1 max-w-md">
+            <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 md:gap-4">
+              <div className="relative flex-1 min-w-0 sm:max-w-md">
                 <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Rechercher une transaction..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-10 pl-10 rounded-lg"
+                  className="h-10 pl-10 rounded-lg w-full"
                 />
               </div>
-              <Select value={selectedCondominium} onValueChange={setSelectedCondominium}>
-                <SelectTrigger className="w-[220px] h-10 rounded-lg">
-                  <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <SelectValue placeholder="Résidence" />
-                </SelectTrigger>
-                <SelectContent>
-                  {condominiums.map((condo) => (
-                    <SelectItem key={condo.value} value={condo.value}>{condo.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={selectedAccount} onValueChange={setSelectedAccount}>
-                <SelectTrigger className="w-[200px] h-10 rounded-lg">
-                  <SelectValue placeholder="Tous les comptes" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les comptes</SelectItem>
-                  {bankAccounts.map((acc) => (
-                    <SelectItem key={acc.id} value={acc.id}>{acc.bankName}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="w-[180px] h-10 rounded-lg">
-                  <SelectValue placeholder="Tous les statuts" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
-                  <SelectItem value="matched">Rapproché</SelectItem>
-                  <SelectItem value="pending">En attente</SelectItem>
-                  <SelectItem value="unmatched">Non rapproché</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex flex-wrap gap-2">
+                <Select value={selectedCondominium} onValueChange={setSelectedCondominium}>
+                  <SelectTrigger className="w-full sm:w-[180px] md:w-[220px] h-10 rounded-lg">
+                    <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <SelectValue placeholder="Résidence" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {condominiums.map((condo) => (
+                      <SelectItem key={condo.value} value={condo.value}>{condo.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={selectedAccount} onValueChange={setSelectedAccount}>
+                  <SelectTrigger className="w-[calc(50%-4px)] sm:w-[150px] md:w-[200px] h-10 rounded-lg">
+                    <SelectValue placeholder="Tous les comptes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les comptes</SelectItem>
+                    {bankAccounts.map((acc) => (
+                      <SelectItem key={acc.id} value={acc.id}>{acc.bankName}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                  <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px] md:w-[180px] h-10 rounded-lg">
+                    <SelectValue placeholder="Tous les statuts" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les statuts</SelectItem>
+                    <SelectItem value="matched">Rapproché</SelectItem>
+                    <SelectItem value="pending">En attente</SelectItem>
+                    <SelectItem value="unmatched">Non rapproché</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Transactions List */}
@@ -280,40 +284,40 @@ export default function BankPage() {
                 {filteredTransactions.map((tx) => (
                   <div
                     key={tx.id}
-                    className="flex items-center justify-between px-6 py-4 transition-colors hover:bg-muted/50"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between px-4 md:px-6 py-3 md:py-4 transition-colors hover:bg-muted/50 gap-3 sm:gap-4"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                    <div className="flex items-center gap-3 md:gap-4">
+                      <div className={`flex h-9 w-9 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-full ${
                         tx.type === "credit" 
                           ? "bg-emerald-500/10" 
                           : "bg-destructive/10"
                       }`}>
                         {tx.type === "credit" ? (
-                          <ArrowDownLeft className="h-5 w-5 text-emerald-500" />
+                          <ArrowDownLeft className="h-4 w-4 md:h-5 md:w-5 text-emerald-500" />
                         ) : (
-                          <ArrowUpRight className="h-5 w-5 text-destructive" />
+                          <ArrowUpRight className="h-4 w-4 md:h-5 md:w-5 text-destructive" />
                         )}
                       </div>
-                      <div>
-                        <p className="text-[14px] font-medium text-foreground">
+                      <div className="min-w-0">
+                        <p className="text-[13px] md:text-[14px] font-medium text-foreground truncate">
                           {tx.counterpartyName || "Inconnu"}
                         </p>
-                        <p className="text-[12px] text-muted-foreground line-clamp-1">
+                        <p className="text-[11px] md:text-[12px] text-muted-foreground line-clamp-1">
                           {tx.description}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-6">
-                      <div className="text-right">
-                        <p className={`text-[14px] font-semibold ${
+                    <div className="flex items-center justify-between sm:justify-end gap-3 md:gap-6 pl-12 sm:pl-0">
+                      <div className="text-left sm:text-right">
+                        <p className={`text-[13px] md:text-[14px] font-semibold ${
                           tx.type === "credit" 
                             ? "text-emerald-600 dark:text-emerald-400" 
                             : "text-foreground"
                         }`}>
                           {tx.type === "credit" ? "+" : ""}{tx.amount.toLocaleString("fr-FR")} €
                         </p>
-                        <p className="text-[12px] text-muted-foreground">
+                        <p className="text-[11px] md:text-[12px] text-muted-foreground">
                           {new Date(tx.transactionDate).toLocaleDateString("fr-FR")}
                         </p>
                       </div>
@@ -323,10 +327,10 @@ export default function BankPage() {
                 ))}
 
                 {filteredTransactions.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <Landmark className="h-12 w-12 text-muted-foreground/50" />
-                    <p className="mt-4 text-[15px] font-medium text-foreground">Aucune transaction</p>
-                    <p className="mt-1 text-[13px] text-muted-foreground">
+                  <div className="flex flex-col items-center justify-center py-8 md:py-12">
+                    <Landmark className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/50" />
+                    <p className="mt-3 md:mt-4 text-[14px] md:text-[15px] font-medium text-foreground">Aucune transaction</p>
+                    <p className="mt-1 text-[12px] md:text-[13px] text-muted-foreground text-center px-4">
                       Aucune transaction ne correspond à vos critères
                     </p>
                   </div>
@@ -336,21 +340,21 @@ export default function BankPage() {
           </TabsContent>
 
           <TabsContent value="reconciliation" className="space-y-4">
-            <Card className="p-6">
-              <div className="flex flex-col items-center justify-center py-8">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                  <CheckCircle2 className="h-8 w-8 text-primary" />
+            <Card className="p-4 md:p-6">
+              <div className="flex flex-col items-center justify-center py-6 md:py-8">
+                <div className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-full bg-primary/10">
+                  <CheckCircle2 className="h-7 w-7 md:h-8 md:w-8 text-primary" />
                 </div>
-                <h3 className="mt-4 text-lg font-semibold text-foreground">Rapprochement bancaire</h3>
-                <p className="mt-2 max-w-md text-center text-[14px] text-muted-foreground">
+                <h3 className="mt-3 md:mt-4 text-base md:text-lg font-semibold text-foreground text-center">Rapprochement bancaire</h3>
+                <p className="mt-2 max-w-md text-center text-[13px] md:text-[14px] text-muted-foreground px-4">
                   Associez automatiquement les transactions bancaires aux paiements des copropriétaires.
                   L&apos;IA peut vous suggérer des correspondances.
                 </p>
-                <div className="mt-6 flex gap-3">
-                  <Button variant="outline">
+                <div className="mt-5 md:mt-6 flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto px-4 sm:px-0">
+                  <Button variant="outline" className="w-full sm:w-auto">
                     Voir les suggestions IA ({pendingCount})
                   </Button>
-                  <Button>
+                  <Button className="w-full sm:w-auto">
                     Rapprocher manuellement ({unmatchedCount})
                   </Button>
                 </div>

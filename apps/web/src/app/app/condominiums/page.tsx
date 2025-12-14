@@ -72,16 +72,16 @@ export default function CondominiumsListPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Copropriétés</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold">Copropriétés</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             Gérez vos {condominiums.length} copropriété{condominiums.length > 1 ? 's' : ''}
           </p>
         </div>
-        <Button asChild>
+        <Button asChild className="w-full sm:w-auto">
           <Link href="/app/condominiums/new">
             <Plus className="mr-2 h-4 w-4" />
             Nouvelle copropriété
@@ -90,19 +90,19 @@ export default function CondominiumsListPage() {
       </div>
 
       {/* Filters & View Toggle */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <Input
           placeholder="Rechercher par nom, adresse, ville..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
+          className="w-full md:max-w-sm"
         />
-        <div className="flex gap-1 rounded-lg border p-1">
+        <div className="flex gap-1 rounded-lg border p-1 self-start md:self-auto">
           <Button
             variant={viewMode === "table" ? "secondary" : "ghost"}
             size="sm"
             onClick={() => setViewMode("table")}
-            className="h-8 px-3"
+            className="h-8 px-3 hidden md:flex"
           >
             <List className="mr-1.5 h-4 w-4" />
             Tableau
@@ -119,14 +119,14 @@ export default function CondominiumsListPage() {
         </div>
       </div>
 
-      {/* Table View */}
+      {/* Table View - Hidden on mobile */}
       {viewMode === "table" && (
-        <div className="rounded-md border bg-card">
+        <div className="rounded-md border bg-card hidden md:block overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="border-b bg-muted/50 hover:bg-muted/50">
                 <TableHead className="h-10 px-4 font-medium">Nom</TableHead>
-                <TableHead className="h-10 px-4 font-medium">Adresse</TableHead>
+                <TableHead className="h-10 px-4 font-medium hidden lg:table-cell">Adresse</TableHead>
                 <TableHead className="h-10 w-20 px-4 text-center font-medium">Lots</TableHead>
                 <TableHead className="h-10 w-28 px-4 text-center font-medium">Propriétaires</TableHead>
                 <TableHead className="h-10 w-24 px-4 text-right font-medium">Solde</TableHead>
@@ -155,7 +155,7 @@ export default function CondominiumsListPage() {
                         {condo.name}
                       </Link>
                     </TableCell>
-                    <TableCell className="h-12 px-4 text-muted-foreground">
+                    <TableCell className="h-12 px-4 text-muted-foreground hidden lg:table-cell">
                       {condo.address}, {condo.postalCode} {condo.city}
                     </TableCell>
                     <TableCell className="h-12 px-4 text-center tabular-nums">{condo.lots}</TableCell>
@@ -163,7 +163,7 @@ export default function CondominiumsListPage() {
                     <TableCell className={`h-12 px-4 text-right font-medium tabular-nums ${condo.balance < 0 ? "text-destructive" : "text-emerald-600"}`}>
                       {condo.balance.toLocaleString('fr-FR')} €
                     </TableCell>
-                    <TableCell className="h-12 px-4 text-center">
+                    <TableCell className="h-12 px-4 text-center hidden xl:table-cell">
                       <Badge 
                         variant="outline" 
                         className={condo.sepaEnabled 
@@ -180,7 +180,7 @@ export default function CondominiumsListPage() {
                           <Button 
                             variant="ghost" 
                             size="icon"
-                            className="h-8 w-8 opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100 transition-opacity"
+                            className="h-8 w-8 opacity-100 md:opacity-0 md:group-hover:opacity-100 data-[state=open]:opacity-100 transition-opacity"
                           >
                                 <span className="sr-only">Actions</span>
                                 <MoreVertical className="h-4 w-4" />
@@ -238,9 +238,9 @@ export default function CondominiumsListPage() {
         </div>
       )}
 
-      {/* Cards View */}
-      {viewMode === "cards" && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {/* Cards View - Shows on mobile always, or when viewMode is "cards" on desktop */}
+      {(viewMode === "cards" || true) && (
+        <div className={`grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 ${viewMode === "table" ? "md:hidden" : ""}`}>
           {filteredCondos.length === 0 ? (
             <div className="col-span-full flex h-40 items-center justify-center rounded-lg border border-dashed text-muted-foreground">
               Aucune copropriété trouvée
@@ -250,22 +250,22 @@ export default function CondominiumsListPage() {
               <Link key={condo.id} href={`/app/condominiums/${condo.id}`}>
                 <Card className="group relative overflow-hidden transition-all hover:shadow-md hover:border-primary/50">
                   {/* Header with gradient accent */}
-                  <div className="h-1.5 bg-gradient-to-r from-primary/80 to-primary/40" />
+                  <div className="h-1 md:h-1.5 bg-gradient-to-r from-primary/80 to-primary/40" />
                   
-                  <CardHeader className="pb-3">
+                  <CardHeader className="p-3 md:pb-3 md:p-6">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="space-y-1 min-w-0">
-                        <CardTitle className="text-base font-semibold truncate group-hover:text-primary transition-colors">
+                      <div className="space-y-0.5 md:space-y-1 min-w-0">
+                        <CardTitle className="text-sm md:text-base font-semibold truncate group-hover:text-primary transition-colors">
                           {condo.name}
                         </CardTitle>
-                        <p className="text-sm text-muted-foreground truncate">
+                        <p className="text-xs md:text-sm text-muted-foreground truncate">
                           {condo.address}, {condo.postalCode} {condo.city}
                         </p>
                       </div>
                       {condo.sepaEnabled && (
                         <Badge 
                           variant="outline" 
-                          className="shrink-0 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          className="shrink-0 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] md:text-xs"
                         >
                           SEPA
                         </Badge>
@@ -273,31 +273,31 @@ export default function CondominiumsListPage() {
                     </div>
                   </CardHeader>
 
-                  <CardContent className="pt-0">
+                  <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
                     {/* Stats row */}
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="rounded-lg bg-muted/50 p-3 text-center">
-                        <p className="text-xl font-bold tabular-nums">{condo.lots}</p>
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Lots</p>
+                    <div className="grid grid-cols-3 gap-2 md:gap-3">
+                      <div className="rounded-lg bg-muted/50 p-2 md:p-3 text-center">
+                        <p className="text-lg md:text-xl font-bold tabular-nums">{condo.lots}</p>
+                        <p className="text-[10px] md:text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Lots</p>
                       </div>
-                      <div className="rounded-lg bg-muted/50 p-3 text-center">
-                        <p className="text-xl font-bold tabular-nums">{condo.owners}</p>
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Propriétaires</p>
+                      <div className="rounded-lg bg-muted/50 p-2 md:p-3 text-center">
+                        <p className="text-lg md:text-xl font-bold tabular-nums">{condo.owners}</p>
+                        <p className="text-[10px] md:text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Proprio.</p>
                       </div>
-                      <div className="rounded-lg bg-muted/50 p-3 text-center">
-                        <p className={`text-xl font-bold tabular-nums ${condo.balance < 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400"}`}>
+                      <div className="rounded-lg bg-muted/50 p-2 md:p-3 text-center">
+                        <p className={`text-lg md:text-xl font-bold tabular-nums ${condo.balance < 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400"}`}>
                           {condo.balance >= 1000 || condo.balance <= -1000 
                             ? `${(condo.balance / 1000).toFixed(1)}k` 
                             : condo.balance.toLocaleString('fr-FR')
                           }€
                         </p>
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Solde</p>
+                        <p className="text-[10px] md:text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Solde</p>
                       </div>
                     </div>
                   </CardContent>
 
-                  {/* Hover arrow indicator */}
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100">
+                  {/* Hover arrow indicator - hidden on mobile */}
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100 hidden md:flex">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
                       →
                     </div>
