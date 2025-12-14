@@ -45,18 +45,18 @@
 | Statut | Tâche | Priorité | Notes | Issue |
 |--------|-------|----------|-------|-------|
 | ✅ | Layout (Sidebar + Header) | 🔴 Haute | Composants réutilisables | [#17](https://github.com/vMarc64/Le-Copropri-taire/issues/17) |
-| ⬜ | Dashboard Manager | 🔴 Haute | KPIs, impayés | [#18](https://github.com/vMarc64/Le-Copropri-taire/issues/18) |
+| ✅ | Dashboard Manager | 🔴 Haute | KPIs, impayés, copros avec problèmes | [#18](https://github.com/vMarc64/Le-Copropri-taire/issues/18) |
 | ✅ | Liste des copropriétés | 🔴 Haute | Redesign avec shadcn Data Table | [#19](https://github.com/vMarc64/Le-Copropri-taire/issues/19) |
-| ⬜ | Création copropriété (modal) | 🔴 Haute | | [#20](https://github.com/vMarc64/Le-Copropri-taire/issues/20) |
+| ✅ | Création copropriété (modal) | 🔴 Haute | Modal création fonctionnelle | [#20](https://github.com/vMarc64/Le-Copropri-taire/issues/20) |
 | ✅ | Page détail copropriété | 🔴 Haute | Cards redesignées | [#21](https://github.com/vMarc64/Le-Copropri-taire/issues/21) |
 | ✅ | Liste des propriétaires | 🔴 Haute | Redesign + modal recherche/invitation | [#22](https://github.com/vMarc64/Le-Copropri-taire/issues/22) |
 | ✅ | API recherche propriétaires orphelins | 🔴 Haute | GET /owners/search?q= | [#95](https://github.com/vMarc64/Le-Copropri-taire/issues/95) |
 | ✅ | API association propriétaire au syndic | 🔴 Haute | POST /owners/:id/associate | [#96](https://github.com/vMarc64/Le-Copropri-taire/issues/96) |
 | ⬜ | Système invitation propriétaire | 🔴 Haute | statut "invited", email via N8N (Partie 8) | - |
 | ⬜ | Profil propriétaire | 🔴 Haute | Tabs: overview, payments, documents, consumption | [#23](https://github.com/vMarc64/Le-Copropri-taire/issues/23) |
-| ⬜ | Gestion des lots | 🟡 Moyenne | | [#24](https://github.com/vMarc64/Le-Copropri-taire/issues/24) |
-| ⬜ | Transactions bancaires (modal) | 🟡 Moyenne | Vue open banking | [#25](https://github.com/vMarc64/Le-Copropri-taire/issues/25) |
-| ⬜ | Rapprochement bancaire | 🟡 Moyenne | Matching transactions ↔ paiements | [#26](https://github.com/vMarc64/Le-Copropri-taire/issues/26) |
+| ✅ | Gestion des lots | 🟡 Moyenne | CRUD lots fonctionnel, assignment propriétaires | [#24](https://github.com/vMarc64/Le-Copropri-taire/issues/24) |
+| ✅ | Transactions bancaires (page) | 🟡 Moyenne | Page bank avec connexion Powens, liste transactions | [#25](https://github.com/vMarc64/Le-Copropri-taire/issues/25) |
+| ✅ | Rapprochement bancaire | 🟡 Moyenne | UI rapprochement fonctionnelle (backend à implémenter) | [#26](https://github.com/vMarc64/Le-Copropri-taire/issues/26) |
 | ⬜ | Gestion documents | 🟢 Basse | Upload, catégories | [#27](https://github.com/vMarc64/Le-Copropri-taire/issues/27) |
 | ⬜ | Paramètres copropriété | 🟢 Basse | | [#28](https://github.com/vMarc64/Le-Copropri-taire/issues/28) |
 
@@ -89,10 +89,10 @@
 
 | Statut | Tâche | Priorité | Notes | Issue |
 |--------|-------|----------|-------|-------|
-| ⬜ | Intégration PSP (SEPA) | ��� Haute | Prélèvements automatiques - Stripe SEPA mock prêt | [#37](https://github.com/vMarc64/Le-Copropri-taire/issues/37) |
-| ⬜ | Intégration PSP (CB) | ��� Moyenne | Paiement rattrapage | [#38](https://github.com/vMarc64/Le-Copropri-taire/issues/38) |
-| ✅ | Intégration Open Banking | ��� Moyenne | Powens sandbox intégré, token exchange fonctionnel | [#39](https://github.com/vMarc64/Le-Copropri-taire/issues/39) |
-| ⬜ | Webhooks PSP | ��� Haute | Notifications paiements | [#40](https://github.com/vMarc64/Le-Copropri-taire/issues/40) |
+| ⬜ | Intégration PSP (SEPA) | 🔴 Haute | Prélèvements automatiques - Stripe SEPA mock prêt | [#37](https://github.com/vMarc64/Le-Copropri-taire/issues/37) |
+| ⬜ | Intégration PSP (CB) | 🟡 Moyenne | Paiement rattrapage | [#38](https://github.com/vMarc64/Le-Copropri-taire/issues/38) |
+| ✅ | Intégration Open Banking | 🟡 Moyenne | Powens sandbox complet : connexion iframe, sync transactions, stockage DB | [#39](https://github.com/vMarc64/Le-Copropri-taire/issues/39) |
+| ⬜ | Webhooks PSP | 🔴 Haute | Notifications paiements | [#40](https://github.com/vMarc64/Le-Copropri-taire/issues/40) |
 
 ---
 
@@ -126,10 +126,11 @@
 | ⬜ | Setup Redis + BullMQ | ��� Moyenne | Workers async (désactivé pour l'instant) | [#6](https://github.com/vMarc64/Le-Copropri-taire/issues/6) |
 | ⬜ | Setup CI/CD | ��� Basse | GitHub Actions | [#8](https://github.com/vMarc64/Le-Copropri-taire/issues/8) |
 | ⬜ | Tests unitaires | ��� Moyenne | | [#42](https://github.com/vMarc64/Le-Copropri-taire/issues/42) |
-| ⬜ | Tests e2e | ��� Basse | | [#43](https://github.com/vMarc64/Le-Copropri-taire/issues/43) |
-| ⬜ | Responsive mobile | ��� Moyenne | | [#44](https://github.com/vMarc64/Le-Copropri-taire/issues/44) |
-| ⬜ | Performance / optimisation | ��� Basse | | [#45](https://github.com/vMarc64/Le-Copropri-taire/issues/45) |
-| ⬜ | Déploiement production | ��� Haute | | [#46](https://github.com/vMarc64/Le-Copropri-taire/issues/46) |
+| ⬜ | Tests e2e | 🟢 Basse | | [#43](https://github.com/vMarc64/Le-Copropri-taire/issues/43) |
+| ✅ | Responsive mobile | 🟡 Moyenne | Toutes les pages adaptées mobile (cards, filtres, modals) | [#44](https://github.com/vMarc64/Le-Copropri-taire/issues/44), [#117](https://github.com/vMarc64/Le-Copropri-taire/issues/117) |
+| ⬜ | Performance / optimisation | 🟢 Basse | | [#45](https://github.com/vMarc64/Le-Copropri-taire/issues/45) |
+| ✅ | Déploiement UAT | 🔴 Haute | VPS Docker déployé sur uat.lecopropietaire.fr | - |
+| ⬜ | Déploiement production | 🔴 Haute | | [#46](https://github.com/vMarc64/Le-Copropri-taire/issues/46) |
 | ⬜ | Monitoring / logs | ��� Moyenne | | [#47](https://github.com/vMarc64/Le-Copropri-taire/issues/47) |
 | ✅ | Connecter les pages Frontend aux APIs Backend | 🔴 Haute | Platform Admin connecté (PR #90) | [#87](https://github.com/vMarc64/Le-Copropri-taire/issues/87) |
 

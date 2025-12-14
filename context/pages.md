@@ -84,7 +84,32 @@
   - Match transaction
   - View linked payment
 
-### 3.5 Reconciliation View (Modal / Panel)
+### 3.5 Bank Page (Full Page)
+- Header with condominium name and back navigation
+- Stats cards:
+  - Current balance
+  - Reconciled transactions count
+  - Pending transactions count
+  - Trend indicator
+- Bank account details card:
+  - Bank name & account name
+  - IBAN (with copy button)
+  - BIC
+  - Account type
+  - Coming balance
+  - Last sync date
+  - Sync button
+- Connect bank button (if no account):
+  - Opens Powens webview in modal/iframe
+  - Full-screen on mobile
+- Tabs:
+  - Transactions: list with search, status filter, table (desktop) / cards (mobile)
+  - Reconciliation: pending transactions + pending payments side by side
+- Match dialog:
+  - Transaction details
+  - List of pending payments to match
+
+### 3.6 Reconciliation View (Modal / Panel)
 - Unmatched bank transactions
 - Unpaid dues
 - Suggested matches (confidence score)

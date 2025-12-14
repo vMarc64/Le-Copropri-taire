@@ -48,36 +48,37 @@
 - /app/dashboard
 
 ### 3.2 Condominiums
-- /app/coproprietes
-- /app/coproprietes/new
-- /app/coproprietes/[coproId]
+- /app/condominiums
+- /app/condominiums/new
+- /app/condominiums/[id]
 
 ### 3.3 Condominium Sections (Modal / Panels)
-- /app/coproprietes/[coproId]/settings
-- /app/coproprietes/[coproId]/bank
-- /app/coproprietes/[coproId]/documents
-- /app/coproprietes/[coproId]/people
-- /app/coproprietes/[coproId]/payments
-- /app/coproprietes/[coproId]/reconciliation
-- /app/coproprietes/[coproId]/charges
-- /app/coproprietes/[coproId]/reports
+- /app/condominiums/[id]/settings
+- /app/condominiums/[id]/bank               # Bank connection, transactions, reconciliation
+- /app/condominiums/[id]/documents
+- /app/condominiums/[id]/people
+- /app/condominiums/[id]/payments
+- /app/condominiums/[id]/reconciliation
+- /app/condominiums/[id]/charges
+- /app/condominiums/[id]/reports
+- /app/condominiums/[id]/lots               # Lots management
 
 ### 3.4 Owners
-- /app/coproprietes/[coproId]/coproprietaires
-- /app/coproprietes/[coproId]/coproprietaires/new
-- /app/coproprietes/[coproId]/coproprietaires/[ownerId]
-- /app/coproprietes/[coproId]/coproprietaires/[ownerId]/balance
-- /app/coproprietes/[coproId]/coproprietaires/[ownerId]/mandates
+- /app/condominiums/[id]/owners
+- /app/condominiums/[id]/owners/new
+- /app/condominiums/[id]/owners/[ownerId]
+- /app/condominiums/[id]/owners/[ownerId]/balance
+- /app/condominiums/[id]/owners/[ownerId]/mandates
 
 ### 3.5 Tenants (Locataires)
-- /app/coproprietes/[coproId]/locataires
-- /app/coproprietes/[coproId]/locataires/new
-- /app/coproprietes/[coproId]/locataires/[tenantId]
+- /app/condominiums/[id]/locataires
+- /app/condominiums/[id]/locataires/new
+- /app/condominiums/[id]/locataires/[tenantId]
 
 ### 3.6 Lots
-- /app/coproprietes/[coproId]/lots
-- /app/coproprietes/[coproId]/lots/new
-- /app/coproprietes/[coproId]/lots/[lotId]
+- /app/condominiums/[id]/lots
+- /app/condominiums/[id]/lots/new
+- /app/condominiums/[id]/lots/[lotId]
 
 ### 3.7 AI Assistant
 - /app/ai                             # AI suggestions dashboard
@@ -142,6 +143,12 @@
 - GET    /condominiums/:id
 - PATCH  /condominiums/:id
 - DELETE /condominiums/:id
+- GET    /condominiums/:id/lots                    # List lots
+- POST   /condominiums/:id/lots                    # Create lot
+- PATCH  /condominiums/lots/:lotId                 # Update lot
+- DELETE /condominiums/lots/:lotId                 # Delete lot
+- PATCH  /condominiums/lots/:lotId/assign          # Assign owner to lot
+- GET    /condominiums/:id/owners                  # List owners of condominium
 - GET    /owners                       # List owners for tenant
 - POST   /owners                       # Create owner (status = invited)
 - GET    /owners/:id
@@ -150,6 +157,28 @@
 - POST   /owners/:id/resend-invite     # Resend invitation email (future: via N8N)
 - GET    /documents
 - POST   /documents
-- GET    /bank/accounts
-- GET    /bank/transactions
 - GET    /dashboard/stats
+- GET    /dashboard/condominiums-with-unpaid
+
+### Bank API (tenant-scoped)
+- GET    /bank/accounts                            # List bank accounts
+- GET    /bank/accounts/:id                        # Get account details
+- GET    /bank/transactions                        # List transactions
+- POST   /bank/sync/:condominiumId                 # Sync transactions from Powens
+- GET    /bank/connect/:condominiumId              # Get Powens webview URL
+- GET    /bank/connect/callback                    # Powens OAuth callback
+- POST   /bank/connect/finalize                    # Finalize bank connection
+
+### Powens API (Open Banking)
+- GET    /powens/health                            # Health check
+- GET    /powens/banks                             # List available banks
+- GET    /powens/banks/:id                         # Get bank details
+- GET    /powens/connections                       # List connections
+- POST   /powens/connections                       # Create connection
+- GET    /powens/connections/:id                   # Get connection
+- POST   /powens/connections/:id/sync              # Force sync
+- DELETE /powens/connections/:id                   # Delete connection
+- GET    /powens/accounts                          # List accounts
+- GET    /powens/accounts/:id                      # Get account
+- GET    /powens/transactions                      # List transactions
+- POST   /powens/webhooks                          # Receive webhooks

@@ -94,3 +94,45 @@ flowchart LR
   N8N --> AI[LLM APIs]
   N8N --> PSP
   N8N --> OB
+
+```
+
+---
+
+## 3. Environnements de déploiement
+
+### UAT (User Acceptance Testing)
+- **URL**: https://uat.lecopropietaire.fr
+- **Infrastructure**: VPS avec Docker Compose
+- **Services**:
+  - Next.js (Frontend + BFF) - port 3000
+  - NestJS API - port 3002
+  - Nginx reverse proxy (SSL via Let's Encrypt)
+- **Base de données**: Supabase PostgreSQL (partagée avec dev)
+- **Open Banking**: Powens Sandbox (lecoproprietaire-sandbox.biapi.pro)
+
+### Production (à venir)
+- Infrastructure à définir (VPS, Kubernetes, ou cloud managed)
+- Powens production domain
+- Base de données PostgreSQL dédiée
+
+---
+
+## 4. Intégrations externes
+
+### Powens (Open Banking / PSD2)
+- **Sandbox domain**: lecoproprietaire-sandbox
+- **Flux d'authentification**:
+  1. GET /bank/connect/:condominiumId → génère webview URL
+  2. Utilisateur complète la connexion dans l'iframe
+  3. Callback avec code → échange contre access_token
+  4. POST /bank/connect/finalize → stocke connection + accounts en DB
+  5. POST /bank/sync/:condominiumId → synchronise les transactions
+- **Tables DB**:
+  - powens_connections - stocke les connexions avec access_token
+  - bank_accounts - comptes bancaires liés aux copropriétés
+  - bank_transactions - transactions synchronisées depuis Powens
+
+### Stripe (Paiements SEPA/CB)
+- Mock service disponible en développement
+- Intégration production à implémenter
