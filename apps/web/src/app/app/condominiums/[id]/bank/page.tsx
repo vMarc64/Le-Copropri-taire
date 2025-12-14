@@ -71,10 +71,16 @@ interface BankAccount {
   id: string;
   bankName: string;
   accountName: string;
+  accountType: string;
+  accountNumber: string;
   iban: string;
+  bic: string;
   balance: number;
+  comingBalance: number | null;
+  currency: string;
   lastSyncAt: string | null;
   status: string;
+  isMain: boolean;
 }
 
 interface Transaction {
@@ -467,6 +473,58 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
           </div>
         </div>
       </div>
+
+      {/* Account Details Card */}
+      {mainAccount && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  <CreditCard className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">{mainAccount.accountName}</CardTitle>
+                  <CardDescription>{mainAccount.bankName} • {mainAccount.accountType === 'card' ? 'Carte' : mainAccount.accountType === 'checking' ? 'Compte courant' : mainAccount.accountType}</CardDescription>
+                </div>
+              </div>
+              <Badge variant={mainAccount.status === 'active' ? 'default' : 'secondary'}>
+                {mainAccount.status === 'active' ? 'Actif' : mainAccount.status}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">IBAN</p>
+                <p className="font-mono text-sm">{mainAccount.iban}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">BIC</p>
+                <p className="font-mono text-sm">{mainAccount.bic || '-'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">N° Compte</p>
+                <p className="font-mono text-sm">{mainAccount.accountNumber || '-'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground">Devise</p>
+                <p className="text-sm">{mainAccount.currency}</p>
+              </div>
+            </div>
+            {mainAccount.comingBalance !== null && mainAccount.comingBalance !== 0 && (
+              <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span>Opérations à venir : <strong className={mainAccount.comingBalance < 0 ? 'text-red-500' : 'text-green-500'}>{mainAccount.comingBalance.toLocaleString('fr-FR')} €</strong></span>
+              </div>
+            )}
+            <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+              <RefreshCw className="h-3 w-3" />
+              <span>Dernière synchronisation : {mainAccount.lastSyncAt ? new Date(mainAccount.lastSyncAt).toLocaleString('fr-FR') : 'Jamais'}</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Tabs */}
       <Tabs defaultValue="transactions">
