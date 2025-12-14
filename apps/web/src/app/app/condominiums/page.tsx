@@ -97,12 +97,13 @@ export default function CondominiumsListPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-full md:max-w-sm"
         />
-        <div className="flex gap-1 rounded-lg border p-1 self-start md:self-auto">
+        {/* View Toggle - Hidden on mobile (cards only on mobile) */}
+        <div className="hidden md:flex gap-1 rounded-lg border p-1">
           <Button
             variant={viewMode === "table" ? "secondary" : "ghost"}
             size="sm"
             onClick={() => setViewMode("table")}
-            className="h-8 px-3 hidden md:flex"
+            className="h-8 px-3"
           >
             <List className="mr-1.5 h-4 w-4" />
             Tableau
