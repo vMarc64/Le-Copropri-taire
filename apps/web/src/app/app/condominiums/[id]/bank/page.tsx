@@ -368,24 +368,26 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
           }
           setShowConnectModal(open);
         }}>
-          <DialogContent className={powensUrl ? "max-w-md sm:max-w-lg h-[600px] flex flex-col" : ""}>
-            <DialogHeader className="flex-shrink-0">
-              <DialogTitle>
-                {powensUrl ? "Connexion bancaire en cours" : "Connecter un compte bancaire"}
+          <DialogContent className={powensUrl 
+            ? "max-w-[100vw] sm:max-w-lg h-[100dvh] sm:h-[600px] w-full flex flex-col p-0 sm:p-6 gap-0 rounded-none sm:rounded-lg" 
+            : "max-w-[95vw] sm:max-w-lg"}>
+            <DialogHeader className={powensUrl ? "flex-shrink-0 p-4 sm:p-0 border-b sm:border-0" : ""}>
+              <DialogTitle className="text-base sm:text-lg">
+                {powensUrl ? "Connexion bancaire" : "Connecter un compte bancaire"}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-sm">
                 {powensUrl 
-                  ? "Sélectionnez votre banque et autorisez l'accès à vos comptes."
+                  ? "Sélectionnez votre banque et autorisez l'accès."
                   : "Vous allez être redirigé vers notre partenaire bancaire sécurisé pour connecter votre compte."}
               </DialogDescription>
             </DialogHeader>
             
             {powensUrl ? (
               // Iframe mode - takes remaining space
-              <div className="flex-1 min-h-0 -mx-6 -mb-6 overflow-hidden">
+              <div className="flex-1 min-h-0 overflow-hidden sm:-mx-6 sm:-mb-6">
                 <iframe
                   src={powensUrl}
-                  className="w-full h-full border-0 rounded-b-lg"
+                  className="w-full h-full border-0 sm:rounded-b-lg"
                   title="Connexion bancaire Powens"
                   allow="camera"
                 />
@@ -458,37 +460,40 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
           <Link href={`/app/condominiums/${condoId}`}>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <ArrowLeft className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="h-10 w-10 sm:h-8 sm:w-8">
+              <ArrowLeft className="h-5 w-5 sm:h-4 sm:w-4" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Suivi bancaire</h1>
-            <p className="text-sm text-muted-foreground">
-              {mainAccount ? `${mainAccount.bankName} • Dernière synchro: ${mainAccount.lastSyncAt ? new Date(mainAccount.lastSyncAt).toLocaleDateString('fr-FR') : 'Jamais'}` : "Aucun compte connecté"}
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Suivi bancaire</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate max-w-[200px] sm:max-w-none">
+              {mainAccount ? `${mainAccount.bankName} • ${mainAccount.lastSyncAt ? new Date(mainAccount.lastSyncAt).toLocaleDateString('fr-FR') : 'Jamais'}` : "Aucun compte"}
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleSync} disabled={syncing}>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button variant="outline" size="sm" onClick={handleSync} disabled={syncing} className="flex-1 sm:flex-none h-10 sm:h-8">
             {syncing ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Synchronisation...
+                <span className="hidden sm:inline">Synchronisation...</span>
+                <span className="sm:hidden">Sync...</span>
               </>
             ) : (
               <>
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Synchroniser
+                <span className="hidden sm:inline">Synchroniser</span>
+                <span className="sm:hidden">Sync</span>
               </>
             )}
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-none h-10 sm:h-8">
             <Upload className="mr-2 h-4 w-4" />
-            Importer relevé
+            <span className="hidden sm:inline">Importer relevé</span>
+            <span className="sm:hidden">Import</span>
           </Button>
         </div>
       </div>
@@ -506,48 +511,48 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
       )}
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-lg border bg-card p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10">
-              <Wallet className="h-5 w-5 text-emerald-500" />
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+        <div className="rounded-lg border bg-card p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-emerald-500/10">
+              <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-500" />
             </div>
-            <div>
-              <p className="text-2xl font-bold text-emerald-600">{stats.balance.toLocaleString('fr-FR')} €</p>
-              <p className="text-xs text-muted-foreground">Solde actuel</p>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-lg border bg-card p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/10">
-              <Clock className="h-5 w-5 text-amber-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{stats.pending}</p>
-              <p className="text-xs text-muted-foreground">À rapprocher</p>
+            <div className="min-w-0">
+              <p className="text-lg sm:text-2xl font-bold text-emerald-600 truncate">{stats.balance.toLocaleString('fr-FR')} €</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Solde actuel</p>
             </div>
           </div>
         </div>
-        <div className="rounded-lg border bg-card p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10">
-              <CheckCircle className="h-5 w-5 text-blue-500" />
+        <div className="rounded-lg border bg-card p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-amber-500/10">
+              <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{stats.matched}</p>
-              <p className="text-xs text-muted-foreground">Rapprochées</p>
+              <p className="text-lg sm:text-2xl font-bold">{stats.pending}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">À rapprocher</p>
             </div>
           </div>
         </div>
-        <div className="rounded-lg border bg-card p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/10">
-              <TrendingUp className="h-5 w-5 text-green-500" />
+        <div className="rounded-lg border bg-card p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-blue-500/10">
+              <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold">+{stats.credits.toLocaleString('fr-FR')} €</p>
-              <p className="text-xs text-muted-foreground">Encaissements</p>
+              <p className="text-lg sm:text-2xl font-bold">{stats.matched}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Rapprochées</p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-lg border bg-card p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-green-500/10">
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-lg sm:text-2xl font-bold truncate">+{stats.credits.toLocaleString('fr-FR')} €</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Encaissements</p>
             </div>
           </div>
         </div>
@@ -556,15 +561,15 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
       {/* Account Details Card */}
       {mainAccount && (
         <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+          <CardHeader className="pb-3 px-4 sm:px-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                  <CreditCard className="h-6 w-6 text-primary" />
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-primary/10 flex-shrink-0">
+                  <CreditCard className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                 </div>
-                <div>
-                  <CardTitle className="text-lg">{mainAccount.accountName}</CardTitle>
-                  <CardDescription>{mainAccount.bankName} • {mainAccount.accountType === 'card' ? 'Carte' : mainAccount.accountType === 'checking' ? 'Compte courant' : mainAccount.accountType}</CardDescription>
+                <div className="min-w-0">
+                  <CardTitle className="text-base sm:text-lg truncate">{mainAccount.accountName}</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm truncate">{mainAccount.bankName} • {mainAccount.accountType === 'card' ? 'Carte' : mainAccount.accountType === 'checking' ? 'Compte courant' : mainAccount.accountType}</CardDescription>
                 </div>
               </div>
               <Badge variant={mainAccount.status === 'active' ? 'default' : 'secondary'}>
@@ -572,34 +577,34 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
               </Badge>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">IBAN</p>
-                <p className="font-mono text-sm">{mainAccount.iban}</p>
+          <CardContent className="px-4 sm:px-6">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+              <div className="space-y-1 col-span-2 sm:col-span-1">
+                <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">IBAN</p>
+                <p className="font-mono text-xs sm:text-sm break-all">{mainAccount.iban}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">BIC</p>
-                <p className="font-mono text-sm">{mainAccount.bic || '-'}</p>
+                <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">BIC</p>
+                <p className="font-mono text-xs sm:text-sm">{mainAccount.bic || '-'}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">N° Compte</p>
-                <p className="font-mono text-sm">{mainAccount.accountNumber || '-'}</p>
+                <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">N° Compte</p>
+                <p className="font-mono text-xs sm:text-sm truncate">{mainAccount.accountNumber || '-'}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">Devise</p>
-                <p className="text-sm">{mainAccount.currency}</p>
+                <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">Devise</p>
+                <p className="text-xs sm:text-sm">{mainAccount.currency}</p>
               </div>
             </div>
             {mainAccount.comingBalance !== null && mainAccount.comingBalance !== 0 && (
-              <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                <span>Opérations à venir : <strong className={mainAccount.comingBalance < 0 ? 'text-red-500' : 'text-green-500'}>{mainAccount.comingBalance.toLocaleString('fr-FR')} €</strong></span>
+              <div className="mt-3 sm:mt-4 flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span>À venir : <strong className={mainAccount.comingBalance < 0 ? 'text-red-500' : 'text-green-500'}>{mainAccount.comingBalance.toLocaleString('fr-FR')} €</strong></span>
               </div>
             )}
-            <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-              <RefreshCw className="h-3 w-3" />
-              <span>Dernière synchronisation : {mainAccount.lastSyncAt ? new Date(mainAccount.lastSyncAt).toLocaleString('fr-FR') : 'Jamais'}</span>
+            <div className="mt-3 sm:mt-4 flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground">
+              <RefreshCw className="h-3 w-3 flex-shrink-0" />
+              <span className="truncate">Sync : {mainAccount.lastSyncAt ? new Date(mainAccount.lastSyncAt).toLocaleString('fr-FR') : 'Jamais'}</span>
             </div>
           </CardContent>
         </Card>
@@ -607,31 +612,33 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
 
       {/* Tabs */}
       <Tabs defaultValue="transactions">
-        <TabsList>
-          <TabsTrigger value="transactions" className="flex items-center gap-2">
+        <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:flex">
+          <TabsTrigger value="transactions" className="flex items-center justify-center gap-2 text-xs sm:text-sm">
             <ListChecks className="h-4 w-4" />
-            Transactions
+            <span className="hidden sm:inline">Transactions</span>
+            <span className="sm:hidden">Transactions</span>
           </TabsTrigger>
-          <TabsTrigger value="reconciliation" className="flex items-center gap-2">
+          <TabsTrigger value="reconciliation" className="flex items-center justify-center gap-2 text-xs sm:text-sm">
             <Link2 className="h-4 w-4" />
-            Rapprochement
+            <span className="hidden sm:inline">Rapprochement</span>
+            <span className="sm:hidden">Rappro.</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="transactions" className="mt-4 space-y-4">
           {/* Filters */}
-          <div className="flex gap-4">
-            <div className="relative max-w-sm flex-1">
+          <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+            <div className="relative flex-1 sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Rechercher une transaction..."
-                className="pl-9"
+                placeholder="Rechercher..."
+                className="pl-9 h-10"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px] h-10">
                 <SelectValue placeholder="Statut" />
               </SelectTrigger>
               <SelectContent>
@@ -642,8 +649,87 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
             </Select>
           </div>
 
-          {/* Transactions Table */}
-          <div className="rounded-md border bg-card">
+          {/* Transactions - Mobile Cards */}
+          <div className="space-y-3 sm:hidden">
+            {filteredTransactions.length === 0 ? (
+              <div className="flex flex-col items-center gap-2 py-8">
+                <CreditCard className="h-8 w-8 text-muted-foreground/50" />
+                <p className="text-muted-foreground text-sm">Aucune transaction trouvée</p>
+              </div>
+            ) : (
+              filteredTransactions.map((tx) => (
+                <div
+                  key={tx.id}
+                  className="rounded-lg border bg-card p-3 space-y-2"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+                        tx.type === "credit" 
+                          ? "bg-emerald-100 dark:bg-emerald-950" 
+                          : "bg-red-100 dark:bg-red-950"
+                      }`}>
+                        {tx.type === "credit" ? (
+                          <ArrowDownLeft className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        ) : (
+                          <ArrowUpRight className="h-4 w-4 text-red-600 dark:text-red-400" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm truncate">{tx.label}</p>
+                        <p className="text-xs text-muted-foreground">{tx.date}</p>
+                      </div>
+                    </div>
+                    <span className={`font-semibold text-sm whitespace-nowrap ${
+                      tx.type === "credit" ? "text-emerald-600" : "text-destructive"
+                    }`}>
+                      {tx.type === "credit" ? "+" : "-"}{tx.amount.toLocaleString('fr-FR')} €
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pt-1 border-t">
+                    <Badge 
+                      variant="secondary"
+                      className={`text-xs ${tx.status === "matched" 
+                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 border-0"
+                        : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400 border-0"
+                      }`}
+                    >
+                      {tx.status === "matched" ? (
+                        <>
+                          <CheckCircle className="mr-1 h-3 w-3" />
+                          Rapprochée
+                        </>
+                      ) : (
+                        <>
+                          <Clock className="mr-1 h-3 w-3" />
+                          En attente
+                        </>
+                      )}
+                    </Badge>
+                    {tx.status === "pending" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 text-xs"
+                        onClick={() => openMatchDialog(tx)}
+                      >
+                        <Link2 className="mr-1 h-3 w-3" />
+                        Rapprocher
+                      </Button>
+                    )}
+                    {tx.status === "matched" && tx.matchedTo && (
+                      <span className="text-xs text-muted-foreground truncate max-w-[120px]">
+                        {tx.matchedTo}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Transactions Table - Desktop */}
+          <div className="rounded-md border bg-card hidden sm:block">
             <Table>
               <TableHeader>
                 <TableRow className="border-b bg-muted/50 hover:bg-muted/50">
@@ -748,58 +834,58 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
 
         <TabsContent value="reconciliation" className="mt-4 space-y-4">
           <Card>
-            <CardHeader>
+            <CardHeader className="p-4 sm:p-6">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/10">
-                  <Link2 className="h-5 w-5 text-blue-500" />
+                <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-blue-500/10">
+                  <Link2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
                 </div>
-                <div>
-                  <CardTitle className="text-lg">Rapprochement bancaire</CardTitle>
-                  <CardDescription>
-                    Associez les transactions bancaires aux paiements attendus
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-base sm:text-lg">Rapprochement bancaire</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Associez les transactions aux paiements
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
               <div className="grid gap-6 lg:grid-cols-2">
                 {/* Pending Transactions */}
                 <div>
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
+                  <h3 className="font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
                     <Clock className="h-4 w-4 text-amber-500" />
-                    Transactions à rapprocher ({transactions.filter(t => t.status === "pending").length})
+                    À rapprocher ({transactions.filter(t => t.status === "pending").length})
                   </h3>
                   <div className="space-y-2">
                     {transactions.filter(t => t.status === "pending").length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-8 text-center">
-                        <CheckCircle className="h-8 w-8 text-emerald-500/50 mb-2" />
-                        <p className="text-muted-foreground text-sm">Toutes les transactions sont rapprochées</p>
+                      <div className="flex flex-col items-center justify-center py-6 sm:py-8 text-center">
+                        <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-500/50 mb-2" />
+                        <p className="text-muted-foreground text-xs sm:text-sm">Toutes les transactions sont rapprochées</p>
                       </div>
                     ) : (
                       transactions.filter(t => t.status === "pending").map(tx => (
                         <div 
                           key={tx.id}
-                          className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                          className="flex items-center justify-between p-2 sm:p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors active:bg-muted"
                           onClick={() => openMatchDialog(tx)}
                         >
-                          <div className="flex items-center gap-3">
-                            <div className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                            <div className={`flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full ${
                               tx.type === "credit" 
                                 ? "bg-emerald-100 dark:bg-emerald-950" 
                                 : "bg-red-100 dark:bg-red-950"
                             }`}>
                               {tx.type === "credit" ? (
-                                <ArrowDownLeft className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                <ArrowDownLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600 dark:text-emerald-400" />
                               ) : (
-                                <ArrowUpRight className="h-4 w-4 text-red-600 dark:text-red-400" />
+                                <ArrowUpRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-600 dark:text-red-400" />
                               )}
                             </div>
-                            <div>
-                              <p className="font-medium text-sm">{tx.label}</p>
-                              <p className="text-xs text-muted-foreground">{tx.date}</p>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-xs sm:text-sm truncate">{tx.label}</p>
+                              <p className="text-[10px] sm:text-xs text-muted-foreground">{tx.date}</p>
                             </div>
                           </div>
-                          <span className={`font-semibold ${tx.type === "credit" ? "text-emerald-600" : "text-destructive"}`}>
+                          <span className={`font-semibold text-xs sm:text-sm whitespace-nowrap ml-2 ${tx.type === "credit" ? "text-emerald-600" : "text-destructive"}`}>
                             {tx.type === "credit" ? "+" : "-"}{tx.amount.toLocaleString('fr-FR')} €
                           </span>
                         </div>
@@ -810,32 +896,32 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
 
                 {/* Pending Payments */}
                 <div>
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
+                  <h3 className="font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
                     <Landmark className="h-4 w-4 text-blue-500" />
                     Paiements en attente ({pendingPayments.length})
                   </h3>
                   <div className="space-y-2">
                     {pendingPayments.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-8 text-center">
-                        <CheckCircle className="h-8 w-8 text-emerald-500/50 mb-2" />
-                        <p className="text-muted-foreground text-sm">Aucun paiement en attente</p>
+                      <div className="flex flex-col items-center justify-center py-6 sm:py-8 text-center">
+                        <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-500/50 mb-2" />
+                        <p className="text-muted-foreground text-xs sm:text-sm">Aucun paiement en attente</p>
                       </div>
                     ) : (
                       pendingPayments.map(payment => (
                         <div 
                           key={payment.id}
-                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                          className="flex items-center justify-between p-2 sm:p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950">
-                              <Landmark className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                            <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950">
+                              <Landmark className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 dark:text-blue-400" />
                             </div>
-                            <div>
-                              <p className="font-medium text-sm">{payment.owner} - {payment.lot}</p>
-                              <p className="text-xs text-muted-foreground">Échéance: {payment.dueDate}</p>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-xs sm:text-sm truncate">{payment.owner} - {payment.lot}</p>
+                              <p className="text-[10px] sm:text-xs text-muted-foreground">Éch: {payment.dueDate}</p>
                             </div>
                           </div>
-                          <span className="font-semibold">{payment.amount.toLocaleString('fr-FR')} €</span>
+                          <span className="font-semibold text-xs sm:text-sm whitespace-nowrap ml-2">{payment.amount.toLocaleString('fr-FR')} €</span>
                         </div>
                       ))
                     )}
@@ -849,18 +935,18 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
 
       {/* Match Dialog */}
       <Dialog open={isMatchOpen} onOpenChange={setIsMatchOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Rapprocher la transaction</DialogTitle>
-            <DialogDescription>
-              Associez cette transaction à un paiement attendu
+            <DialogTitle className="text-base sm:text-lg">Rapprocher la transaction</DialogTitle>
+            <DialogDescription className="text-sm">
+              Associez cette transaction à un paiement
             </DialogDescription>
           </DialogHeader>
           {selectedTransaction && (
-            <div className="py-4">
-              <div className="p-4 rounded-lg border bg-muted/50 mb-4">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className={`flex h-8 w-8 items-center justify-center rounded-full ${
+            <div className="py-2 sm:py-4">
+              <div className="p-3 sm:p-4 rounded-lg border bg-muted/50 mb-3 sm:mb-4">
+                <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                  <div className={`flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full ${
                     selectedTransaction.type === "credit" 
                       ? "bg-emerald-100 dark:bg-emerald-950" 
                       : "bg-red-100 dark:bg-red-950"
@@ -871,50 +957,50 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
                       <ArrowUpRight className="h-4 w-4 text-red-600 dark:text-red-400" />
                     )}
                   </div>
-                  <div>
-                    <p className="font-medium">{selectedTransaction.label}</p>
-                    <p className="text-sm text-muted-foreground">{selectedTransaction.date}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm sm:text-base truncate">{selectedTransaction.label}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{selectedTransaction.date}</p>
                   </div>
                 </div>
-                <p className={`text-lg font-bold ${selectedTransaction.type === "credit" ? "text-emerald-600" : "text-destructive"}`}>
+                <p className={`text-base sm:text-lg font-bold ${selectedTransaction.type === "credit" ? "text-emerald-600" : "text-destructive"}`}>
                   {selectedTransaction.type === "credit" ? "+" : "-"}{selectedTransaction.amount.toLocaleString('fr-FR')} €
                 </p>
               </div>
               <div className="space-y-2">
-                <p className="text-sm font-medium">Sélectionnez le paiement correspondant:</p>
+                <p className="text-xs sm:text-sm font-medium">Sélectionnez le paiement correspondant:</p>
                 {pendingPayments.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-6 text-center">
-                    <Landmark className="h-8 w-8 text-muted-foreground/50 mb-2" />
-                    <p className="text-muted-foreground text-sm">Aucun paiement en attente</p>
+                  <div className="flex flex-col items-center justify-center py-4 sm:py-6 text-center">
+                    <Landmark className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/50 mb-2" />
+                    <p className="text-muted-foreground text-xs sm:text-sm">Aucun paiement en attente</p>
                   </div>
                 ) : (
                   pendingPayments.map(payment => (
                     <div 
                       key={payment.id}
-                      className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                      className="flex items-center justify-between p-2 sm:p-3 border rounded-lg cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950">
-                          <Landmark className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                        <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950">
+                          <Landmark className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <div>
-                          <p className="font-medium text-sm">{payment.owner} - {payment.lot}</p>
-                          <p className="text-xs text-muted-foreground">Appel de fonds</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-xs sm:text-sm truncate">{payment.owner} - {payment.lot}</p>
+                          <p className="text-[10px] sm:text-xs text-muted-foreground">Appel de fonds</p>
                         </div>
                       </div>
-                      <span className="font-semibold">{payment.amount.toLocaleString('fr-FR')} €</span>
+                      <span className="font-semibold text-xs sm:text-sm whitespace-nowrap ml-2">{payment.amount.toLocaleString('fr-FR')} €</span>
                     </div>
                   ))
                 )}
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsMatchOpen(false)}>
+          <DialogFooter className="flex-col gap-2 sm:flex-row sm:gap-0">
+            <Button variant="outline" onClick={() => setIsMatchOpen(false)} className="w-full sm:w-auto">
               Annuler
             </Button>
-            <Button onClick={() => setIsMatchOpen(false)}>
-              Valider le rapprochement
+            <Button onClick={() => setIsMatchOpen(false)} className="w-full sm:w-auto">
+              Valider
             </Button>
           </DialogFooter>
         </DialogContent>
