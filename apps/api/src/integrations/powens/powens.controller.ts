@@ -1,15 +1,20 @@
-import { Controller, Get, Post, Body, Param, Delete, Query, Headers, HttpException, HttpStatus, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Query, Headers, HttpException, HttpStatus, Res, Inject } from '@nestjs/common';
 import type { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 import { PowensService } from './powens.service';
 import { PowensMockService } from './powens-mock.service';
 import { CreateConnectionDto } from './dto';
 import { Public } from '../../auth/decorators/public.decorator';
+import { db } from '../../database';
+import { powensConnections, bankAccounts } from '../../database/schema';
+import { eq } from 'drizzle-orm';
 
 @Controller('powens')
 export class PowensController {
   constructor(
     private readonly powensService: PowensService,
     private readonly powensMockService: PowensMockService,
+    private readonly configService: ConfigService,
   ) {}
 
   // ============ HEALTH & CONFIG ============
@@ -68,7 +73,7 @@ export class PowensController {
   /**
    * Callback endpoint for Powens webview
    * Powens redirects here after user completes bank connection
-   * Automatically exchanges the code for a permanent token
+   * Automatically exchanges the code for a permanent token and saves to database
    */
   @Public()
   @Get('callback')
@@ -78,46 +83,100 @@ export class PowensController {
     @Query('error') error?: string,
     @Query('error_description') errorDescription?: string,
     @Query('connection_id') connectionId?: string,
+    @Res() res?: Response,
   ) {
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3000');
+    
+    // Decode state to get condominiumId and tenantId
+    let decodedState: { condominiumId?: string; tenantId?: string } = {};
+    if (state) {
+      try {
+        decodedState = JSON.parse(Buffer.from(state, 'base64').toString('utf-8'));
+      } catch {
+        // Invalid state, continue anyway
+      }
+    }
+    
+    const { condominiumId, tenantId } = decodedState;
+
     if (error) {
-      return {
-        success: false,
-        error,
-        error_description: errorDescription,
-      };
+      // Redirect to frontend with error
+      const redirectUrl = `${frontendUrl}/app/bank/callback?error=${encodeURIComponent(error)}&error_description=${encodeURIComponent(errorDescription || '')}`;
+      return res?.redirect(redirectUrl);
     }
 
-    // Automatically exchange the code for a permanent access token
+    if (!code) {
+      const redirectUrl = `${frontendUrl}/app/bank/callback?error=missing_code`;
+      return res?.redirect(redirectUrl);
+    }
+
     try {
+      // Exchange code for permanent access token
       const tokenResult = await this.powensService.exchangeCode(code);
       
-      // In a real implementation, you would:
-      // 1. Store the token in your database linked to the user
-      // 2. Redirect to your frontend with success status
+      // Save connection to database if we have condominiumId and tenantId
+      if (condominiumId && tenantId) {
+        try {
+          // Create the Powens connection record
+          const [connection] = await db.insert(powensConnections).values({
+            tenantId,
+            condominiumId,
+            powensConnectionId: connectionId ? parseInt(connectionId, 10) : null,
+            powensUserId: tokenResult.id_user,
+            accessToken: tokenResult.access_token,
+            status: 'active',
+            lastSyncAt: new Date(),
+            lastSyncStatus: 'success',
+          }).returning();
+
+          // Fetch accounts using the new token
+          if (connection && tokenResult.access_token) {
+            try {
+              const accountsResult = await this.powensService.getAccounts(tokenResult.access_token);
+              
+              // Save accounts to database
+              for (const account of accountsResult.accounts) {
+                await db.insert(bankAccounts).values({
+                  tenantId,
+                  condominiumId,
+                  powensConnectionId: connection.id,
+                  powensAccountId: account.id,
+                  bankName: account.company_name || 'Banque',
+                  accountName: account.name || account.original_name,
+                  accountType: account.type,
+                  accountNumber: account.number,
+                  iban: account.iban,
+                  bic: account.bic,
+                  balance: account.balance.toString(),
+                  comingBalance: account.coming?.toString(),
+                  currency: account.currency?.id || 'EUR',
+                  isMain: true,
+                  status: 'active',
+                  lastSyncAt: new Date(),
+                });
+              }
+            } catch (accountError) {
+              console.error('Failed to fetch accounts:', accountError);
+            }
+          }
+        } catch (dbError) {
+          console.error('Failed to save connection to database:', dbError);
+        }
+      }
       
-      return {
-        success: true,
-        message: 'Bank connection successful and token obtained!',
-        connection_id: connectionId,
-        state,
-        access_token: tokenResult.access_token,
-        token_type: tokenResult.token_type,
-        id_user: tokenResult.id_user,
-        note: 'Store this access_token to fetch accounts and transactions later.',
-      };
+      // Redirect to frontend callback page with success
+      const successUrl = new URL(`${frontendUrl}/app/bank/callback`);
+      successUrl.searchParams.set('success', 'true');
+      if (connectionId) successUrl.searchParams.set('connection_id', connectionId);
+      if (condominiumId) successUrl.searchParams.set('condominium_id', condominiumId);
+      
+      return res?.redirect(successUrl.toString());
+      
     } catch (tokenError) {
-      // If token exchange fails, return the code for manual exchange
-      return {
-        success: true,
-        message: 'Bank connection successful but token exchange failed',
-        code,
-        connection_id: connectionId,
-        state,
-        token_error: tokenError.message,
-        next_steps: [
-          'Try exchanging the code manually using POST /powens/token',
-        ],
-      };
+      console.error('Token exchange failed:', tokenError);
+      // Redirect to frontend with error
+      const redirectUrl = `${frontendUrl}/app/bank/callback?error=token_exchange_failed&error_description=${encodeURIComponent(tokenError.message || 'Failed to exchange token')}`;
+      return res?.redirect(redirectUrl);
     }
   }
 
