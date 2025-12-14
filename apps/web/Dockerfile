@@ -3,6 +3,10 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Accept build arguments for Next.js public env vars
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9 --activate
 
@@ -18,7 +22,7 @@ RUN pnpm install --frozen-lockfile
 # Copy source code
 COPY . .
 
-# Build the application with Next.js
+# Build the application with Next.js (uses NEXT_PUBLIC_API_URL)
 RUN pnpm --filter web run build
 
 # Production stage
