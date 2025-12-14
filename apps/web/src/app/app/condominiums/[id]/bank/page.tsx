@@ -304,8 +304,8 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
           }
           setShowConnectModal(open);
         }}>
-          <DialogContent className={powensUrl ? "max-w-4xl h-[80vh]" : ""}>
-            <DialogHeader>
+          <DialogContent className={powensUrl ? "max-w-md sm:max-w-lg h-[600px] flex flex-col" : ""}>
+            <DialogHeader className="flex-shrink-0">
               <DialogTitle>
                 {powensUrl ? "Connexion bancaire en cours" : "Connecter un compte bancaire"}
               </DialogTitle>
@@ -317,11 +317,11 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
             </DialogHeader>
             
             {powensUrl ? (
-              // Iframe mode
-              <div className="flex-1 min-h-0 -mx-6 -mb-6">
+              // Iframe mode - takes remaining space
+              <div className="flex-1 min-h-0 -mx-6 -mb-6 overflow-hidden">
                 <iframe
                   src={powensUrl}
-                  className="w-full h-full min-h-[500px] border-0 rounded-b-lg"
+                  className="w-full h-full border-0 rounded-b-lg"
                   title="Connexion bancaire Powens"
                   allow="camera"
                 />

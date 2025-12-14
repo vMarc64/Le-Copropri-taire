@@ -11,9 +11,13 @@ function CallbackContent() {
   const router = useRouter();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
-  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+  const [isInIframe, setIsInIframe] = useState(false);
 
   useEffect(() => {
+    // Check if we're in an iframe
+    const inIframe = window.parent !== window;
+    setIsInIframe(inIframe);
+
     // Get params from URL
     const success = searchParams.get("success");
     const error = searchParams.get("error");
@@ -24,22 +28,22 @@ function CallbackContent() {
       // Success case - connection was saved by the backend
       setStatus("success");
       setMessage("Votre compte bancaire a été connecté avec succès !");
-      
-      const redirectTo = condominiumId 
-        ? `/app/condominiums/${condominiumId}/bank?success=true`
-        : "/app?success=true";
-      setRedirectUrl(redirectTo);
 
-      // Notify parent window if in iframe
-      if (window.parent !== window) {
+      // Notify parent window if in iframe - parent will close modal and refresh
+      if (inIframe) {
         window.parent.postMessage({
           type: "powens-callback",
           status: "success",
           condominiumId,
         }, "*");
+        // Don't redirect - parent will handle it
+        return;
       }
 
-      // Auto redirect after 2 seconds
+      // Only redirect if NOT in iframe (direct access)
+      const redirectTo = condominiumId 
+        ? `/app/condominiums/${condominiumId}/bank?success=true`
+        : "/app?success=true";
       setTimeout(() => {
         router.push(redirectTo);
       }, 2000);
@@ -50,11 +54,12 @@ function CallbackContent() {
       setMessage(errorDescription || error || "Une erreur est survenue");
       
       // Notify parent window if in iframe
-      if (window.parent !== window) {
+      if (inIframe) {
         window.parent.postMessage({
           type: "powens-callback",
           status: "error",
           error,
+          errorDescription,
         }, "*");
       }
     } else {
@@ -62,15 +67,28 @@ function CallbackContent() {
       setStatus("loading");
       setMessage("Traitement de la connexion...");
       
-      // If no params after 3 seconds, show error
-      setTimeout(() => {
-        if (status === "loading") {
-          setStatus("error");
-          setMessage("Aucune donnée de callback reçue");
-        }
-      }, 3000);
+      // If no params after 5 seconds, show error
+      const timeout = setTimeout(() => {
+        setStatus("error");
+        setMessage("Aucune donnée de callback reçue");
+      }, 5000);
+      
+      return () => clearTimeout(timeout);
     }
-  }, [searchParams, router, status]);
+  }, [searchParams, router]);
+
+  // If in iframe and success, show minimal UI (parent will close)
+  if (isInIframe && status === "success") {
+    return (
+      <div className="text-center space-y-4 p-8">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 mx-auto">
+          <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+        </div>
+        <h2 className="text-lg font-semibold text-foreground">Compte connecté !</h2>
+        <p className="text-sm text-muted-foreground">Fermeture en cours...</p>
+      </div>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md">
@@ -93,11 +111,6 @@ function CallbackContent() {
             <p className="text-sm text-muted-foreground">
               Redirection automatique...
             </p>
-            {redirectUrl && (
-              <Button onClick={() => router.push(redirectUrl)} className="mt-4">
-                Continuer maintenant
-              </Button>
-            )}
           </div>
         )}
 
