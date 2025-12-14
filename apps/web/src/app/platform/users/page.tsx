@@ -1,18 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -146,198 +138,242 @@ export default function PlatformUsersPage() {
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Utilisateurs en attente</h1>
-        <p className="text-muted-foreground mt-1">
-          Gérez les utilisateurs qui attendent d'être associés à un syndic
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Utilisateurs en attente</h1>
+        <p className="text-[15px] text-muted-foreground mt-1">
+          Gérez les utilisateurs qui attendent d&apos;être associés à un syndic
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-violet-100">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-violet-100 rounded-lg">
-                <Clock className="h-5 w-5 text-violet-600" />
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {/* En attente */}
+        <Card className="p-0">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
+              <div className="space-y-3">
+                <p className="text-[13px] font-medium text-muted-foreground">En attente</p>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-4xl font-semibold tracking-tight text-foreground">
+                    {total}
+                  </span>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-violet-600">{total}</p>
-                <p className="text-sm text-muted-foreground">En attente</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-primary/20">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <UserCheck className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-primary">
-                  {users.filter(u => u.role === "manager").length}
-                </p>
-                <p className="text-sm text-muted-foreground">Gestionnaires</p>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
+                <Clock className="h-6 w-6 text-amber-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-neutral-200">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-neutral-100 rounded-lg">
-                <Users className="h-5 w-5 text-neutral-600" />
+
+        {/* Gestionnaires */}
+        <Card className="p-0">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
+              <div className="space-y-3">
+                <p className="text-[13px] font-medium text-muted-foreground">Gestionnaires</p>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-4xl font-semibold tracking-tight text-foreground">
+                    {users.filter(u => u.role === "manager").length}
+                  </span>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-neutral-600">
-                  {users.filter(u => u.role === "owner").length}
-                </p>
-                <p className="text-sm text-muted-foreground">Copropriétaires</p>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <UserCheck className="h-6 w-6 text-primary" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-blue-200">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Building2 className="h-5 w-5 text-blue-600" />
+
+        {/* Copropriétaires */}
+        <Card className="p-0">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
+              <div className="space-y-3">
+                <p className="text-[13px] font-medium text-muted-foreground">Copropriétaires</p>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-4xl font-semibold tracking-tight text-foreground">
+                    {users.filter(u => u.role === "owner").length}
+                  </span>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-blue-600">{syndics.length}</p>
-                <p className="text-sm text-muted-foreground">Syndics disponibles</p>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
+                <Users className="h-6 w-6 text-secondary-foreground" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Syndics disponibles */}
+        <Card className="p-0">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
+              <div className="space-y-3">
+                <p className="text-[13px] font-medium text-muted-foreground">Syndics disponibles</p>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-4xl font-semibold tracking-tight text-foreground">
+                    {syndics.length}
+                  </span>
+                </div>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10">
+                <Building2 className="h-6 w-6 text-blue-500" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Liste des utilisateurs</CardTitle>
-          <CardDescription>
-            Associez les utilisateurs en attente à un syndic pour qu'ils puissent accéder à la plateforme
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher par nom ou email..."
-                value={search}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={roleFilter} onValueChange={handleRoleFilter}>
-              <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="Filtrer par rôle" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les rôles</SelectItem>
-                <SelectItem value="manager">Gestionnaires</SelectItem>
-                <SelectItem value="owner">Copropriétaires</SelectItem>
-              </SelectContent>
-            </Select>
+      {/* Filters & Table */}
+      <div className="space-y-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">Liste des utilisateurs</h2>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              Associez les utilisateurs en attente à un syndic pour qu&apos;ils puissent accéder à la plateforme
+            </p>
           </div>
+        </div>
 
-          {/* Table */}
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600"></div>
-            </div>
-          ) : users.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Users className="h-12 w-12 mx-auto mb-4 opacity-20" />
-              <p className="text-lg font-medium">Aucun utilisateur en attente</p>
-              <p className="text-sm">
-                {search || roleFilter !== "all"
-                  ? "Modifiez vos filtres pour voir plus de résultats"
-                  : "Tous les utilisateurs ont été associés à un syndic"}
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Utilisateur</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Rôle</TableHead>
-                      <TableHead>Date d'inscription</TableHead>
-                      <TableHead className="w-[50px]"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">
-                          {user.firstName} {user.lastName}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {user.email}
-                        </TableCell>
-                        <TableCell>{getRoleBadge(user.role)}</TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {formatDate(user.createdAt)}
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onSelect={() => openAssociateModal(user)}>
-                                <Link2 className="h-4 w-4 mr-2" />
-                                Associer à un syndic
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+        {/* Filters */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher par nom ou email..."
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select value={roleFilter} onValueChange={handleRoleFilter}>
+            <SelectTrigger className="w-full md:w-[200px]">
+              <SelectValue placeholder="Filtrer par rôle" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les rôles</SelectItem>
+              <SelectItem value="manager">Gestionnaires</SelectItem>
+              <SelectItem value="owner">Copropriétaires</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Table */}
+        <Card className="overflow-hidden p-0">
+          <div className="overflow-x-auto">
+            {loading ? (
+              <div className="flex justify-center py-16">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4">
-                  <p className="text-sm text-muted-foreground">
-                    {(page - 1) * limit + 1} - {Math.min(page * limit, total)} sur {total} utilisateurs
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page === 1}
-                      onClick={() => setPage(p => p - 1)}
-                    >
-                      Précédent
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page === totalPages}
-                      onClick={() => setPage(p => p + 1)}
-                    >
-                      Suivant
-                    </Button>
-                  </div>
+            ) : users.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                  <Users className="h-8 w-8 text-muted-foreground/50" />
                 </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+                <p className="mt-4 text-[14px] font-medium text-foreground">Aucun utilisateur en attente</p>
+                <p className="mt-1 text-[13px] text-muted-foreground">
+                  {search || roleFilter !== "all"
+                    ? "Modifiez vos filtres pour voir plus de résultats"
+                    : "Tous les utilisateurs ont été associés à un syndic"}
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Table Header */}
+                <div className="grid min-w-[700px] grid-cols-12 gap-4 border-b border-border bg-muted/50 px-6 py-3">
+                  <div className="col-span-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Utilisateur
+                  </div>
+                  <div className="col-span-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Email
+                  </div>
+                  <div className="col-span-2 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Rôle
+                  </div>
+                  <div className="col-span-3 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Date d&apos;inscription
+                  </div>
+                  <div className="col-span-1"></div>
+                </div>
+                
+                {/* Table Rows */}
+                <div className="divide-y divide-border">
+                  {users.map((user) => (
+                    <div
+                      key={user.id}
+                      className="grid min-w-[700px] grid-cols-12 gap-4 px-6 py-4 transition-colors hover:bg-muted/50 group"
+                    >
+                      <div className="col-span-3 flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                          <Users className="h-5 w-5 text-primary" />
+                        </div>
+                        <span className="text-[14px] font-medium text-foreground truncate">
+                          {user.firstName} {user.lastName}
+                        </span>
+                      </div>
+                      <div className="col-span-3 flex items-center">
+                        <span className="text-[14px] text-muted-foreground truncate">{user.email}</span>
+                      </div>
+                      <div className="col-span-2 flex items-center justify-center">
+                        {getRoleBadge(user.role)}
+                      </div>
+                      <div className="col-span-3 flex items-center justify-center">
+                        <span className="text-[13px] text-muted-foreground">
+                          {formatDate(user.createdAt)}
+                        </span>
+                      </div>
+                      <div className="col-span-1 flex items-center justify-end">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onSelect={() => openAssociateModal(user)}>
+                              <Link2 className="h-4 w-4 mr-2" />
+                              Associer à un syndic
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between px-6 py-4 border-t border-border">
+                    <p className="text-[13px] text-muted-foreground">
+                      {(page - 1) * limit + 1} - {Math.min(page * limit, total)} sur {total} utilisateurs
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page === 1}
+                        onClick={() => setPage(p => p - 1)}
+                      >
+                        Précédent
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page === totalPages}
+                        onClick={() => setPage(p => p + 1)}
+                      >
+                        Suivant
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </Card>
+      </div>
 
       {/* Association Modal */}
       <Dialog open={associateModalOpen} onOpenChange={setAssociateModalOpen}>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,14 +15,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { 
   Building2, 
   Users, 
@@ -31,8 +23,8 @@ import {
   Plus,
   Loader2,
   RefreshCw,
-  MoreHorizontal,
-  Eye
+  Eye,
+  TrendingUp
 } from "lucide-react";
 import { 
   getPlatformStats, 
@@ -233,136 +225,176 @@ export default function PlatformDashboard() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Gestionnaires
-            </CardTitle>
-            <Building2 className="h-4 w-4 text-violet-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.syndics ?? 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Syndics sur la plateforme
-            </p>
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Gestionnaires */}
+        <Card className="p-0">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
+              <div className="space-y-3">
+                <p className="text-[13px] font-medium text-muted-foreground">Gestionnaires</p>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-4xl font-semibold tracking-tight text-foreground">
+                    {stats?.syndics ?? 0}
+                  </span>
+                </div>
+                <p className="text-[12px] text-muted-foreground">Syndics sur la plateforme</p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <Building2 className="h-6 w-6 text-primary" />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Utilisateurs
-            </CardTitle>
-            <Users className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.users ?? 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Comptes actifs
-            </p>
+        {/* Utilisateurs */}
+        <Card className="p-0">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
+              <div className="space-y-3">
+                <p className="text-[13px] font-medium text-muted-foreground">Utilisateurs</p>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-4xl font-semibold tracking-tight text-foreground">
+                    {stats?.users ?? 0}
+                  </span>
+                </div>
+                <p className="text-[12px] text-muted-foreground">Comptes actifs</p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10">
+                <Users className="h-6 w-6 text-blue-500" />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Copropriétés
-            </CardTitle>
-            <Home className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.condominiums ?? 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Immeubles gérés
-            </p>
+        {/* Copropriétés */}
+        <Card className="p-0">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
+              <div className="space-y-3">
+                <p className="text-[13px] font-medium text-muted-foreground">Copropriétés</p>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-4xl font-semibold tracking-tight text-foreground">
+                    {stats?.condominiums ?? 0}
+                  </span>
+                </div>
+                <p className="text-[12px] text-muted-foreground">Immeubles gérés</p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10">
+                <Home className="h-6 w-6 text-emerald-500" />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Copropriétaires
-            </CardTitle>
-            <UserPlus className="h-4 w-4 text-orange-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.owners ?? 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Propriétaires enregistrés
-            </p>
+        {/* Copropriétaires */}
+        <Card className="p-0">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
+              <div className="space-y-3">
+                <p className="text-[13px] font-medium text-muted-foreground">Copropriétaires</p>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-4xl font-semibold tracking-tight text-foreground">
+                    {stats?.owners ?? 0}
+                  </span>
+                </div>
+                <p className="text-[12px] text-muted-foreground">Propriétaires enregistrés</p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500/10">
+                <UserPlus className="h-6 w-6 text-orange-500" />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Syndics Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-violet-500" />
-            Liste des Gestionnaires
-          </CardTitle>
-          <CardDescription>
-            Tous les syndics enregistrés sur la plateforme
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {syndics.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Aucun gestionnaire enregistré</p>
-              <p className="text-sm mt-1">Cliquez sur &quot;Nouveau Gestionnaire&quot; pour en créer un</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nom</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead className="text-center">Copropriétés</TableHead>
-                  <TableHead className="text-center">Copropriétaires</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {syndics.map((syndic) => (
-                  <TableRow key={syndic.id}>
-                    <TableCell className="font-medium">{syndic.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{syndic.email}</TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="secondary">
-                        {syndic.condominiumsCount ?? 0}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant="secondary">
-                        {syndic.ownersCount ?? 0}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={syndic.status === 'active' ? 'default' : 'secondary'}
-                        className={syndic.status === 'active' ? 'bg-green-500/10 text-green-600 border-green-500/20' : ''}
-                      >
-                        {syndic.status === 'active' ? 'Actif' : syndic.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Link href={`/platform/tenants/${syndic.id}`}>
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4 mr-1" />
-                          Voir
-                        </Button>
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      {/* Syndics List */}
+      <div className="space-y-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-primary" />
+              Liste des Gestionnaires
+            </h2>
+            <p className="text-[13px] text-muted-foreground mt-1">Tous les syndics enregistrés sur la plateforme</p>
+          </div>
+        </div>
+
+        <Card className="overflow-hidden p-0">
+          <div className="overflow-x-auto">
+            {syndics.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                  <Building2 className="h-8 w-8 text-muted-foreground/50" />
+                </div>
+                <p className="mt-4 text-[14px] font-medium text-foreground">Aucun gestionnaire enregistré</p>
+                <p className="mt-1 text-[13px] text-muted-foreground">Cliquez sur &quot;Nouveau Gestionnaire&quot; pour en créer un</p>
+              </div>
+            ) : (
+              <>
+                {/* Table Header */}
+                <div className="grid min-w-[700px] grid-cols-12 gap-4 border-b border-border bg-muted/50 px-6 py-3">
+                  <div className="col-span-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Nom
+                  </div>
+                  <div className="col-span-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Email
+                  </div>
+                  <div className="col-span-2 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Copropriétés
+                  </div>
+                  <div className="col-span-2 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Copropriétaires
+                  </div>
+                  <div className="col-span-2 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Statut
+                  </div>
+                </div>
+                
+                {/* Table Rows */}
+                <div className="divide-y divide-border">
+                  {syndics.map((syndic) => (
+                    <Link
+                      key={syndic.id}
+                      href={`/platform/tenants/${syndic.id}`}
+                      className="grid min-w-[700px] grid-cols-12 gap-4 px-6 py-4 transition-colors hover:bg-muted/50"
+                    >
+                      <div className="col-span-3 flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                          <Building2 className="h-5 w-5 text-primary" />
+                        </div>
+                        <span className="text-[14px] font-medium text-foreground truncate">{syndic.name}</span>
+                      </div>
+                      <div className="col-span-3 flex items-center">
+                        <span className="text-[14px] text-muted-foreground truncate">{syndic.email}</span>
+                      </div>
+                      <div className="col-span-2 flex items-center justify-center">
+                        <span className="inline-flex h-7 min-w-[28px] items-center justify-center rounded-full bg-secondary px-2.5 text-[13px] font-medium text-secondary-foreground">
+                          {syndic.condominiumsCount ?? 0}
+                        </span>
+                      </div>
+                      <div className="col-span-2 flex items-center justify-center">
+                        <span className="inline-flex h-7 min-w-[28px] items-center justify-center rounded-full bg-secondary px-2.5 text-[13px] font-medium text-secondary-foreground">
+                          {syndic.ownersCount ?? 0}
+                        </span>
+                      </div>
+                      <div className="col-span-2 flex items-center justify-center">
+                        <Badge 
+                          variant="outline"
+                          className={syndic.status === 'active' 
+                            ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' 
+                            : 'bg-secondary text-secondary-foreground'}
+                        >
+                          {syndic.status === 'active' ? 'Actif' : syndic.status}
+                        </Badge>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
