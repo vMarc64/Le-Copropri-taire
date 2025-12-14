@@ -49,6 +49,22 @@ export class BankController {
     return this.bankService.findAllTransactions(tenantId, accountId, condominiumId);
   }
 
+  // ============ SYNC & TRANSACTIONS ============
+
+  /**
+   * Sync bank account transactions from Powens
+   */
+  @Post('sync/:condominiumId')
+  async syncTransactions(
+    @Param('condominiumId') condominiumId: string,
+    @CurrentTenantId() tenantId: string,
+  ) {
+    if (!tenantId) {
+      throw new ForbiddenException('Tenant context is required');
+    }
+    return this.bankService.syncTransactionsFromPowens(tenantId, condominiumId, this.powensService);
+  }
+
   // ============ POWENS CONNECT FLOW ============
 
   /**

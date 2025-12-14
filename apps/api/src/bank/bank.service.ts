@@ -227,4 +227,111 @@ export class BankService {
 
     return connection[0] || null;
   }
+
+  async syncTransactionsFromPowens(tenantId: string, condominiumId: string, powensService: any) {
+    // Get the Powens connection for this condominium
+    const connection = await this.findPowensConnectionByCondominiumId(condominiumId, tenantId);
+    
+    if (!connection || !connection.accessToken) {
+      throw new Error('No active Powens connection found for this condominium');
+    }
+
+    // Get bank accounts for this connection
+    const accounts = await db
+      .select()
+      .from(bankAccounts)
+      .where(
+        and(
+          eq(bankAccounts.condominiumId, condominiumId),
+          eq(bankAccounts.tenantId, tenantId)
+        )
+      );
+
+    if (accounts.length === 0) {
+      throw new Error('No bank accounts found for this condominium');
+    }
+
+    // Force sync the connection first
+    if (connection.powensConnectionId) {
+      try {
+        await powensService.syncConnection(connection.accessToken, connection.powensConnectionId);
+      } catch (error) {
+        console.error('Failed to sync connection:', error);
+      }
+    }
+
+    // Fetch and store transactions for each account
+    let totalNewTransactions = 0;
+    
+    for (const account of accounts) {
+      if (!account.powensAccountId) continue;
+
+      try {
+        const transactionsResult = await powensService.getTransactionsByAccount(
+          connection.accessToken, 
+          account.powensAccountId,
+          { limit: 50 }
+        );
+
+        for (const tx of transactionsResult.transactions) {
+          // Check if transaction already exists
+          const existing = await db
+            .select({ id: bankTransactions.id })
+            .from(bankTransactions)
+            .where(eq(bankTransactions.powensTransactionId, tx.id))
+            .limit(1);
+
+          if (existing.length === 0) {
+            // Insert new transaction
+            await db.insert(bankTransactions).values({
+              tenantId,
+              bankAccountId: account.id,
+              powensTransactionId: tx.id,
+              amount: tx.value?.toString() || '0',
+              originalWording: tx.original_wording || '',
+              simplifiedWording: tx.simplified_wording || '',
+              description: tx.wording || tx.simplified_wording || '',
+              counterpartyName: tx.simplified_wording || tx.wording || '',
+              transactionDate: tx.date,
+              valueDate: tx.vdate,
+              applicationDate: tx.application_date,
+              powensCategoryId: tx.id_category,
+              type: tx.type || 'unknown',
+              direction: tx.value >= 0 ? 'credit' : 'debit',
+              isComing: tx.coming || false,
+              reconciliationStatus: 'unmatched',
+            });
+            totalNewTransactions++;
+          }
+        }
+
+        // Update account balance and last sync
+        await db
+          .update(bankAccounts)
+          .set({
+            lastSyncAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(bankAccounts.id, account.id));
+      } catch (error) {
+        console.error(`Failed to fetch transactions for account ${account.id}:`, error);
+      }
+    }
+
+    // Update connection last sync
+    await db
+      .update(powensConnections)
+      .set({
+        lastSyncAt: new Date(),
+        lastSyncStatus: 'success',
+        updatedAt: new Date(),
+      })
+      .where(eq(powensConnections.id, connection.id));
+
+    return {
+      success: true,
+      newTransactions: totalNewTransactions,
+      message: `Synchronisation terminée. ${totalNewTransactions} nouvelles transactions.`,
+    };
+  }
 }

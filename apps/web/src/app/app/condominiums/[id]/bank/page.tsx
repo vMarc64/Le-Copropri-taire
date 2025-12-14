@@ -122,6 +122,10 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
   const [powensConfigured, setPowensConfigured] = useState(true);
   const [powensUrl, setPowensUrl] = useState<string | null>(null);
   
+  // Sync state
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  
   // Check for callback params
   const callbackSuccess = searchParams.get('success');
   const callbackError = searchParams.get('error');
@@ -148,13 +152,26 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
     async function fetchData() {
       try {
         setLoading(true);
-        const response = await fetch(`/api/condominiums/${condoId}/bank`);
-        if (!response.ok) {
+        
+        // Fetch accounts
+        const accountsResponse = await fetch(`/api/condominiums/${condoId}/bank`);
+        if (!accountsResponse.ok) {
           throw new Error("Erreur lors du chargement");
         }
-        const accounts = await response.json();
+        const accounts = await accountsResponse.json();
         setBankAccounts(accounts);
-        setTransactions([]);
+        
+        // Fetch transactions if we have accounts
+        if (accounts.length > 0) {
+          const transactionsResponse = await fetch(`/api/condominiums/${condoId}/bank/transactions`);
+          if (transactionsResponse.ok) {
+            const txData = await transactionsResponse.json();
+            setTransactions(txData);
+          }
+        } else {
+          setTransactions([]);
+        }
+        
         setPendingPayments([]);
         setError(null);
       } catch (err) {
@@ -200,6 +217,47 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
     setShowConnectModal(false);
     // Refresh data in case connection was successful
     window.location.reload();
+  };
+  
+  // Handle sync transactions
+  const handleSync = async () => {
+    try {
+      setSyncing(true);
+      setSyncMessage(null);
+      
+      const response = await fetch(`/api/condominiums/${condoId}/bank/sync`, {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        throw new Error("Erreur lors de la synchronisation");
+      }
+      
+      const result = await response.json();
+      setSyncMessage(result.message);
+      
+      // Reload data after sync
+      const accountsResponse = await fetch(`/api/condominiums/${condoId}/bank`);
+      if (accountsResponse.ok) {
+        const accounts = await accountsResponse.json();
+        setBankAccounts(accounts);
+      }
+      
+      // Reload transactions
+      const transactionsResponse = await fetch(`/api/condominiums/${condoId}/bank/transactions`);
+      if (transactionsResponse.ok) {
+        const txData = await transactionsResponse.json();
+        setTransactions(txData);
+      }
+      
+      // Clear message after 5 seconds
+      setTimeout(() => setSyncMessage(null), 5000);
+    } catch (err) {
+      console.error("Sync error:", err);
+      setSyncMessage("Erreur lors de la synchronisation");
+    } finally {
+      setSyncing(false);
+    }
   };
 
   const filteredTransactions = transactions.filter((tx) => {
@@ -415,9 +473,18 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Synchroniser
+          <Button variant="outline" size="sm" onClick={handleSync} disabled={syncing}>
+            {syncing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Synchronisation...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Synchroniser
+              </>
+            )}
           </Button>
           <Button variant="outline" size="sm">
             <Upload className="mr-2 h-4 w-4" />
@@ -425,6 +492,18 @@ export default function BankPage({ params }: { params: Promise<{ id: string }> }
           </Button>
         </div>
       </div>
+      
+      {/* Sync Message */}
+      {syncMessage && (
+        <Alert className={syncMessage.includes('Erreur') ? '' : 'border-green-200 bg-green-50 text-green-800'}>
+          {syncMessage.includes('Erreur') ? (
+            <AlertCircle className="h-4 w-4" />
+          ) : (
+            <CheckCircle2 className="h-4 w-4" />
+          )}
+          <AlertDescription>{syncMessage}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
