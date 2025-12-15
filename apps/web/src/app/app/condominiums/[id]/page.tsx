@@ -152,10 +152,15 @@ export default function CondominiumDashboardPage({ params }: { params: Promise<{
             icon: Users,
           },
           {
-            label: "SEPA",
-            value: condominium.sepaEnabled ? "Actif" : "Inactif",
+            label: "Paiements",
+            value: [
+              condominium.sepaEnabled ? "SEPA" : null,
+              condominium.cbEnabled ? "CB" : null,
+            ].filter(Boolean).join(" / ") || "Aucun",
             icon: Landmark,
-            valueClass: condominium.sepaEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
+            valueClass: (condominium.sepaEnabled || condominium.cbEnabled) 
+              ? "text-emerald-600 dark:text-emerald-400" 
+              : "text-muted-foreground",
           },
         ].map((stat, index) => (
           <Card key={index} className="relative overflow-hidden">

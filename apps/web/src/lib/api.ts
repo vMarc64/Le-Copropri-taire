@@ -168,6 +168,8 @@ export interface Condominium {
   city: string;
   postalCode: string;
   sepaEnabled: boolean;
+  cbEnabled: boolean;
+  callFrequency: 'monthly' | 'quarterly';
   lots: number;
   owners: number;
   balance: number;

@@ -32,6 +32,8 @@ export class CondominiumsService {
         city: condominiums.city,
         postalCode: condominiums.postalCode,
         sepaEnabled: condominiums.sepaEnabled,
+        cbEnabled: condominiums.cbEnabled,
+        callFrequency: condominiums.callFrequency,
         createdAt: condominiums.createdAt,
       })
       .from(condominiums)
