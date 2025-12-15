@@ -502,9 +502,18 @@ export class PlatformService {
       conditions.push(eq(users.status, status));
     }
 
+    // Search across all fields: name, email, role, status, syndic name
     if (search) {
+      const searchPattern = '%' + search + '%';
       conditions.push(
-        sql`(${users.firstName} ILIKE ${'%' + search + '%'} OR ${users.lastName} ILIKE ${'%' + search + '%'} OR ${users.email} ILIKE ${'%' + search + '%'})`
+        sql`(
+          ${users.firstName} ILIKE ${searchPattern} 
+          OR ${users.lastName} ILIKE ${searchPattern} 
+          OR ${users.email} ILIKE ${searchPattern}
+          OR ${users.role} ILIKE ${searchPattern}
+          OR ${users.status} ILIKE ${searchPattern}
+          OR ${tenants.name} ILIKE ${searchPattern}
+        )`
       );
     }
 
@@ -515,10 +524,11 @@ export class PlatformService {
     // Build where clause
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    // Get total count
+    // Get total count - need to join with tenants for search
     const [{ count: total }] = await db
       .select({ count: count() })
       .from(users)
+      .leftJoin(tenants, eq(users.tenantId, tenants.id))
       .where(whereClause);
 
     // Get users with syndic name
