@@ -1,0 +1,759 @@
+{
+  "title": "LeCopro - Base de données",
+  "description": "Monitoring des opérations base de données (Drizzle ORM)",
+  "tags": ["lecopro", "database", "drizzle", "postgres"],
+  "layout": [
+    {
+      "i": "db-operations",
+      "x": 0,
+      "y": 0,
+      "w": 3,
+      "h": 2
+    },
+    {
+      "i": "db-avg-latency",
+      "x": 3,
+      "y": 0,
+      "w": 3,
+      "h": 2
+    },
+    {
+      "i": "db-p95-latency",
+      "x": 6,
+      "y": 0,
+      "w": 3,
+      "h": 2
+    },
+    {
+      "i": "db-errors",
+      "x": 9,
+      "y": 0,
+      "w": 3,
+      "h": 2
+    },
+    {
+      "i": "db-operations-timeline",
+      "x": 0,
+      "y": 2,
+      "w": 12,
+      "h": 3
+    },
+    {
+      "i": "db-latency-timeline",
+      "x": 0,
+      "y": 5,
+      "w": 12,
+      "h": 3
+    },
+    {
+      "i": "db-by-operation",
+      "x": 0,
+      "y": 8,
+      "w": 6,
+      "h": 3
+    },
+    {
+      "i": "db-slowest-queries",
+      "x": 6,
+      "y": 8,
+      "w": 6,
+      "h": 3
+    },
+    {
+      "i": "db-by-table",
+      "x": 0,
+      "y": 11,
+      "w": 6,
+      "h": 3
+    },
+    {
+      "i": "db-errors-detail",
+      "x": 6,
+      "y": 11,
+      "w": 6,
+      "h": 3
+    }
+  ],
+  "widgets": [
+    {
+      "id": "db-operations",
+      "title": "Opérations DB",
+      "description": "Nombre total d'opérations base de données",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "db.system",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "exists",
+                    "value": ""
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "legend": "Opérations",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "db-avg-latency",
+      "title": "Latence moyenne DB",
+      "description": "Temps moyen des requêtes DB",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "avg",
+              "aggregateAttribute": {
+                "key": "durationNano",
+                "dataType": "float64",
+                "type": "tag",
+                "isColumn": true
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "db.system",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "exists",
+                    "value": ""
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A/1000000",
+              "disabled": false,
+              "legend": "ms",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      },
+      "thresholds": [
+        {
+          "thresholdValue": 50,
+          "thresholdColor": "Yellow",
+          "thresholdFormat": "Text",
+          "thresholdUnit": "ms"
+        },
+        {
+          "thresholdValue": 200,
+          "thresholdColor": "Red",
+          "thresholdFormat": "Text",
+          "thresholdUnit": "ms"
+        }
+      ]
+    },
+    {
+      "id": "db-p95-latency",
+      "title": "P95 Latence DB",
+      "description": "Latence 95ème percentile",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "p95",
+              "aggregateAttribute": {
+                "key": "durationNano",
+                "dataType": "float64",
+                "type": "tag",
+                "isColumn": true
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "db.system",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "exists",
+                    "value": ""
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A/1000000",
+              "disabled": false,
+              "legend": "ms",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      },
+      "thresholds": [
+        {
+          "thresholdValue": 100,
+          "thresholdColor": "Yellow",
+          "thresholdFormat": "Text",
+          "thresholdUnit": "ms"
+        },
+        {
+          "thresholdValue": 500,
+          "thresholdColor": "Red",
+          "thresholdFormat": "Text",
+          "thresholdUnit": "ms"
+        }
+      ]
+    },
+    {
+      "id": "db-errors",
+      "title": "Erreurs DB",
+      "description": "Nombre d'erreurs base de données",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "db.system",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "exists",
+                    "value": ""
+                  },
+                  {
+                    "key": {
+                      "key": "hasError",
+                      "dataType": "bool",
+                      "type": "tag",
+                      "isColumn": true
+                    },
+                    "op": "=",
+                    "value": true
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "legend": "Erreurs",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      },
+      "thresholds": [
+        {
+          "thresholdValue": 1,
+          "thresholdColor": "Red",
+          "thresholdFormat": "Text",
+          "thresholdUnit": "none"
+        }
+      ]
+    },
+    {
+      "id": "db-operations-timeline",
+      "title": "Opérations DB dans le temps",
+      "description": "Évolution du nombre de requêtes DB",
+      "panelTypes": "graph",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "db.system",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "exists",
+                    "value": ""
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "stepInterval": 60,
+              "legend": "Requêtes DB"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "db-latency-timeline",
+      "title": "Latences DB dans le temps",
+      "description": "Évolution des latences (avg, P95, P99)",
+      "panelTypes": "graph",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "avg",
+              "aggregateAttribute": {
+                "key": "durationNano",
+                "dataType": "float64",
+                "type": "tag",
+                "isColumn": true
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "db.system",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "exists",
+                    "value": ""
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A/1000000",
+              "disabled": false,
+              "stepInterval": 60,
+              "legend": "Avg"
+            },
+            {
+              "dataSource": "traces",
+              "queryName": "B",
+              "aggregateOperator": "p95",
+              "aggregateAttribute": {
+                "key": "durationNano",
+                "dataType": "float64",
+                "type": "tag",
+                "isColumn": true
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "db.system",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "exists",
+                    "value": ""
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "B/1000000",
+              "disabled": false,
+              "stepInterval": 60,
+              "legend": "P95"
+            },
+            {
+              "dataSource": "traces",
+              "queryName": "C",
+              "aggregateOperator": "p99",
+              "aggregateAttribute": {
+                "key": "durationNano",
+                "dataType": "float64",
+                "type": "tag",
+                "isColumn": true
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "db.system",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "exists",
+                    "value": ""
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "C/1000000",
+              "disabled": false,
+              "stepInterval": 60,
+              "legend": "P99"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "db-by-operation",
+      "title": "Par type d'opération",
+      "description": "Distribution SELECT, INSERT, UPDATE, DELETE",
+      "panelTypes": "pie",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "db.system",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "exists",
+                    "value": ""
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "groupBy": [
+                {
+                  "key": "db.operation",
+                  "dataType": "string",
+                  "type": "tag",
+                  "isColumn": false
+                }
+              ],
+              "legend": "{{db.operation}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "db-slowest-queries",
+      "title": "Requêtes les plus lentes",
+      "description": "Top 10 requêtes DB par latence",
+      "panelTypes": "table",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "avg",
+              "aggregateAttribute": {
+                "key": "durationNano",
+                "dataType": "float64",
+                "type": "tag",
+                "isColumn": true
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "db.system",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "exists",
+                    "value": ""
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A/1000000",
+              "disabled": false,
+              "groupBy": [
+                {
+                  "key": "db.statement",
+                  "dataType": "string",
+                  "type": "tag",
+                  "isColumn": false
+                }
+              ],
+              "legend": "{{db.statement}}",
+              "orderBy": {
+                "columnName": "A",
+                "order": "desc"
+              },
+              "limit": 10
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "db-by-table",
+      "title": "Par table",
+      "description": "Requêtes par table SQL",
+      "panelTypes": "bar",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "db.sql.table",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "exists",
+                    "value": ""
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "groupBy": [
+                {
+                  "key": "db.sql.table",
+                  "dataType": "string",
+                  "type": "tag",
+                  "isColumn": false
+                }
+              ],
+              "legend": "{{db.sql.table}}",
+              "orderBy": {
+                "columnName": "A",
+                "order": "desc"
+              },
+              "limit": 15
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "db-errors-detail",
+      "title": "Erreurs DB détaillées",
+      "description": "Détail des erreurs base de données",
+      "panelTypes": "table",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "db.system",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "exists",
+                    "value": ""
+                  },
+                  {
+                    "key": {
+                      "key": "hasError",
+                      "dataType": "bool",
+                      "type": "tag",
+                      "isColumn": true
+                    },
+                    "op": "=",
+                    "value": true
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "groupBy": [
+                {
+                  "key": "db.operation",
+                  "dataType": "string",
+                  "type": "tag",
+                  "isColumn": false
+                },
+                {
+                  "key": "exception.message",
+                  "dataType": "string",
+                  "type": "tag",
+                  "isColumn": false
+                }
+              ],
+              "legend": "{{db.operation}} - {{exception.message}}",
+              "orderBy": {
+                "columnName": "A",
+                "order": "desc"
+              },
+              "limit": 20
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "variables": {}
+}

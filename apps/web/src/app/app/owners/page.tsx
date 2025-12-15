@@ -622,7 +622,7 @@ export default function OwnersPage() {
   const [totalPages, setTotalPages] = useState(0);
   
   // Filter state
-  const [selectedCondominiumId, setSelectedCondominiumId] = useState<string>("");
+  const [selectedCondominiumId, setSelectedCondominiumId] = useState<string>("all");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   
   // Modal state
@@ -660,7 +660,7 @@ export default function OwnersPage() {
         page,
         limit,
         search: debouncedSearch || undefined,
-        condominiumId: selectedCondominiumId || undefined,
+        condominiumId: selectedCondominiumId === "all" ? undefined : selectedCondominiumId,
       };
       const [ownersResponse, condosData] = await Promise.all([
         getOwners(params),
@@ -1035,7 +1035,7 @@ export default function OwnersPage() {
               <SelectValue placeholder="Toutes les copropriétés" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Toutes les copropriétés</SelectItem>
+              <SelectItem value="all">Toutes les copropriétés</SelectItem>
               {condominiums.map((condo) => (
                 <SelectItem key={condo.id} value={condo.id}>
                   {condo.name}

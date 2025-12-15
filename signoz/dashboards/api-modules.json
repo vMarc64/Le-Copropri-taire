@@ -1,0 +1,811 @@
+{
+  "title": "LeCopro - API par Module",
+  "description": "Suivi des appels API par module métier (Auth, Owners, Condominiums, etc.)",
+  "tags": ["lecopro", "api", "modules"],
+  "layout": [
+    {
+      "i": "auth-requests",
+      "x": 0,
+      "y": 0,
+      "w": 4,
+      "h": 2
+    },
+    {
+      "i": "owners-requests",
+      "x": 4,
+      "y": 0,
+      "w": 4,
+      "h": 2
+    },
+    {
+      "i": "condominiums-requests",
+      "x": 8,
+      "y": 0,
+      "w": 4,
+      "h": 2
+    },
+    {
+      "i": "auth-latency",
+      "x": 0,
+      "y": 2,
+      "w": 4,
+      "h": 2
+    },
+    {
+      "i": "owners-latency",
+      "x": 4,
+      "y": 2,
+      "w": 4,
+      "h": 2
+    },
+    {
+      "i": "condominiums-latency",
+      "x": 8,
+      "y": 2,
+      "w": 4,
+      "h": 2
+    },
+    {
+      "i": "payments-requests",
+      "x": 0,
+      "y": 4,
+      "w": 4,
+      "h": 2
+    },
+    {
+      "i": "bank-requests",
+      "x": 4,
+      "y": 4,
+      "w": 4,
+      "h": 2
+    },
+    {
+      "i": "documents-requests",
+      "x": 8,
+      "y": 4,
+      "w": 4,
+      "h": 2
+    },
+    {
+      "i": "module-distribution",
+      "x": 0,
+      "y": 6,
+      "w": 6,
+      "h": 3
+    },
+    {
+      "i": "module-errors",
+      "x": 6,
+      "y": 6,
+      "w": 6,
+      "h": 3
+    },
+    {
+      "i": "module-timeline",
+      "x": 0,
+      "y": 9,
+      "w": 12,
+      "h": 3
+    }
+  ],
+  "widgets": [
+    {
+      "id": "auth-requests",
+      "title": "Auth - Requêtes",
+      "description": "Nombre de requêtes sur /auth/*",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "aggregateAttribute": {
+                "key": "",
+                "dataType": "",
+                "type": "",
+                "isColumn": false
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/auth"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "legend": "Auth",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "owners-requests",
+      "title": "Owners - Requêtes",
+      "description": "Nombre de requêtes sur /owners/*",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "aggregateAttribute": {
+                "key": "",
+                "dataType": "",
+                "type": "",
+                "isColumn": false
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/owners"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "legend": "Owners",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "condominiums-requests",
+      "title": "Condominiums - Requêtes",
+      "description": "Nombre de requêtes sur /condominiums/*",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "aggregateAttribute": {
+                "key": "",
+                "dataType": "",
+                "type": "",
+                "isColumn": false
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/condominiums"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "legend": "Condominiums",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "auth-latency",
+      "title": "Auth - Latence P95",
+      "description": "Latence P95 des endpoints Auth",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "p95",
+              "aggregateAttribute": {
+                "key": "durationNano",
+                "dataType": "float64",
+                "type": "tag",
+                "isColumn": true
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/auth"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A/1000000",
+              "disabled": false,
+              "legend": "P95 (ms)",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "owners-latency",
+      "title": "Owners - Latence P95",
+      "description": "Latence P95 des endpoints Owners",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "p95",
+              "aggregateAttribute": {
+                "key": "durationNano",
+                "dataType": "float64",
+                "type": "tag",
+                "isColumn": true
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/owners"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A/1000000",
+              "disabled": false,
+              "legend": "P95 (ms)",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "condominiums-latency",
+      "title": "Condominiums - Latence P95",
+      "description": "Latence P95 des endpoints Condominiums",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "p95",
+              "aggregateAttribute": {
+                "key": "durationNano",
+                "dataType": "float64",
+                "type": "tag",
+                "isColumn": true
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/condominiums"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A/1000000",
+              "disabled": false,
+              "legend": "P95 (ms)",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "payments-requests",
+      "title": "Payments - Requêtes",
+      "description": "Nombre de requêtes sur /payments/*",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "aggregateAttribute": {
+                "key": "",
+                "dataType": "",
+                "type": "",
+                "isColumn": false
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/payments"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "legend": "Payments",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "bank-requests",
+      "title": "Bank - Requêtes",
+      "description": "Nombre de requêtes sur /bank/*",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "aggregateAttribute": {
+                "key": "",
+                "dataType": "",
+                "type": "",
+                "isColumn": false
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/bank"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "legend": "Bank",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "documents-requests",
+      "title": "Documents - Requêtes",
+      "description": "Nombre de requêtes sur /documents/*",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "aggregateAttribute": {
+                "key": "",
+                "dataType": "",
+                "type": "",
+                "isColumn": false
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/documents"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "legend": "Documents",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "module-distribution",
+      "title": "Distribution par module",
+      "description": "Répartition des requêtes par module API",
+      "panelTypes": "pie",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "aggregateAttribute": {
+                "key": "",
+                "dataType": "",
+                "type": "",
+                "isColumn": false
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "kind",
+                      "dataType": "int64",
+                      "type": "tag",
+                      "isColumn": true
+                    },
+                    "op": "=",
+                    "value": 2
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "groupBy": [
+                {
+                  "key": "http.route",
+                  "dataType": "string",
+                  "type": "tag",
+                  "isColumn": false
+                }
+              ],
+              "legend": "{{http.route}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "module-errors",
+      "title": "Erreurs par module",
+      "description": "Nombre d'erreurs par module",
+      "panelTypes": "bar",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "aggregateAttribute": {
+                "key": "",
+                "dataType": "",
+                "type": "",
+                "isColumn": false
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "hasError",
+                      "dataType": "bool",
+                      "type": "tag",
+                      "isColumn": true
+                    },
+                    "op": "=",
+                    "value": true
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "groupBy": [
+                {
+                  "key": "http.route",
+                  "dataType": "string",
+                  "type": "tag",
+                  "isColumn": false
+                }
+              ],
+              "legend": "{{http.route}}",
+              "orderBy": {
+                "columnName": "A",
+                "order": "desc"
+              },
+              "limit": 10
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "module-timeline",
+      "title": "Timeline par module",
+      "description": "Évolution des requêtes par module dans le temps",
+      "panelTypes": "graph",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "auth",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/auth"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "auth",
+              "disabled": false,
+              "stepInterval": 60,
+              "legend": "Auth"
+            },
+            {
+              "dataSource": "traces",
+              "queryName": "owners",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/owners"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "owners",
+              "disabled": false,
+              "stepInterval": 60,
+              "legend": "Owners"
+            },
+            {
+              "dataSource": "traces",
+              "queryName": "condos",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/condominiums"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "condos",
+              "disabled": false,
+              "stepInterval": 60,
+              "legend": "Condominiums"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "variables": {}
+}

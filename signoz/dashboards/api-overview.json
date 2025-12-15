@@ -1,0 +1,674 @@
+{
+  "title": "LeCopro - API Overview",
+  "description": "Vue d'ensemble des appels API de l'application LeCopro",
+  "tags": ["lecopro", "api", "nestjs"],
+  "layout": [
+    {
+      "i": "requests-per-minute",
+      "x": 0,
+      "y": 0,
+      "w": 6,
+      "h": 2
+    },
+    {
+      "i": "error-rate",
+      "x": 6,
+      "y": 0,
+      "w": 6,
+      "h": 2
+    },
+    {
+      "i": "avg-latency",
+      "x": 0,
+      "y": 2,
+      "w": 4,
+      "h": 2
+    },
+    {
+      "i": "p95-latency",
+      "x": 4,
+      "y": 2,
+      "w": 4,
+      "h": 2
+    },
+    {
+      "i": "p99-latency",
+      "x": 8,
+      "y": 2,
+      "w": 4,
+      "h": 2
+    },
+    {
+      "i": "requests-by-endpoint",
+      "x": 0,
+      "y": 4,
+      "w": 12,
+      "h": 3
+    },
+    {
+      "i": "requests-by-status",
+      "x": 0,
+      "y": 7,
+      "w": 6,
+      "h": 3
+    },
+    {
+      "i": "top-slow-endpoints",
+      "x": 6,
+      "y": 7,
+      "w": 6,
+      "h": 3
+    },
+    {
+      "i": "requests-timeline",
+      "x": 0,
+      "y": 10,
+      "w": 12,
+      "h": 3
+    }
+  ],
+  "widgets": [
+    {
+      "id": "requests-per-minute",
+      "title": "Requêtes / minute",
+      "description": "Nombre total de requêtes par minute",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "rate",
+              "aggregateAttribute": {
+                "key": "",
+                "dataType": "",
+                "type": "",
+                "isColumn": false
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "kind",
+                      "dataType": "int64",
+                      "type": "tag",
+                      "isColumn": true
+                    },
+                    "op": "=",
+                    "value": 2
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "stepInterval": 60,
+              "groupBy": [],
+              "legend": "Requêtes/min",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "error-rate",
+      "title": "Taux d'erreur (%)",
+      "description": "Pourcentage de requêtes en erreur",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "aggregateAttribute": {
+                "key": "",
+                "dataType": "",
+                "type": "",
+                "isColumn": false
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "hasError",
+                      "dataType": "bool",
+                      "type": "tag",
+                      "isColumn": true
+                    },
+                    "op": "=",
+                    "value": true
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false
+            },
+            {
+              "dataSource": "traces",
+              "queryName": "B",
+              "aggregateOperator": "count",
+              "aggregateAttribute": {
+                "key": "",
+                "dataType": "",
+                "type": "",
+                "isColumn": false
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "B",
+              "disabled": false
+            }
+          ],
+          "queryFormulas": [
+            {
+              "expression": "(A/B)*100",
+              "queryName": "F1",
+              "legend": "Taux d'erreur"
+            }
+          ]
+        }
+      },
+      "thresholds": [
+        {
+          "thresholdValue": 1,
+          "thresholdColor": "Yellow",
+          "thresholdFormat": "Text",
+          "thresholdUnit": "none"
+        },
+        {
+          "thresholdValue": 5,
+          "thresholdColor": "Red",
+          "thresholdFormat": "Text",
+          "thresholdUnit": "none"
+        }
+      ]
+    },
+    {
+      "id": "avg-latency",
+      "title": "Latence moyenne",
+      "description": "Temps de réponse moyen des API",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "avg",
+              "aggregateAttribute": {
+                "key": "durationNano",
+                "dataType": "float64",
+                "type": "tag",
+                "isColumn": true
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "kind",
+                      "dataType": "int64",
+                      "type": "tag",
+                      "isColumn": true
+                    },
+                    "op": "=",
+                    "value": 2
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A/1000000",
+              "disabled": false,
+              "legend": "Latence (ms)",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "p95-latency",
+      "title": "Latence P95",
+      "description": "95ème percentile de latence",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "p95",
+              "aggregateAttribute": {
+                "key": "durationNano",
+                "dataType": "float64",
+                "type": "tag",
+                "isColumn": true
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "kind",
+                      "dataType": "int64",
+                      "type": "tag",
+                      "isColumn": true
+                    },
+                    "op": "=",
+                    "value": 2
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A/1000000",
+              "disabled": false,
+              "legend": "P95 (ms)",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "p99-latency",
+      "title": "Latence P99",
+      "description": "99ème percentile de latence",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "p99",
+              "aggregateAttribute": {
+                "key": "durationNano",
+                "dataType": "float64",
+                "type": "tag",
+                "isColumn": true
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "kind",
+                      "dataType": "int64",
+                      "type": "tag",
+                      "isColumn": true
+                    },
+                    "op": "=",
+                    "value": 2
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A/1000000",
+              "disabled": false,
+              "legend": "P99 (ms)",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "requests-by-endpoint",
+      "title": "Requêtes par endpoint",
+      "description": "Distribution des requêtes par route API",
+      "panelTypes": "graph",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "aggregateAttribute": {
+                "key": "",
+                "dataType": "",
+                "type": "",
+                "isColumn": false
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "kind",
+                      "dataType": "int64",
+                      "type": "tag",
+                      "isColumn": true
+                    },
+                    "op": "=",
+                    "value": 2
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "stepInterval": 60,
+              "groupBy": [
+                {
+                  "key": "http.route",
+                  "dataType": "string",
+                  "type": "tag",
+                  "isColumn": false
+                }
+              ],
+              "legend": "{{http.route}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "requests-by-status",
+      "title": "Requêtes par code HTTP",
+      "description": "Distribution des codes de statut HTTP",
+      "panelTypes": "pie",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "aggregateAttribute": {
+                "key": "",
+                "dataType": "",
+                "type": "",
+                "isColumn": false
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "kind",
+                      "dataType": "int64",
+                      "type": "tag",
+                      "isColumn": true
+                    },
+                    "op": "=",
+                    "value": 2
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "groupBy": [
+                {
+                  "key": "http.status_code",
+                  "dataType": "int64",
+                  "type": "tag",
+                  "isColumn": false
+                }
+              ],
+              "legend": "HTTP {{http.status_code}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "top-slow-endpoints",
+      "title": "Top 10 endpoints les plus lents",
+      "description": "Endpoints avec la latence moyenne la plus élevée",
+      "panelTypes": "table",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "avg",
+              "aggregateAttribute": {
+                "key": "durationNano",
+                "dataType": "float64",
+                "type": "tag",
+                "isColumn": true
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "kind",
+                      "dataType": "int64",
+                      "type": "tag",
+                      "isColumn": true
+                    },
+                    "op": "=",
+                    "value": 2
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A/1000000",
+              "disabled": false,
+              "groupBy": [
+                {
+                  "key": "http.route",
+                  "dataType": "string",
+                  "type": "tag",
+                  "isColumn": false
+                },
+                {
+                  "key": "http.method",
+                  "dataType": "string",
+                  "type": "tag",
+                  "isColumn": false
+                }
+              ],
+              "legend": "{{http.method}} {{http.route}}",
+              "orderBy": {
+                "columnName": "A",
+                "order": "desc"
+              },
+              "limit": 10
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "requests-timeline",
+      "title": "Timeline des requêtes",
+      "description": "Évolution du nombre de requêtes dans le temps",
+      "panelTypes": "graph",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "aggregateAttribute": {
+                "key": "",
+                "dataType": "",
+                "type": "",
+                "isColumn": false
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "kind",
+                      "dataType": "int64",
+                      "type": "tag",
+                      "isColumn": true
+                    },
+                    "op": "=",
+                    "value": 2
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "stepInterval": 60,
+              "groupBy": [],
+              "legend": "Requêtes"
+            },
+            {
+              "dataSource": "traces",
+              "queryName": "B",
+              "aggregateOperator": "count",
+              "aggregateAttribute": {
+                "key": "",
+                "dataType": "",
+                "type": "",
+                "isColumn": false
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "hasError",
+                      "dataType": "bool",
+                      "type": "tag",
+                      "isColumn": true
+                    },
+                    "op": "=",
+                    "value": true
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "B",
+              "disabled": false,
+              "stepInterval": 60,
+              "groupBy": [],
+              "legend": "Erreurs"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "variables": {}
+}

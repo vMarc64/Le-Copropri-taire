@@ -1,0 +1,847 @@
+{
+  "title": "LeCopro - Authentification",
+  "description": "Monitoring des authentifications, tokens et sessions",
+  "tags": ["lecopro", "auth", "security", "jwt"],
+  "layout": [
+    {
+      "i": "login-attempts",
+      "x": 0,
+      "y": 0,
+      "w": 3,
+      "h": 2
+    },
+    {
+      "i": "login-success",
+      "x": 3,
+      "y": 0,
+      "w": 3,
+      "h": 2
+    },
+    {
+      "i": "login-failures",
+      "x": 6,
+      "y": 0,
+      "w": 3,
+      "h": 2
+    },
+    {
+      "i": "token-refreshes",
+      "x": 9,
+      "y": 0,
+      "w": 3,
+      "h": 2
+    },
+    {
+      "i": "auth-timeline",
+      "x": 0,
+      "y": 2,
+      "w": 12,
+      "h": 3
+    },
+    {
+      "i": "auth-by-endpoint",
+      "x": 0,
+      "y": 5,
+      "w": 6,
+      "h": 3
+    },
+    {
+      "i": "auth-failures-by-reason",
+      "x": 6,
+      "y": 5,
+      "w": 6,
+      "h": 3
+    },
+    {
+      "i": "auth-by-role",
+      "x": 0,
+      "y": 8,
+      "w": 6,
+      "h": 3
+    },
+    {
+      "i": "401-errors",
+      "x": 6,
+      "y": 8,
+      "w": 6,
+      "h": 3
+    },
+    {
+      "i": "auth-latency",
+      "x": 0,
+      "y": 11,
+      "w": 6,
+      "h": 3
+    },
+    {
+      "i": "auth-detail-table",
+      "x": 6,
+      "y": 11,
+      "w": 6,
+      "h": 3
+    }
+  ],
+  "widgets": [
+    {
+      "id": "login-attempts",
+      "title": "Tentatives de connexion",
+      "description": "Nombre total de tentatives de login",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/auth/login"
+                  },
+                  {
+                    "key": {
+                      "key": "http.method",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "POST"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "legend": "Logins",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "login-success",
+      "title": "Connexions réussies",
+      "description": "Logins avec succès (HTTP 200/201)",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/auth/login"
+                  },
+                  {
+                    "key": {
+                      "key": "http.method",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "POST"
+                  },
+                  {
+                    "key": {
+                      "key": "http.status_code",
+                      "dataType": "int64",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "<",
+                    "value": 300
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "legend": "Succès",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "login-failures",
+      "title": "Échecs de connexion",
+      "description": "Logins échoués (401, 403, etc.)",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/auth/login"
+                  },
+                  {
+                    "key": {
+                      "key": "http.method",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "POST"
+                  },
+                  {
+                    "key": {
+                      "key": "http.status_code",
+                      "dataType": "int64",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": ">=",
+                    "value": 400
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "legend": "Échecs",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      },
+      "thresholds": [
+        {
+          "thresholdValue": 10,
+          "thresholdColor": "Yellow",
+          "thresholdFormat": "Text",
+          "thresholdUnit": "none"
+        },
+        {
+          "thresholdValue": 50,
+          "thresholdColor": "Red",
+          "thresholdFormat": "Text",
+          "thresholdUnit": "none"
+        }
+      ]
+    },
+    {
+      "id": "token-refreshes",
+      "title": "Refresh tokens",
+      "description": "Nombre de refresh de tokens",
+      "panelTypes": "value",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/auth/refresh"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "legend": "Refreshes",
+              "reduceTo": "last"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "auth-timeline",
+      "title": "Activité d'authentification",
+      "description": "Logins et refreshes dans le temps",
+      "panelTypes": "graph",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/auth/login"
+                  },
+                  {
+                    "key": {
+                      "key": "http.status_code",
+                      "dataType": "int64",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "<",
+                    "value": 300
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "stepInterval": 60,
+              "legend": "Login OK"
+            },
+            {
+              "dataSource": "traces",
+              "queryName": "B",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/auth/login"
+                  },
+                  {
+                    "key": {
+                      "key": "http.status_code",
+                      "dataType": "int64",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": ">=",
+                    "value": 400
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "B",
+              "disabled": false,
+              "stepInterval": 60,
+              "legend": "Login KO"
+            },
+            {
+              "dataSource": "traces",
+              "queryName": "C",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/auth/refresh"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "C",
+              "disabled": false,
+              "stepInterval": 60,
+              "legend": "Refresh"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "auth-by-endpoint",
+      "title": "Par endpoint auth",
+      "description": "Distribution des appels par endpoint",
+      "panelTypes": "pie",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/auth"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "groupBy": [
+                {
+                  "key": "http.route",
+                  "dataType": "string",
+                  "type": "tag",
+                  "isColumn": false
+                }
+              ],
+              "legend": "{{http.route}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "auth-failures-by-reason",
+      "title": "Échecs par code HTTP",
+      "description": "Distribution des erreurs d'auth",
+      "panelTypes": "bar",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/auth"
+                  },
+                  {
+                    "key": {
+                      "key": "http.status_code",
+                      "dataType": "int64",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": ">=",
+                    "value": 400
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "groupBy": [
+                {
+                  "key": "http.status_code",
+                  "dataType": "int64",
+                  "type": "tag",
+                  "isColumn": false
+                }
+              ],
+              "legend": "HTTP {{http.status_code}}",
+              "orderBy": {
+                "columnName": "A",
+                "order": "desc"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "auth-by-role",
+      "title": "Par rôle utilisateur",
+      "description": "Connexions par rôle (si disponible)",
+      "panelTypes": "pie",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/auth/login"
+                  },
+                  {
+                    "key": {
+                      "key": "http.status_code",
+                      "dataType": "int64",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "<",
+                    "value": 300
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "groupBy": [
+                {
+                  "key": "user.role",
+                  "dataType": "string",
+                  "type": "tag",
+                  "isColumn": false
+                }
+              ],
+              "legend": "{{user.role}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "401-errors",
+      "title": "Erreurs 401 globales",
+      "description": "Toutes les erreurs 401 (non autorisé)",
+      "panelTypes": "graph",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.status_code",
+                      "dataType": "int64",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": 401
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "stepInterval": 60,
+              "groupBy": [
+                {
+                  "key": "http.route",
+                  "dataType": "string",
+                  "type": "tag",
+                  "isColumn": false
+                }
+              ],
+              "legend": "{{http.route}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "auth-latency",
+      "title": "Latence auth",
+      "description": "Temps de réponse des endpoints auth",
+      "panelTypes": "graph",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "avg",
+              "aggregateAttribute": {
+                "key": "durationNano",
+                "dataType": "float64",
+                "type": "tag",
+                "isColumn": true
+              },
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/auth"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A/1000000",
+              "disabled": false,
+              "stepInterval": 60,
+              "groupBy": [
+                {
+                  "key": "http.route",
+                  "dataType": "string",
+                  "type": "tag",
+                  "isColumn": false
+                }
+              ],
+              "legend": "{{http.route}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "auth-detail-table",
+      "title": "Détails auth",
+      "description": "Résumé des appels auth par endpoint et status",
+      "panelTypes": "table",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "dataSource": "traces",
+              "queryName": "A",
+              "aggregateOperator": "count",
+              "filters": {
+                "items": [
+                  {
+                    "key": {
+                      "key": "service.name",
+                      "dataType": "string",
+                      "type": "resource",
+                      "isColumn": false
+                    },
+                    "op": "=",
+                    "value": "lecopro-api"
+                  },
+                  {
+                    "key": {
+                      "key": "http.route",
+                      "dataType": "string",
+                      "type": "tag",
+                      "isColumn": false
+                    },
+                    "op": "contains",
+                    "value": "/auth"
+                  }
+                ],
+                "op": "AND"
+              },
+              "expression": "A",
+              "disabled": false,
+              "groupBy": [
+                {
+                  "key": "http.method",
+                  "dataType": "string",
+                  "type": "tag",
+                  "isColumn": false
+                },
+                {
+                  "key": "http.route",
+                  "dataType": "string",
+                  "type": "tag",
+                  "isColumn": false
+                },
+                {
+                  "key": "http.status_code",
+                  "dataType": "int64",
+                  "type": "tag",
+                  "isColumn": false
+                }
+              ],
+              "legend": "{{http.method}} {{http.route}}",
+              "orderBy": {
+                "columnName": "A",
+                "order": "desc"
+              },
+              "limit": 20
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "variables": {}
+}
