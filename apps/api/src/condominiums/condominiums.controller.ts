@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Put,
   Delete,
   Param,
   Body,
@@ -12,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { CondominiumsService } from './condominiums.service';
 import { CurrentTenantId } from '../tenant/current-tenant.decorator';
-import { CreateCondominiumDto, CreateLotDto } from './dto';
+import { CreateCondominiumDto, CreateLotDto, UpdateCondominiumSettingsDto } from './dto';
 
 @Controller('condominiums')
 export class CondominiumsController {
@@ -139,5 +140,32 @@ export class CondominiumsController {
       throw new ForbiddenException('Tenant context is required');
     }
     return this.condominiumsService.assignLot(lotId, body.ownerId, tenantId);
+  }
+
+  // ============================================================================
+  // SETTINGS
+  // ============================================================================
+
+  @Get(':id/settings')
+  async getSettings(
+    @Param('id', ParseUUIDPipe) condoId: string,
+    @CurrentTenantId() tenantId: string,
+  ) {
+    if (!tenantId) {
+      throw new ForbiddenException('Tenant context is required');
+    }
+    return this.condominiumsService.getSettings(condoId, tenantId);
+  }
+
+  @Put(':id/settings')
+  async updateSettings(
+    @Param('id', ParseUUIDPipe) condoId: string,
+    @Body() data: UpdateCondominiumSettingsDto,
+    @CurrentTenantId() tenantId: string,
+  ) {
+    if (!tenantId) {
+      throw new ForbiddenException('Tenant context is required');
+    }
+    return this.condominiumsService.updateSettings(condoId, tenantId, data);
   }
 }

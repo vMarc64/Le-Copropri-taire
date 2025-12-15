@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { db } from '../database/client';
-import { condominiums, lots, users, payments, ownerCondominiums, sepaMandates, powensConnections } from '../database/schema';
-import { eq, and, count, sum, sql, inArray, or, isNull } from 'drizzle-orm';
-import { CreateCondominiumDto, CreateLotDto } from './dto';
+import { condominiums, lots, users, payments, ownerCondominiums, sepaMandates, powensConnections, bankAccounts } from '../database/schema';
+import { eq, and, count, sum, sql, inArray, or, isNull, desc } from 'drizzle-orm';
+import { CreateCondominiumDto, CreateLotDto, UpdateCondominiumSettingsDto } from './dto';
 
 @Injectable()
 export class CondominiumsService {
@@ -494,5 +494,115 @@ export class CondominiumsService {
       .returning();
 
     return updatedLot;
+  }
+
+  /**
+   * Get condominium settings
+   */
+  async getSettings(condominiumId: string, tenantId: string) {
+    const [condo] = await db
+      .select({
+        id: condominiums.id,
+        name: condominiums.name,
+        address: condominiums.address,
+        city: condominiums.city,
+        postalCode: condominiums.postalCode,
+        siret: condominiums.siret,
+        callFrequency: condominiums.callFrequency,
+        sepaEnabled: condominiums.sepaEnabled,
+        cbEnabled: condominiums.cbEnabled,
+        bankIban: condominiums.bankIban,
+        bankBic: condominiums.bankBic,
+        bankName: condominiums.bankName,
+      })
+      .from(condominiums)
+      .where(and(
+        eq(condominiums.id, condominiumId),
+        eq(condominiums.tenantId, tenantId)
+      ));
+
+    if (!condo) {
+      throw new NotFoundException('Copropriété non trouvée');
+    }
+
+    // Check if there's an active Powens connection
+    const [connection] = await db
+      .select({
+        id: powensConnections.id,
+        bankName: powensConnections.bankName,
+        status: powensConnections.status,
+        lastSyncAt: powensConnections.lastSyncAt,
+      })
+      .from(powensConnections)
+      .where(and(
+        eq(powensConnections.condominiumId, condominiumId),
+        eq(powensConnections.status, 'active')
+      ))
+      .limit(1);
+
+    // Get linked bank accounts
+    const linkedAccounts = await db
+      .select({
+        id: bankAccounts.id,
+        accountName: bankAccounts.accountName,
+        bankName: bankAccounts.bankName,
+        accountNumber: bankAccounts.accountNumber,
+        iban: bankAccounts.iban,
+        balance: bankAccounts.balance,
+        lastSyncAt: bankAccounts.lastSyncAt,
+      })
+      .from(bankAccounts)
+      .where(eq(bankAccounts.condominiumId, condominiumId))
+      .orderBy(desc(bankAccounts.createdAt));
+
+    return {
+      ...condo,
+      hasOpenBankingConnection: !!connection,
+      openBankingConnection: connection || null,
+      linkedBankAccounts: linkedAccounts,
+    };
+  }
+
+  /**
+   * Update condominium settings
+   */
+  async updateSettings(condominiumId: string, tenantId: string, data: UpdateCondominiumSettingsDto) {
+    // Check condominium exists
+    const [existing] = await db
+      .select({ id: condominiums.id })
+      .from(condominiums)
+      .where(and(
+        eq(condominiums.id, condominiumId),
+        eq(condominiums.tenantId, tenantId)
+      ));
+
+    if (!existing) {
+      throw new NotFoundException('Copropriété non trouvée');
+    }
+
+    // Build update object
+    const updateData: Record<string, unknown> = {
+      updatedAt: new Date(),
+    };
+
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.address !== undefined) updateData.address = data.address;
+    if (data.city !== undefined) updateData.city = data.city;
+    if (data.postalCode !== undefined) updateData.postalCode = data.postalCode;
+    if (data.siret !== undefined) updateData.siret = data.siret;
+    if (data.callFrequency !== undefined) updateData.callFrequency = data.callFrequency;
+    if (data.sepaEnabled !== undefined) updateData.sepaEnabled = data.sepaEnabled;
+    if (data.cbEnabled !== undefined) updateData.cbEnabled = data.cbEnabled;
+    if (data.bankIban !== undefined) updateData.bankIban = data.bankIban;
+    if (data.bankBic !== undefined) updateData.bankBic = data.bankBic;
+    if (data.bankName !== undefined) updateData.bankName = data.bankName;
+
+    const [updated] = await db
+      .update(condominiums)
+      .set(updateData)
+      .where(eq(condominiums.id, condominiumId))
+      .returning();
+
+    return updated;
   }
 }

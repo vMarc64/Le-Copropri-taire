@@ -44,7 +44,17 @@ export const condominiums = pgTable('condominiums', {
   postalCode: varchar('postal_code', { length: 20 }).notNull(),
   siret: varchar('siret', { length: 14 }),
   bankAccountId: uuid('bank_account_id'), // Link to open banking account
+  
+  // Payment settings
+  callFrequency: varchar('call_frequency', { length: 20 }).notNull().default('monthly'), // monthly, quarterly
   sepaEnabled: boolean('sepa_enabled').notNull().default(false),
+  cbEnabled: boolean('cb_enabled').notNull().default(false),
+  
+  // Manual bank details (when no Powens connection)
+  bankIban: varchar('bank_iban', { length: 34 }),
+  bankBic: varchar('bank_bic', { length: 11 }),
+  bankName: varchar('bank_name', { length: 255 }),
+  
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
