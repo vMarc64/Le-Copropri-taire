@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ConflictException, BadRequestException, 
 import { eq, sql, desc, asc, ilike, and, count } from 'drizzle-orm';
 import * as bcrypt from 'bcrypt';
 import { db } from '../database';
-import { tenants, users, condominiums } from '../database/schema';
+import { tenants, users, condominiums, ownerCondominiums } from '../database/schema';
 import { 
   CreateSyndicDto, 
   UpdateSyndicDto, 
