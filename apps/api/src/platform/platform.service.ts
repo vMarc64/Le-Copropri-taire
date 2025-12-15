@@ -580,12 +580,33 @@ export class PlatformService {
       })
     );
 
+    // Get stats for the cards (global counts, not affected by filters)
+    const [pendingCount] = await db
+      .select({ count: count() })
+      .from(users)
+      .where(eq(users.status, 'pending'));
+
+    const [managersCount] = await db
+      .select({ count: count() })
+      .from(users)
+      .where(eq(users.role, 'manager'));
+
+    const [ownersCount] = await db
+      .select({ count: count() })
+      .from(users)
+      .where(eq(users.role, 'owner'));
+
     return {
       data: usersWithCondos,
       total,
       page,
       limit,
       totalPages: Math.ceil(total / limit),
+      stats: {
+        pending: pendingCount?.count || 0,
+        managers: managersCount?.count || 0,
+        owners: ownersCount?.count || 0,
+      },
     };
   }
 

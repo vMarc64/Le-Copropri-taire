@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Delete, Param, Query, Body, ForbiddenException, ParseUUIDPipe } from '@nestjs/common';
-import { OwnersService } from './owners.service';
+import { OwnersService, FindAllOwnersParams } from './owners.service';
 import { CurrentTenantId } from '../tenant/current-tenant.decorator';
 import { ZoneAccess } from '../guards/zone.decorator';
 import { Zone } from '../guards/zones';
@@ -10,11 +10,23 @@ export class OwnersController {
   constructor(private readonly ownersService: OwnersService) {}
 
   @Get()
-  async findAll(@CurrentTenantId() tenantId: string) {
+  async findAll(
+    @CurrentTenantId() tenantId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('condominiumId') condominiumId?: string,
+  ) {
     if (!tenantId) {
       throw new ForbiddenException('Tenant context is required');
     }
-    return this.ownersService.findAll(tenantId);
+    const params: FindAllOwnersParams = {
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 10,
+      search: search || undefined,
+      condominiumId: condominiumId || undefined,
+    };
+    return this.ownersService.findAll(tenantId, params);
   }
 
   @Get('search')

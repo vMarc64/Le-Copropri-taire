@@ -72,6 +72,8 @@ import {
   ChevronsUpDown,
   Home,
   Plus,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -80,7 +82,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getOwners, getCondominiums, updateOwnerCondominiums, getAvailableLotsForOwner, updateOwnerLots, type Owner, type Condominium, type AvailableLot } from "@/lib/api";
+import { getOwners, getCondominiums, updateOwnerCondominiums, getAvailableLotsForOwner, updateOwnerLots, type Owner, type Condominium, type AvailableLot, type GetOwnersParams } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 function StatusBadge({ status }: { status: string }) {
@@ -613,6 +615,16 @@ export default function OwnersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  
+  // Filter state
+  const [selectedCondominiumId, setSelectedCondominiumId] = useState<string>("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState<"search" | "invite">("search");
@@ -627,14 +639,36 @@ export default function OwnersPage() {
     email: "",
   });
 
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1); // Reset to page 1 on search
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Reset page when filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [selectedCondominiumId, limit]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [ownersData, condosData] = await Promise.all([
-        getOwners(),
+      const params: GetOwnersParams = {
+        page,
+        limit,
+        search: debouncedSearch || undefined,
+        condominiumId: selectedCondominiumId || undefined,
+      };
+      const [ownersResponse, condosData] = await Promise.all([
+        getOwners(params),
         getCondominiums(),
       ]);
-      setOwners(ownersData);
+      setOwners(ownersResponse.data);
+      setTotal(ownersResponse.total);
+      setTotalPages(ownersResponse.totalPages);
       setCondominiums(condosData);
       setError(null);
     } catch (err) {
@@ -647,7 +681,7 @@ export default function OwnersPage() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [page, limit, debouncedSearch, selectedCondominiumId]);
 
   const handleSearchOrphans = async () => {
     if (!orphanSearchQuery.trim() || orphanSearchQuery.trim().length < 2) return;
@@ -710,18 +744,8 @@ export default function OwnersPage() {
     }
   };
 
-  const filteredOwners = owners.filter((owner) => {
-    const fullName = `${owner.firstName} ${owner.lastName}`.toLowerCase();
-    const query = searchQuery.toLowerCase();
-    return (
-      fullName.includes(query) ||
-      owner.email.toLowerCase().includes(query) ||
-      owner.lots.some((lot) => lot.toLowerCase().includes(query))
-    );
-  });
-
   const stats = {
-    total: owners.length,
+    total: total,
     active: owners.filter((o) => o.status === "active").length,
     withArrears: owners.filter((o) => o.balance < 0).length,
     pendingMandate: owners.filter((o) => !o.hasSepaMandateActive).length,
@@ -993,20 +1017,54 @@ export default function OwnersPage() {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative w-full md:max-w-sm">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Rechercher par nom, email ou lot..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9"
-        />
+      {/* Search and Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full sm:w-auto">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher par nom, email ou lot..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={selectedCondominiumId} onValueChange={setSelectedCondominiumId}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Toutes les copropriétés" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Toutes les copropriétés</SelectItem>
+              {condominiums.map((condo) => (
+                <SelectItem key={condo.id} value={condo.id}>
+                  {condo.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground hidden sm:inline">Afficher</span>
+          <Select value={limit.toString()} onValueChange={(v) => setLimit(parseInt(v, 10))}>
+            <SelectTrigger className="w-[80px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="25">25</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+              <SelectItem value="200">200</SelectItem>
+            </SelectContent>
+          </Select>
+          <span className="text-sm text-muted-foreground hidden sm:inline">par page</span>
+        </div>
       </div>
 
       {/* Mobile Cards View */}
       <div className="md:hidden space-y-3">
-        {filteredOwners.length === 0 ? (
+        {owners.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-12 text-center rounded-lg border bg-card">
             <Users className="h-10 w-10 text-muted-foreground/50" />
             <p className="text-muted-foreground text-sm">
@@ -1020,12 +1078,12 @@ export default function OwnersPage() {
             )}
           </div>
         ) : (
-          filteredOwners.map((owner) => {
+          owners.map((owner) => {
             const balance = formatBalance(owner.balance);
             return (
               <div key={owner.id} className="rounded-lg border bg-card p-4">
                 <div className="flex items-start justify-between gap-3">
-                  <Link href={`/app/owners/${owner.id}`} className="flex items-center gap-3 flex-1 min-w-0">
+                  <Link href={owner.condominiumIds?.[0] ? `/app/condominiums/${owner.condominiumIds[0]}/owners/${owner.id}` : '#'} className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
                       <span className="text-sm font-semibold text-primary">
                         {owner.firstName[0]}{owner.lastName[0]}
@@ -1046,7 +1104,7 @@ export default function OwnersPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
-                          <Link href={`/app/owners/${owner.id}`}>
+                          <Link href={owner.condominiumIds?.[0] ? `/app/condominiums/${owner.condominiumIds[0]}/owners/${owner.id}` : '#'}>
                             <Eye className="mr-2 h-4 w-4" />
                             Voir le profil
                           </Link>
@@ -1100,7 +1158,7 @@ export default function OwnersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredOwners.length === 0 ? (
+            {owners.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="h-32 text-center">
                   <div className="flex flex-col items-center gap-2">
@@ -1124,7 +1182,7 @@ export default function OwnersPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredOwners.map((owner) => {
+              owners.map((owner) => {
                 const balance = formatBalance(owner.balance);
                 return (
                   <TableRow 
@@ -1139,7 +1197,7 @@ export default function OwnersPage() {
                           </span>
                         </div>
                         <Link
-                          href={`/app/owners/${owner.id}`}
+                          href={owner.condominiumIds?.[0] ? `/app/condominiums/${owner.condominiumIds[0]}/owners/${owner.id}` : '#'}
                           className="font-medium hover:underline"
                         >
                           {owner.firstName} {owner.lastName}
@@ -1196,7 +1254,7 @@ export default function OwnersPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
-                            <Link href={`/app/owners/${owner.id}`}>
+                            <Link href={owner.condominiumIds?.[0] ? `/app/condominiums/${owner.condominiumIds[0]}/owners/${owner.id}` : '#'}>
                               <Eye className="mr-2 h-4 w-4" />
                               Voir le profil
                             </Link>
@@ -1224,6 +1282,76 @@ export default function OwnersPage() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>
+              Affichage {((page - 1) * limit) + 1} - {Math.min(page * limit, total)} sur {total} résultats
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Select value={limit.toString()} onValueChange={(v) => setLimit(parseInt(v, 10))}>
+              <SelectTrigger className="w-[80px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+                <SelectItem value="200">200</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="flex items-center gap-1 px-2">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (page <= 3) {
+                    pageNum = i + 1;
+                  } else if (page >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = page - 2 + i;
+                  }
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={page === pageNum ? "default" : "ghost"}
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setPage(pageNum)}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
