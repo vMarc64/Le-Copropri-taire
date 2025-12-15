@@ -288,6 +288,7 @@ export default function PlatformUsersPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tous les rôles</SelectItem>
+              <SelectItem value="platform_admin">Admins Plateforme</SelectItem>
               <SelectItem value="manager">Gestionnaires</SelectItem>
               <SelectItem value="owner">Copropriétaires</SelectItem>
             </SelectContent>
@@ -327,13 +328,13 @@ export default function PlatformUsersPage() {
                 <p className="mt-1 text-[13px] text-muted-foreground">
                   {search || roleFilter !== "all" || statusFilter !== "all"
                     ? "Modifiez vos filtres pour voir plus de résultats"
-                    : "Aucun utilisateur non associé à un syndic"}
+                    : "Aucun utilisateur dans la plateforme"}
                 </p>
               </div>
             ) : (
               <>
                 {/* Table Header */}
-                <div className="grid min-w-[800px] grid-cols-14 gap-4 border-b border-border bg-muted/50 px-6 py-3">
+                <div className="grid min-w-[900px] grid-cols-16 gap-4 border-b border-border bg-muted/50 px-6 py-3">
                   <div className="col-span-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Utilisateur
                   </div>
@@ -346,8 +347,11 @@ export default function PlatformUsersPage() {
                   <div className="col-span-2 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Statut
                   </div>
-                  <div className="col-span-3 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Date d&apos;inscription
+                  <div className="col-span-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Syndic
+                  </div>
+                  <div className="col-span-2 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Date
                   </div>
                   <div className="col-span-1"></div>
                 </div>
@@ -357,7 +361,7 @@ export default function PlatformUsersPage() {
                   {users.map((user) => (
                     <div
                       key={user.id}
-                      className="grid min-w-[800px] grid-cols-14 gap-4 px-6 py-4 transition-colors hover:bg-muted/50 group"
+                      className="grid min-w-[900px] grid-cols-16 gap-4 px-6 py-4 transition-colors hover:bg-muted/50 group"
                     >
                       <div className="col-span-3 flex items-center gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
@@ -376,25 +380,32 @@ export default function PlatformUsersPage() {
                       <div className="col-span-2 flex items-center justify-center">
                         {getStatusBadge(user.status)}
                       </div>
-                      <div className="col-span-3 flex items-center justify-center">
+                      <div className="col-span-3 flex items-center">
+                        <span className="text-[13px] text-muted-foreground truncate">
+                          {user.syndicName || <span className="italic text-muted-foreground/60">Non associé</span>}
+                        </span>
+                      </div>
+                      <div className="col-span-2 flex items-center justify-center">
                         <span className="text-[13px] text-muted-foreground">
                           {formatDate(user.createdAt)}
                         </span>
                       </div>
                       <div className="col-span-1 flex items-center justify-end">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onSelect={() => openAssociateModal(user)}>
-                              <Link2 className="h-4 w-4 mr-2" />
-                              Associer à un syndic
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        {!user.tenantId && user.role !== 'platform_admin' && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onSelect={() => openAssociateModal(user)}>
+                                <Link2 className="h-4 w-4 mr-2" />
+                                Associer à un syndic
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </div>
                     </div>
                   ))}

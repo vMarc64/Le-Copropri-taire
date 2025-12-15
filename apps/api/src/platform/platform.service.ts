@@ -494,12 +494,10 @@ export class PlatformService {
 
     const offset = (page - 1) * limit;
 
-    // Build where conditions - users without tenant (not associated with any syndic)
-    const conditions = [
-      sql`${users.tenantId} IS NULL`,
-    ];
+    // Build where conditions - show all users for platform admin
+    const conditions: ReturnType<typeof sql>[] = [];
 
-    // Filter by status if provided, otherwise show all
+    // Filter by status if provided
     if (status) {
       conditions.push(eq(users.status, status));
     }
@@ -514,14 +512,17 @@ export class PlatformService {
       conditions.push(eq(users.role, role));
     }
 
+    // Build where clause
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
     // Get total count
     const [{ count: total }] = await db
       .select({ count: count() })
       .from(users)
-      .where(and(...conditions));
+      .where(whereClause);
 
-    // Get users
-    const pendingUsers = await db
+    // Get users with syndic name
+    const allUsers = await db
       .select({
         id: users.id,
         firstName: users.firstName,
@@ -529,16 +530,19 @@ export class PlatformService {
         email: users.email,
         role: users.role,
         status: users.status,
+        tenantId: users.tenantId,
+        syndicName: tenants.name,
         createdAt: users.createdAt,
       })
       .from(users)
-      .where(and(...conditions))
+      .leftJoin(tenants, eq(users.tenantId, tenants.id))
+      .where(whereClause)
       .orderBy(desc(users.createdAt))
       .limit(limit)
       .offset(offset);
 
     return {
-      data: pendingUsers,
+      data: allUsers,
       total,
       page,
       limit,

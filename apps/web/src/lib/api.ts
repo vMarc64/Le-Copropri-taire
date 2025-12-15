@@ -337,25 +337,31 @@ export async function deleteManager(syndicId: string, managerId: string): Promis
 }
 
 // =============================================================================
-// Pending Users API (Platform Admin)
+// Platform Users API (Platform Admin)
 // =============================================================================
 
-export interface PendingUser {
+export interface PlatformUser {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
   role: string;
   status: string;
+  tenantId: string | null;
+  syndicName: string | null;
   createdAt: string;
 }
 
-export interface PendingUsersResponse {
-  data: PendingUser[];
+export interface PlatformUsersResponse {
+  data: PlatformUser[];
   total: number;
   page: number;
   limit: number;
 }
+
+// Keep old type for backwards compatibility
+export type PendingUser = PlatformUser;
+export type PendingUsersResponse = PlatformUsersResponse;
 
 export async function getPendingUsers(options?: {
   page?: number;
@@ -363,7 +369,7 @@ export async function getPendingUsers(options?: {
   search?: string;
   role?: string;
   status?: string;
-}): Promise<PendingUsersResponse> {
+}): Promise<PlatformUsersResponse> {
   const params = new URLSearchParams();
   if (options?.page) params.append('page', options.page.toString());
   if (options?.limit) params.append('limit', options.limit.toString());
@@ -371,11 +377,11 @@ export async function getPendingUsers(options?: {
   if (options?.role) params.append('role', options.role);
   if (options?.status) params.append('status', options.status);
   const query = params.toString() ? `?${params.toString()}` : '';
-  return fetchApi<PendingUsersResponse>(`/platform/users/pending${query}`);
+  return fetchApi<PlatformUsersResponse>(`/platform/users/pending${query}`);
 }
 
-export async function associateUserToSyndic(userId: string, syndicId: string): Promise<PendingUser> {
-  return fetchApi<PendingUser>(`/platform/users/${userId}/associate/${syndicId}`, {
+export async function associateUserToSyndic(userId: string, syndicId: string): Promise<PlatformUser> {
+  return fetchApi<PlatformUser>(`/platform/users/${userId}/associate/${syndicId}`, {
     method: 'POST',
   });
 }
