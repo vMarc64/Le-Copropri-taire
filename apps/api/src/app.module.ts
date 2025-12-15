@@ -17,6 +17,7 @@ import { DashboardModule } from './dashboard';
 import { PlatformModule } from './platform';
 import { PortalModule } from './portal';
 import { UtilitiesModule } from './utilities';
+import { MonitoringModule } from './monitoring';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { UtilitiesModule } from './utilities';
     PlatformModule,
     PortalModule,
     UtilitiesModule,
+    MonitoringModule,
   ],
   controllers: [AppController],
   providers: [

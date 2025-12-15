@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +29,8 @@ import {
   ExternalLink,
   Server,
   HardDrive,
-  Cpu
+  Cpu,
+  MemoryStick
 } from "lucide-react";
 import { 
   getPlatformStats, 
@@ -42,11 +43,21 @@ import Link from "next/link";
 
 const SIGNOZ_URL = process.env.NEXT_PUBLIC_SIGNOZ_URL || "https://signoz.uat.lecopro.mneto.fr";
 
+interface SystemMetrics {
+  cpu: { usage: number; cores: number };
+  memory: { total: number; used: number; free: number; usage: number };
+  disk: { total: number; used: number; free: number; usage: number; mountPoint: string };
+  uptime: number;
+  loadAverage: number[];
+}
+
 export default function PlatformDashboard() {
   const [stats, setStats] = useState<PlatformStats | null>(null);
   const [syndics, setSyndics] = useState<Syndic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
+  const [metricsLoading, setMetricsLoading] = useState(true);
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -77,9 +88,29 @@ export default function PlatformDashboard() {
     }
   };
 
+  const fetchMetrics = useCallback(async () => {
+    try {
+      setMetricsLoading(true);
+      const response = await fetch("/api/monitoring");
+      if (response.ok) {
+        const data = await response.json();
+        setMetrics(data);
+      }
+    } catch (err) {
+      console.error("Error fetching metrics:", err);
+    } finally {
+      setMetricsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchData();
-  }, []);
+    fetchMetrics();
+    
+    // Refresh metrics every 30 seconds
+    const interval = setInterval(fetchMetrics, 30000);
+    return () => clearInterval(interval);
+  }, [fetchMetrics]);
 
   const handleCreateSyndic = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,6 +138,28 @@ export default function PlatformDashboard() {
     } finally {
       setIsCreating(false);
     }
+  };
+
+  // Helper to format uptime
+  const formatUptime = (seconds: number) => {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    if (days > 0) return `${days}j ${hours}h`;
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  };
+
+  // Helper to get status color based on usage
+  const getStatusColor = (usage: number, thresholds = { warning: 70, danger: 85 }) => {
+    if (usage >= thresholds.danger) return "text-rose-500";
+    if (usage >= thresholds.warning) return "text-amber-500";
+    return "text-emerald-500";
+  };
+
+  const getStatusBg = (usage: number, thresholds = { warning: 70, danger: 85 }) => {
+    if (usage >= thresholds.danger) return "bg-rose-500";
+    if (usage >= thresholds.warning) return "bg-amber-500";
+    return "bg-emerald-500";
   };
 
   if (loading) {
@@ -315,47 +368,196 @@ export default function PlatformDashboard() {
       </div>
 
       {/* Monitoring Card */}
-      <Card className="border-violet-200 dark:border-violet-900 bg-gradient-to-br from-violet-50 to-background dark:from-violet-950/30 dark:to-background p-0">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
+      <Card className="border-violet-200 dark:border-violet-900 bg-gradient-to-br from-violet-50 to-background dark:from-violet-950/30 dark:to-background p-0 overflow-hidden">
+        <CardContent className="p-0">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 pb-4">
             <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-violet-600">
-                <Activity className="h-7 w-7 text-white" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-600">
+                <Activity className="h-6 w-6 text-white" />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 <h3 className="text-lg font-semibold text-foreground">Monitoring Serveur</h3>
                 <p className="text-[13px] text-muted-foreground">
-                  Surveillez les performances, logs et métriques de la plateforme
+                  {metrics ? `Uptime: ${formatUptime(metrics.uptime)}` : "Chargement..."}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-6">
-              {/* Quick Stats */}
-              <div className="hidden lg:flex items-center gap-6 pr-6 border-r border-border">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Server className="h-4 w-4" />
-                  <span className="text-sm">API + Web</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Cpu className="h-4 w-4" />
-                  <span className="text-sm">Metrics</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <HardDrive className="h-4 w-4" />
-                  <span className="text-sm">Logs</span>
-                </div>
-              </div>
-              <a
-                href={SIGNOZ_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={fetchMetrics}
+                disabled={metricsLoading}
               >
+                <RefreshCw className={`h-4 w-4 mr-2 ${metricsLoading ? 'animate-spin' : ''}`} />
+                Actualiser
+              </Button>
+              <a href={SIGNOZ_URL} target="_blank" rel="noopener noreferrer">
                 <Button className="bg-violet-600 hover:bg-violet-700">
                   <Activity className="h-4 w-4 mr-2" />
-                  Ouvrir SigNoz
+                  SigNoz
                   <ExternalLink className="h-3 w-3 ml-2 opacity-70" />
                 </Button>
               </a>
+            </div>
+          </div>
+
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-px bg-border/50">
+            {/* CPU */}
+            <div className="bg-background p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Cpu className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-muted-foreground">CPU</span>
+                </div>
+                {metrics && (
+                  <span className={`text-xs font-medium ${getStatusColor(metrics.cpu.usage)}`}>
+                    {metrics.cpu.cores} cores
+                  </span>
+                )}
+              </div>
+              {metricsLoading && !metrics ? (
+                <div className="h-10 flex items-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : metrics ? (
+                <>
+                  <div className="flex items-baseline gap-1">
+                    <span className={`text-3xl font-bold ${getStatusColor(metrics.cpu.usage)}`}>
+                      {metrics.cpu.usage}
+                    </span>
+                    <span className="text-lg text-muted-foreground">%</span>
+                  </div>
+                  <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-500 ${getStatusBg(metrics.cpu.usage)}`}
+                      style={{ width: `${Math.min(metrics.cpu.usage, 100)}%` }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <span className="text-sm text-muted-foreground">Indisponible</span>
+              )}
+            </div>
+
+            {/* RAM */}
+            <div className="bg-background p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <MemoryStick className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-muted-foreground">RAM</span>
+                </div>
+                {metrics && (
+                  <span className="text-xs text-muted-foreground">
+                    {(metrics.memory.total / 1024).toFixed(1)} GB
+                  </span>
+                )}
+              </div>
+              {metricsLoading && !metrics ? (
+                <div className="h-10 flex items-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : metrics ? (
+                <>
+                  <div className="flex items-baseline gap-1">
+                    <span className={`text-3xl font-bold ${getStatusColor(metrics.memory.usage)}`}>
+                      {metrics.memory.usage}
+                    </span>
+                    <span className="text-lg text-muted-foreground">%</span>
+                  </div>
+                  <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-500 ${getStatusBg(metrics.memory.usage)}`}
+                      style={{ width: `${Math.min(metrics.memory.usage, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1.5">
+                    {(metrics.memory.used / 1024).toFixed(1)} / {(metrics.memory.total / 1024).toFixed(1)} GB
+                  </p>
+                </>
+              ) : (
+                <span className="text-sm text-muted-foreground">Indisponible</span>
+              )}
+            </div>
+
+            {/* Disk */}
+            <div className="bg-background p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <HardDrive className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-muted-foreground">Disque</span>
+                </div>
+                {metrics && (
+                  <span className="text-xs text-muted-foreground">
+                    {metrics.disk.total} GB
+                  </span>
+                )}
+              </div>
+              {metricsLoading && !metrics ? (
+                <div className="h-10 flex items-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : metrics ? (
+                <>
+                  <div className="flex items-baseline gap-1">
+                    <span className={`text-3xl font-bold ${getStatusColor(metrics.disk.usage, { warning: 75, danger: 90 })}`}>
+                      {metrics.disk.usage}
+                    </span>
+                    <span className="text-lg text-muted-foreground">%</span>
+                  </div>
+                  <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-500 ${getStatusBg(metrics.disk.usage, { warning: 75, danger: 90 })}`}
+                      style={{ width: `${Math.min(metrics.disk.usage, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1.5">
+                    {metrics.disk.used} / {metrics.disk.total} GB utilisés
+                  </p>
+                </>
+              ) : (
+                <span className="text-sm text-muted-foreground">Indisponible</span>
+              )}
+            </div>
+
+            {/* Load Average */}
+            <div className="bg-background p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Server className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-muted-foreground">Load</span>
+                </div>
+                {metrics && (
+                  <span className="text-xs text-muted-foreground">
+                    1/5/15 min
+                  </span>
+                )}
+              </div>
+              {metricsLoading && !metrics ? (
+                <div className="h-10 flex items-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : metrics ? (
+                <>
+                  <div className="flex items-baseline gap-2">
+                    {metrics.loadAverage.map((load, i) => (
+                      <span 
+                        key={i} 
+                        className={`text-lg font-semibold ${i === 0 ? getStatusColor((load / metrics.cpu.cores) * 100) : 'text-muted-foreground'}`}
+                      >
+                        {load.toFixed(2)}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-3">
+                    Charge moyenne sur {metrics.cpu.cores} cores
+                  </p>
+                </>
+              ) : (
+                <span className="text-sm text-muted-foreground">Indisponible</span>
+              )}
             </div>
           </div>
         </CardContent>
