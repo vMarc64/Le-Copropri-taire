@@ -527,3 +527,133 @@ export const reconciliationsRelations = relations(reconciliations, ({ one }) => 
     references: [users.id],
   }),
 }));
+
+// ============================================================================
+// LOT METERS (Compteurs par lot)
+// ============================================================================
+
+export const lotMeters = pgTable('lot_meters', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  lotId: uuid('lot_id').notNull().references(() => lots.id, { onDelete: 'cascade' }),
+  meterType: varchar('meter_type', { length: 30 }).notNull(), // cold_water, hot_water, heating
+  meterNumber: varchar('meter_number', { length: 50 }), // Numéro de compteur
+  isDualTariff: boolean('is_dual_tariff').notNull().default(false), // Pour électricité HP/HC (réservé futur)
+  isActive: boolean('is_active').notNull().default(true),
+  lastReadingDate: date('last_reading_date'),
+  lastReadingValue: decimal('last_reading_value', { precision: 12, scale: 3 }),
+  lastReadingValueOffPeak: decimal('last_reading_value_off_peak', { precision: 12, scale: 3 }), // HC si dual
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// ============================================================================
+// UTILITY BILLS (Factures fournisseur niveau copro)
+// ============================================================================
+
+export const utilityBills = pgTable('utility_bills', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  condominiumId: uuid('condominium_id').notNull().references(() => condominiums.id, { onDelete: 'cascade' }),
+  
+  // Type: cold_water, hot_water, electricity_common, gas, heating, fuel_oil
+  utilityType: varchar('utility_type', { length: 30 }).notNull(),
+  
+  // Période
+  periodStart: date('period_start').notNull(),
+  periodEnd: date('period_end').notNull(),
+  
+  // Index global compteur copro (nullable pour fioul)
+  globalIndexStart: decimal('global_index_start', { precision: 12, scale: 3 }),
+  globalIndexEnd: decimal('global_index_end', { precision: 12, scale: 3 }),
+  globalIndexOffPeakStart: decimal('global_index_off_peak_start', { precision: 12, scale: 3 }), // Élec HC
+  globalIndexOffPeakEnd: decimal('global_index_off_peak_end', { precision: 12, scale: 3 }),
+  
+  // Consommation et montant
+  totalConsumption: decimal('total_consumption', { precision: 12, scale: 3 }), // m³, kWh, litres
+  totalConsumptionOffPeak: decimal('total_consumption_off_peak', { precision: 12, scale: 3 }), // Élec HC
+  unit: varchar('unit', { length: 10 }).notNull().default('m3'), // m3, kwh, liters, units
+  totalAmount: decimal('total_amount', { precision: 12, scale: 2 }).notNull(), // € TTC
+  
+  // Infos facture
+  invoiceNumber: varchar('invoice_number', { length: 50 }),
+  invoiceDate: date('invoice_date'),
+  supplierName: varchar('supplier_name', { length: 255 }),
+  
+  // Statut: draft (en cours de saisie), validated (relevés complets), distributed (réparti aux copros)
+  status: varchar('status', { length: 20 }).notNull().default('draft'),
+  
+  notes: text('notes'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// ============================================================================
+// METER READINGS (Relevés individuels par lot)
+// ============================================================================
+
+export const meterReadings = pgTable('meter_readings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  utilityBillId: uuid('utility_bill_id').notNull().references(() => utilityBills.id, { onDelete: 'cascade' }),
+  lotMeterId: uuid('lot_meter_id').notNull().references(() => lotMeters.id, { onDelete: 'cascade' }),
+  
+  // Index
+  previousIndex: decimal('previous_index', { precision: 12, scale: 3 }).notNull(),
+  currentIndex: decimal('current_index', { precision: 12, scale: 3 }).notNull(),
+  previousIndexOffPeak: decimal('previous_index_off_peak', { precision: 12, scale: 3 }), // HC
+  currentIndexOffPeak: decimal('current_index_off_peak', { precision: 12, scale: 3 }),
+  
+  // Consommation calculée
+  consumption: decimal('consumption', { precision: 12, scale: 3 }).notNull(),
+  consumptionOffPeak: decimal('consumption_off_peak', { precision: 12, scale: 3 }),
+  
+  // Montant réparti
+  allocatedAmount: decimal('allocated_amount', { precision: 12, scale: 2 }),
+  
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// ============================================================================
+// RELATIONS - Utilities
+// ============================================================================
+
+export const lotMetersRelations = relations(lotMeters, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [lotMeters.tenantId],
+    references: [tenants.id],
+  }),
+  lot: one(lots, {
+    fields: [lotMeters.lotId],
+    references: [lots.id],
+  }),
+  readings: many(meterReadings),
+}));
+
+export const utilityBillsRelations = relations(utilityBills, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [utilityBills.tenantId],
+    references: [tenants.id],
+  }),
+  condominium: one(condominiums, {
+    fields: [utilityBills.condominiumId],
+    references: [condominiums.id],
+  }),
+  readings: many(meterReadings),
+}));
+
+export const meterReadingsRelations = relations(meterReadings, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [meterReadings.tenantId],
+    references: [tenants.id],
+  }),
+  utilityBill: one(utilityBills, {
+    fields: [meterReadings.utilityBillId],
+    references: [utilityBills.id],
+  }),
+  lotMeter: one(lotMeters, {
+    fields: [meterReadings.lotMeterId],
+    references: [lotMeters.id],
+  }),
+}));

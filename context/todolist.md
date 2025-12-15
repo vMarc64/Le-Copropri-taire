@@ -58,7 +58,23 @@
 | ✅ | Transactions bancaires (page) | 🟡 Moyenne | Page bank avec connexion Powens, liste transactions | [#25](https://github.com/vMarc64/Le-Copropri-taire/issues/25) |
 | ✅ | Rapprochement bancaire | 🟡 Moyenne | UI rapprochement fonctionnelle (backend à implémenter) | [#26](https://github.com/vMarc64/Le-Copropri-taire/issues/26) |
 | ⬜ | Gestion documents | 🟢 Basse | Upload, catégories | [#27](https://github.com/vMarc64/Le-Copropri-taire/issues/27) |
-| ⬜ | Paramètres copropriété | 🟢 Basse | | [#28](https://github.com/vMarc64/Le-Copropri-taire/issues/28) |
+| ✅ | Paramètres copropriété | 🟡 Moyenne | Paiements (SEPA/CB), fréquence appels, compte bancaire, consommations | [#28](https://github.com/vMarc64/Le-Copropri-taire/issues/28) |
+
+---
+
+## 📊 Consommations (Utilities)
+
+| Statut | Tâche | Priorité | Notes | Issue |
+|--------|-------|----------|-------|-------|
+| ✅ | Config consommations au niveau copro | 🔴 Haute | cold_water, hot_water, heating, gas, electricity_common | [#119](https://github.com/vMarc64/Le-Copropri-taire/issues/119) |
+| ✅ | Schéma DB compteurs et factures | 🔴 Haute | lot_meters, utility_bills, meter_readings | [#119](https://github.com/vMarc64/Le-Copropri-taire/issues/119) |
+| 🔄 | API CRUD compteurs (lot_meters) | 🔴 Haute | Gérer les compteurs par lot | [#119](https://github.com/vMarc64/Le-Copropri-taire/issues/119) |
+| ⬜ | API factures fournisseur (utility_bills) | 🔴 Haute | Créer/valider/distribuer les factures | [#119](https://github.com/vMarc64/Le-Copropri-taire/issues/119) |
+| ⬜ | API relevés de compteurs | 🔴 Haute | Saisie des index par lot | [#119](https://github.com/vMarc64/Le-Copropri-taire/issues/119) |
+| ⬜ | UI compteurs dans page lot | 🟡 Moyenne | Ajouter/modifier compteurs avec numéro | [#119](https://github.com/vMarc64/Le-Copropri-taire/issues/119) |
+| ⬜ | UI liste factures consommations | 🟡 Moyenne | /app/condominiums/[id]/utilities | [#119](https://github.com/vMarc64/Le-Copropri-taire/issues/119) |
+| ⬜ | Modal création facture + relevés | 🔴 Haute | Saisie facture fournisseur + tous les relevés lots | [#119](https://github.com/vMarc64/Le-Copropri-taire/issues/119) |
+| ⬜ | Calcul répartition automatique | 🟡 Moyenne | Calculer allocatedAmount par lot selon conso | [#119](https://github.com/vMarc64/Le-Copropri-taire/issues/119) |
 
 ---
 

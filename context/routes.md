@@ -62,6 +62,8 @@
 - /app/condominiums/[id]/charges
 - /app/condominiums/[id]/reports
 - /app/condominiums/[id]/lots               # Lots management
+- /app/condominiums/[id]/utilities          # Utility bills management (eau, gaz, chauffage)
+- /app/condominiums/[id]/utilities/new      # Create utility bill with readings
 
 ### 3.4 Owners
 - /app/condominiums/[id]/owners
@@ -168,6 +170,28 @@
 - GET    /bank/connect/:condominiumId              # Get Powens webview URL
 - GET    /bank/connect/callback                    # Powens OAuth callback
 - POST   /bank/connect/finalize                    # Finalize bank connection
+
+### Condominium Settings API
+- GET    /condominiums/:id/settings                # Get condominium settings
+- PUT    /condominiums/:id/settings                # Update condominium settings
+
+### Utilities API (Consommations)
+- GET    /utilities/meters/:lotId                  # List meters for a lot
+- POST   /utilities/meters                         # Create meter for lot
+- PATCH  /utilities/meters/:id                     # Update meter
+- DELETE /utilities/meters/:id                     # Delete meter
+
+- GET    /utilities/bills/:condominiumId           # List utility bills for condo
+- POST   /utilities/bills                          # Create utility bill
+- GET    /utilities/bills/:id                      # Get bill with readings
+- PATCH  /utilities/bills/:id                      # Update bill
+- DELETE /utilities/bills/:id                      # Delete bill
+- POST   /utilities/bills/:id/validate             # Validate bill (lock readings)
+- POST   /utilities/bills/:id/distribute           # Calculate and distribute amounts
+
+- GET    /utilities/readings/:billId               # Get readings for a bill
+- POST   /utilities/readings                       # Bulk create/update readings
+- PATCH  /utilities/readings/:id                   # Update single reading
 
 ### Powens API (Open Banking)
 - GET    /powens/health                            # Health check

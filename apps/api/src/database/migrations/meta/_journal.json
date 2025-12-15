@@ -29,6 +29,13 @@
       "when": 1765813873331,
       "tag": "0003_add-utility-billing-settings",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1765818090748,
+      "tag": "0004_add-utility-meters-and-bills",
+      "breakpoints": true
     }
   ]
 }
