@@ -362,12 +362,14 @@ export async function getPendingUsers(options?: {
   limit?: number;
   search?: string;
   role?: string;
+  status?: string;
 }): Promise<PendingUsersResponse> {
   const params = new URLSearchParams();
   if (options?.page) params.append('page', options.page.toString());
   if (options?.limit) params.append('limit', options.limit.toString());
   if (options?.search) params.append('search', options.search);
   if (options?.role) params.append('role', options.role);
+  if (options?.status) params.append('status', options.status);
   const query = params.toString() ? `?${params.toString()}` : '';
   return fetchApi<PendingUsersResponse>(`/platform/users/pending${query}`);
 }

@@ -143,12 +143,14 @@ export class PlatformController {
     @Query('limit') limit?: string,
     @Query('search') search?: string,
     @Query('role') role?: string,
+    @Query('status') status?: string,
   ) {
     return this.platformService.findPendingUsers({
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
       search,
       role,
+      status,
     });
   }
 

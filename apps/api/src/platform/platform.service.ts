@@ -482,21 +482,27 @@ export class PlatformService {
     limit?: number;
     search?: string;
     role?: string;
+    status?: string;
   } = {}) {
     const {
       page = 1,
       limit = 20,
       search,
       role,
+      status,
     } = options;
 
     const offset = (page - 1) * limit;
 
-    // Build where conditions
+    // Build where conditions - users without tenant (not associated with any syndic)
     const conditions = [
-      eq(users.status, 'pending'),
       sql`${users.tenantId} IS NULL`,
     ];
+
+    // Filter by status if provided, otherwise show all
+    if (status) {
+      conditions.push(eq(users.status, status));
+    }
 
     if (search) {
       conditions.push(

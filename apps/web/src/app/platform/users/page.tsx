@@ -43,8 +43,10 @@ export default function PlatformUsersPage() {
   const [users, setUsers] = useState<PendingUser[]>([]);
   const [syndics, setSyndics] = useState<Syndic[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const limit = 10;
@@ -58,20 +60,23 @@ export default function PlatformUsersPage() {
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await getPendingUsers({
         page,
         limit,
         search: search || undefined,
         role: roleFilter !== "all" ? roleFilter : undefined,
+        status: statusFilter !== "all" ? statusFilter : undefined,
       });
       setUsers(response.data);
       setTotal(response.total);
-    } catch (error) {
-      console.error("Error fetching pending users:", error);
+    } catch (err) {
+      console.error("Error fetching pending users:", err);
+      setError(err instanceof Error ? err.message : "Erreur lors du chargement des utilisateurs");
     } finally {
       setLoading(false);
     }
-  }, [page, search, roleFilter]);
+  }, [page, search, roleFilter, statusFilter]);
 
   const fetchSyndics = useCallback(async () => {
     try {
@@ -94,6 +99,11 @@ export default function PlatformUsersPage() {
 
   const handleRoleFilter = (value: string) => {
     setRoleFilter(value);
+    setPage(1);
+  };
+
+  const handleStatusFilter = (value: string) => {
+    setStatusFilter(value);
     setPage(1);
   };
 
@@ -135,15 +145,28 @@ export default function PlatformUsersPage() {
     }
   };
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "pending":
+        return <Badge className="bg-amber-100 text-amber-700 border-amber-200">En attente</Badge>;
+      case "active":
+        return <Badge className="bg-green-100 text-green-700 border-green-200">Actif</Badge>;
+      case "suspended":
+        return <Badge className="bg-red-100 text-red-700 border-red-200">Suspendu</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
   const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Utilisateurs en attente</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Gestion des utilisateurs</h1>
         <p className="text-[15px] text-muted-foreground mt-1">
-          Gérez les utilisateurs qui attendent d&apos;être associés à un syndic
+          Gérez les utilisateurs non associés à un syndic
         </p>
       </div>
 
@@ -248,8 +271,19 @@ export default function PlatformUsersPage() {
               className="pl-10"
             />
           </div>
+          <Select value={statusFilter} onValueChange={handleStatusFilter}>
+            <SelectTrigger className="w-full md:w-[180px]">
+              <SelectValue placeholder="Filtrer par statut" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les statuts</SelectItem>
+              <SelectItem value="pending">En attente</SelectItem>
+              <SelectItem value="active">Actif</SelectItem>
+              <SelectItem value="suspended">Suspendu</SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={roleFilter} onValueChange={handleRoleFilter}>
-            <SelectTrigger className="w-full md:w-[200px]">
+            <SelectTrigger className="w-full md:w-[180px]">
               <SelectValue placeholder="Filtrer par rôle" />
             </SelectTrigger>
             <SelectContent>
@@ -267,22 +301,39 @@ export default function PlatformUsersPage() {
               <div className="flex justify-center py-16">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+                  <Users className="h-8 w-8 text-destructive" />
+                </div>
+                <p className="mt-4 text-[14px] font-medium text-destructive">Erreur de chargement</p>
+                <p className="mt-1 text-[13px] text-muted-foreground max-w-md">
+                  {error}
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={() => fetchUsers()}
+                >
+                  Réessayer
+                </Button>
+              </div>
             ) : users.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
                   <Users className="h-8 w-8 text-muted-foreground/50" />
                 </div>
-                <p className="mt-4 text-[14px] font-medium text-foreground">Aucun utilisateur en attente</p>
+                <p className="mt-4 text-[14px] font-medium text-foreground">Aucun utilisateur trouvé</p>
                 <p className="mt-1 text-[13px] text-muted-foreground">
-                  {search || roleFilter !== "all"
+                  {search || roleFilter !== "all" || statusFilter !== "all"
                     ? "Modifiez vos filtres pour voir plus de résultats"
-                    : "Tous les utilisateurs ont été associés à un syndic"}
+                    : "Aucun utilisateur non associé à un syndic"}
                 </p>
               </div>
             ) : (
               <>
                 {/* Table Header */}
-                <div className="grid min-w-[700px] grid-cols-12 gap-4 border-b border-border bg-muted/50 px-6 py-3">
+                <div className="grid min-w-[800px] grid-cols-14 gap-4 border-b border-border bg-muted/50 px-6 py-3">
                   <div className="col-span-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Utilisateur
                   </div>
@@ -291,6 +342,9 @@ export default function PlatformUsersPage() {
                   </div>
                   <div className="col-span-2 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Rôle
+                  </div>
+                  <div className="col-span-2 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Statut
                   </div>
                   <div className="col-span-3 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Date d&apos;inscription
@@ -303,7 +357,7 @@ export default function PlatformUsersPage() {
                   {users.map((user) => (
                     <div
                       key={user.id}
-                      className="grid min-w-[700px] grid-cols-12 gap-4 px-6 py-4 transition-colors hover:bg-muted/50 group"
+                      className="grid min-w-[800px] grid-cols-14 gap-4 px-6 py-4 transition-colors hover:bg-muted/50 group"
                     >
                       <div className="col-span-3 flex items-center gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
@@ -318,6 +372,9 @@ export default function PlatformUsersPage() {
                       </div>
                       <div className="col-span-2 flex items-center justify-center">
                         {getRoleBadge(user.role)}
+                      </div>
+                      <div className="col-span-2 flex items-center justify-center">
+                        {getStatusBadge(user.status)}
                       </div>
                       <div className="col-span-3 flex items-center justify-center">
                         <span className="text-[13px] text-muted-foreground">
