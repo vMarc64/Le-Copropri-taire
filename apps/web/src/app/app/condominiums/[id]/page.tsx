@@ -83,6 +83,14 @@ const quickActions = [
     iconBg: "bg-primary/10",
     iconColor: "text-primary",
   },
+  {
+    title: "Consommations",
+    description: "Gérer les factures et relevés",
+    icon: Droplets,
+    href: "utilities",
+    iconBg: "bg-blue-500/10",
+    iconColor: "text-blue-500",
+  },
 ];
 
 export default function CondominiumDashboardPage({ params }: { params: Promise<{ id: string }> }) {
