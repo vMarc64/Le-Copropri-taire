@@ -1,3 +1,4 @@
 export * from './utilities.module';
 export * from './utilities.service';
 export * from './utilities.controller';
+export * from './dto';
