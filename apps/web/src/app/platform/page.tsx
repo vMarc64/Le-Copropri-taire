@@ -24,7 +24,12 @@ import {
   Loader2,
   RefreshCw,
   Eye,
-  TrendingUp
+  TrendingUp,
+  Activity,
+  ExternalLink,
+  Server,
+  HardDrive,
+  Cpu
 } from "lucide-react";
 import { 
   getPlatformStats, 
@@ -34,6 +39,8 @@ import {
   type Syndic 
 } from "@/lib/api";
 import Link from "next/link";
+
+const SIGNOZ_URL = process.env.NEXT_PUBLIC_SIGNOZ_URL || "https://signoz.uat.lecopro.mneto.fr";
 
 export default function PlatformDashboard() {
   const [stats, setStats] = useState<PlatformStats | null>(null);
@@ -306,6 +313,53 @@ export default function PlatformDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Monitoring Card */}
+      <Card className="border-violet-200 dark:border-violet-900 bg-gradient-to-br from-violet-50 to-background dark:from-violet-950/30 dark:to-background p-0">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-violet-600">
+                <Activity className="h-7 w-7 text-white" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-semibold text-foreground">Monitoring Serveur</h3>
+                <p className="text-[13px] text-muted-foreground">
+                  Surveillez les performances, logs et métriques de la plateforme
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-6">
+              {/* Quick Stats */}
+              <div className="hidden lg:flex items-center gap-6 pr-6 border-r border-border">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Server className="h-4 w-4" />
+                  <span className="text-sm">API + Web</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Cpu className="h-4 w-4" />
+                  <span className="text-sm">Metrics</span>
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <HardDrive className="h-4 w-4" />
+                  <span className="text-sm">Logs</span>
+                </div>
+              </div>
+              <a
+                href={SIGNOZ_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button className="bg-violet-600 hover:bg-violet-700">
+                  <Activity className="h-4 w-4 mr-2" />
+                  Ouvrir SigNoz
+                  <ExternalLink className="h-3 w-3 ml-2 opacity-70" />
+                </Button>
+              </a>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Syndics List */}
       <div className="space-y-5">

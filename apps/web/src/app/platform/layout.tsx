@@ -23,7 +23,9 @@ import {
   HelpCircle, 
   LogOut, 
   ChevronDown,
-  Shield
+  Shield,
+  Activity,
+  ExternalLink
 } from "lucide-react";
 
 interface UserData {
@@ -39,6 +41,8 @@ const navigation = [
   { name: "Syndics", href: "/platform/tenants", icon: Building2 },
   { name: "Utilisateurs", href: "/platform/users", icon: Users },
 ];
+
+const SIGNOZ_URL = process.env.NEXT_PUBLIC_SIGNOZ_URL || "https://signoz.uat.lecopro.mneto.fr";
 
 export default function PlatformLayout({
   children,
@@ -116,6 +120,17 @@ export default function PlatformLayout({
                   </Link>
                 );
               })}
+              {/* SigNoz External Link */}
+              <a
+                href={SIGNOZ_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <Activity className="h-4 w-4" />
+                Monitoring
+                <ExternalLink className="h-3 w-3 opacity-50" />
+              </a>
             </nav>
           </div>
 
