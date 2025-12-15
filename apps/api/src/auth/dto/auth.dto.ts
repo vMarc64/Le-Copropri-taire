@@ -1,4 +1,6 @@
-import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsOptional, IsIn } from 'class-validator';
+
+export type LoginContext = 'manager' | 'owner';
 
 export class LoginDto {
   @IsEmail()
@@ -7,6 +9,11 @@ export class LoginDto {
   @IsString()
   @MinLength(8)
   password: string;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['manager', 'owner'])
+  loginContext?: LoginContext;
 }
 
 export class RegisterDto {

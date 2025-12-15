@@ -46,7 +46,7 @@ export default function ManagerLoginPage() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, rememberMe }),
+        body: JSON.stringify({ ...data, rememberMe, loginContext: 'manager' }),
       });
 
       if (!response.ok) {

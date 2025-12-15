@@ -32,6 +32,24 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // Validate role matches login context
+    if (dto.loginContext) {
+      const managerRoles = ['manager', 'syndic_admin', 'platform_admin'];
+      const ownerRoles = ['owner', 'tenant'];
+      
+      if (dto.loginContext === 'manager' && !managerRoles.includes(user.role)) {
+        throw new UnauthorizedException(
+          'Ce compte n\'est pas un compte gestionnaire. Utilisez l\'espace propriétaire pour vous connecter.'
+        );
+      }
+      
+      if (dto.loginContext === 'owner' && !ownerRoles.includes(user.role)) {
+        throw new UnauthorizedException(
+          'Ce compte n\'est pas un compte propriétaire. Utilisez l\'espace gestionnaire pour vous connecter.'
+        );
+      }
+    }
+
     // Get tenant name if user has a tenantId
     let tenantName: string | null = null;
     if (user.tenantId) {

@@ -46,7 +46,7 @@ export default function OwnerLoginPage() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, rememberMe }),
+        body: JSON.stringify({ ...data, rememberMe, loginContext: 'owner' }),
       });
 
       if (!response.ok) {
