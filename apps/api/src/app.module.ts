@@ -15,6 +15,7 @@ import { BankModule } from './bank';
 import { CondominiumsModule } from './condominiums';
 import { DashboardModule } from './dashboard';
 import { PlatformModule } from './platform';
+import { PortalModule } from './portal';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { PlatformModule } from './platform';
     CondominiumsModule,
     DashboardModule,
     PlatformModule,
+    PortalModule,
   ],
   controllers: [AppController],
   providers: [
