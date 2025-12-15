@@ -21,10 +21,13 @@ services:
       - POWENS_CLIENT_ID=${POWENS_CLIENT_ID}
       - POWENS_CLIENT_SECRET=${POWENS_CLIENT_SECRET}
       - POWENS_REDIRECT_URI=${POWENS_REDIRECT_URI}
+      # OpenTelemetry tracing
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://signoz-otel-collector:4318
     depends_on:
       - redis
     networks:
       - lecopro-network
+      - signoz-net
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002/"]
       interval: 30s
@@ -43,10 +46,13 @@ services:
       - NODE_ENV=production
       - API_URL=http://api:3002
       - NEXT_PUBLIC_API_URL=${API_URL}
+      # OpenTelemetry tracing
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://signoz-otel-collector:4318
     depends_on:
       - api
     networks:
       - lecopro-network
+      - signoz-net
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
       interval: 30s
@@ -103,6 +109,9 @@ services:
 networks:
   lecopro-network:
     driver: bridge
+  # Connect to SigNoz network for OpenTelemetry
+  signoz-net:
+    external: true
 
 volumes:
   redis-data:

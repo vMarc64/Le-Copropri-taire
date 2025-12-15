@@ -1,3 +1,6 @@
+// OpenTelemetry must be imported first before any other modules
+import './tracing';
+
 import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
