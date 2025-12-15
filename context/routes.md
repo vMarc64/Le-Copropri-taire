@@ -176,18 +176,20 @@
 - PUT    /condominiums/:id/settings                # Update condominium settings
 
 ### Utilities API (Consommations)
-- GET    /utilities/meters/:lotId                  # List meters for a lot
+- GET    /utilities/meters/lot/:lotId              # List meters for a lot
+- GET    /utilities/meters/condominium/:id         # List meters for condominium (optional ?type=)
 - POST   /utilities/meters                         # Create meter for lot
 - PATCH  /utilities/meters/:id                     # Update meter
 - DELETE /utilities/meters/:id                     # Delete meter
 
-- GET    /utilities/bills/:condominiumId           # List utility bills for condo
+- GET    /utilities/bills/condominium/:id          # List utility bills for condo
 - POST   /utilities/bills                          # Create utility bill
 - GET    /utilities/bills/:id                      # Get bill with readings
 - PATCH  /utilities/bills/:id                      # Update bill
 - DELETE /utilities/bills/:id                      # Delete bill
 - POST   /utilities/bills/:id/validate             # Validate bill (lock readings)
 - POST   /utilities/bills/:id/distribute           # Calculate and distribute amounts
+- POST   /utilities/bills/:id/initialize-readings  # Initialize readings from lot meters
 
 - GET    /utilities/readings/:billId               # Get readings for a bill
 - POST   /utilities/readings                       # Bulk create/update readings
