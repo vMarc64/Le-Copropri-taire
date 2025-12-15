@@ -1,8 +1,11 @@
 import { Controller, Get, Post, Delete, Param, Query, Body, ForbiddenException, ParseUUIDPipe } from '@nestjs/common';
 import { OwnersService } from './owners.service';
 import { CurrentTenantId } from '../tenant/current-tenant.decorator';
+import { ZoneAccess } from '../guards/zone.decorator';
+import { Zone } from '../guards/zones';
 
 @Controller('owners')
+@ZoneAccess(Zone.MANAGE)
 export class OwnersController {
   constructor(private readonly ownersService: OwnersService) {}
 

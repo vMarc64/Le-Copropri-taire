@@ -10,6 +10,12 @@ const publicRoutes = ['/owner', '/manager', '/forgot-password', '/product'];
 // Pending pages (accessible even without tenant)
 const pendingPages = ['/app/pending', '/portal/pending'];
 
+// Manager-only routes (role = manager, syndic_admin)
+const managerOnlyRoutes = ['/app'];
+
+// Owner-only routes (role = owner)
+const ownerOnlyRoutes = ['/portal'];
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
@@ -21,6 +27,8 @@ export function middleware(request: NextRequest) {
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
   const isPendingPage = pendingPages.some(route => pathname === route);
   const isHomePage = pathname === '/';
+  const isManagerRoute = managerOnlyRoutes.some(route => pathname.startsWith(route));
+  const isOwnerRoute = ownerOnlyRoutes.some(route => pathname.startsWith(route));
   
   // If accessing a protected route without auth, redirect to home
   if (isProtectedRoute && !accessToken) {
@@ -43,13 +51,27 @@ export function middleware(request: NextRequest) {
         return NextResponse.next();
       }
       
+      // Role-based route restrictions
+      const isManager = role === 'manager' || role === 'syndic_admin';
+      const isOwner = role === 'owner' || role === 'tenant';
+      
+      // Owners cannot access /app routes (except pending)
+      if (isOwner && isManagerRoute && !isPendingPage) {
+        return NextResponse.redirect(new URL('/portal', request.url));
+      }
+      
+      // Managers cannot access /portal routes (redirect to /app)
+      if (isManager && isOwnerRoute && !isPendingPage) {
+        return NextResponse.redirect(new URL('/app', request.url));
+      }
+      
       // Check if user has no tenant (pending state)
       const hasTenant = tenantId && tenantId !== null;
       
       if (!hasTenant) {
         // User without tenant can only access pending pages
         if (!isPendingPage && isProtectedRoute) {
-          if (role === 'manager' || role === 'syndic_admin') {
+          if (isManager) {
             return NextResponse.redirect(new URL('/app/pending', request.url));
           } else {
             return NextResponse.redirect(new URL('/portal/pending', request.url));
@@ -58,7 +80,7 @@ export function middleware(request: NextRequest) {
       } else {
         // User with tenant should not access pending pages
         if (isPendingPage) {
-          if (role === 'manager' || role === 'syndic_admin') {
+          if (isManager) {
             return NextResponse.redirect(new URL('/app', request.url));
           } else {
             return NextResponse.redirect(new URL('/portal', request.url));
@@ -68,7 +90,7 @@ export function middleware(request: NextRequest) {
       
       // Redirect from login/register/home if authenticated
       if (isPublicRoute || isHomePage) {
-        if (role === 'manager' || role === 'syndic_admin') {
+        if (isManager) {
           return NextResponse.redirect(new URL(hasTenant ? '/app' : '/app/pending', request.url));
         } else {
           return NextResponse.redirect(new URL(hasTenant ? '/portal' : '/portal/pending', request.url));

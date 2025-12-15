@@ -166,21 +166,30 @@ Platform Admin (you)
 
 ## 4. Owner (Copropriétaire) – Use Cases
 
+> **IMPORTANT: Access Restrictions**
+> - Owners ONLY have access to `/portal` routes
+> - Owners CANNOT access `/app` routes (Manager backoffice)
+> - Owners CANNOT see: Bank accounts, Bank transactions, Other owners, Management functions
+> - Middleware must redirect any owner trying to access `/app` to `/portal`
+
 ### 4.1 Access & Information
-- Access one or multiple condominiums
+- Access one or multiple condominiums (only those associated to the owner)
 - View personal balance per condominium
 - View lots owned
 - View due schedule
+- **NO ACCESS to**: bank management, other owners list, management functions
 
 ### 4.2 Payments
 - Create / sign a SEPA mandate
-- View payment history
+- View payment history (own payments only)
 - Pay by credit card if no SEPA mandate (optional)
+- **NO ACCESS to**: batch payments, other owners' payments
 
 ### 4.3 Documents & Consumption
-- View condominium documents
+- View condominium documents (visibility = 'owners' or 'all')
 - Filter documents by type
 - View consumption history (if enabled)
+- **NO ACCESS to**: manager-only documents (visibility = 'managers')
 
 ### 4.4 Profile
 - Update profile info

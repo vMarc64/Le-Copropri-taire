@@ -5,8 +5,11 @@ import { CurrentTenantId } from '../tenant/current-tenant.decorator';
 import { PowensService } from '../integrations/powens/powens.service';
 import { ConfigService } from '@nestjs/config';
 import { SkipTenantCheck } from '../tenant/skip-tenant-check.decorator';
+import { ZoneAccess } from '../guards/zone.decorator';
+import { Zone } from '../guards/zones';
 
 @Controller('bank')
+@ZoneAccess(Zone.MANAGE)
 export class BankController {
   private readonly frontendUrl: string;
 
