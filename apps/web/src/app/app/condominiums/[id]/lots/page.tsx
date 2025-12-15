@@ -65,6 +65,10 @@ import {
   Box,
   Trash2,
   UserX,
+  Droplets,
+  Flame,
+  ThermometerSun,
+  Gauge,
 } from "lucide-react";
 
 interface Lot {
@@ -83,6 +87,29 @@ interface Owner {
   name: string;
   email: string;
 }
+
+interface LotMeter {
+  id: string;
+  lotId: string;
+  meterType: 'cold_water' | 'hot_water' | 'heating';
+  meterNumber: string | null;
+  isDualTariff: boolean;
+  isActive: boolean;
+  lastReadingValue: string | null;
+  lastReadingDate: string | null;
+}
+
+const meterTypeConfig: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
+  cold_water: { label: "Eau froide", icon: <Droplets className="h-4 w-4" />, color: "bg-blue-500/10 text-blue-600" },
+  hot_water: { label: "Eau chaude", icon: <ThermometerSun className="h-4 w-4" />, color: "bg-orange-500/10 text-orange-600" },
+  heating: { label: "Chauffage", icon: <Flame className="h-4 w-4" />, color: "bg-red-500/10 text-red-600" },
+};
+
+const METER_TYPES = [
+  { value: "cold_water", label: "Eau froide" },
+  { value: "hot_water", label: "Eau chaude" },
+  { value: "heating", label: "Chauffage" },
+];
 
 const lotTypeConfig: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
   appartement: { label: "Appartement", icon: <Home className="h-4 w-4" />, color: "bg-blue-500/10 text-blue-600" },
@@ -149,6 +176,18 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingLot, setDeletingLot] = useState<Lot | null>(null);
+
+  // Meters modal state
+  const [showMetersDialog, setShowMetersDialog] = useState(false);
+  const [metersLot, setMetersLot] = useState<Lot | null>(null);
+  const [meters, setMeters] = useState<LotMeter[]>([]);
+  const [loadingMeters, setLoadingMeters] = useState(false);
+  const [showAddMeterForm, setShowAddMeterForm] = useState(false);
+  const [isAddingMeter, setIsAddingMeter] = useState(false);
+  const [newMeter, setNewMeter] = useState({
+    meterType: "cold_water",
+    meterNumber: "",
+  });
 
   const fetchLots = async () => {
     try {
@@ -313,6 +352,67 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
       console.error("Error deleting lot:", error);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const openMetersDialog = async (lot: Lot) => {
+    setMetersLot(lot);
+    setShowMetersDialog(true);
+    setLoadingMeters(true);
+    setShowAddMeterForm(false);
+    
+    try {
+      const response = await fetch(`/api/utilities/meters/lot/${lot.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setMeters(data);
+      }
+    } catch (error) {
+      console.error("Error fetching meters:", error);
+    } finally {
+      setLoadingMeters(false);
+    }
+  };
+
+  const handleAddMeter = async () => {
+    if (!metersLot || !newMeter.meterType) return;
+
+    setIsAddingMeter(true);
+    try {
+      const response = await fetch(`/api/utilities/meters`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lotId: metersLot.id,
+          meterType: newMeter.meterType,
+          meterNumber: newMeter.meterNumber.trim() || null,
+        }),
+      });
+
+      if (response.ok) {
+        const created = await response.json();
+        setMeters([...meters, created]);
+        setNewMeter({ meterType: "cold_water", meterNumber: "" });
+        setShowAddMeterForm(false);
+      }
+    } catch (error) {
+      console.error("Error creating meter:", error);
+    } finally {
+      setIsAddingMeter(false);
+    }
+  };
+
+  const handleDeleteMeter = async (meterId: string) => {
+    try {
+      const response = await fetch(`/api/utilities/meters/${meterId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setMeters(meters.filter((m) => m.id !== meterId));
+      }
+    } catch (error) {
+      console.error("Error deleting meter:", error);
     }
   };
 
@@ -523,6 +623,10 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
                           <DropdownMenuItem onClick={() => openAssignDialog(lot)}>
                             <User className="mr-2 h-4 w-4" />
                             Assigner
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openMetersDialog(lot)}>
+                            <Gauge className="mr-2 h-4 w-4" />
+                            Compteurs
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
@@ -818,6 +922,145 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Meters Dialog */}
+      <Dialog open={showMetersDialog} onOpenChange={setShowMetersDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gauge className="h-5 w-5" />
+              Compteurs du lot {metersLot?.reference}
+            </DialogTitle>
+            <DialogDescription>
+              Gérez les compteurs (eau, chauffage) de ce lot.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4 space-y-4">
+            {loadingMeters ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <>
+                {/* Liste des compteurs */}
+                {meters.length === 0 && !showAddMeterForm ? (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <Gauge className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                    <p>Aucun compteur configuré</p>
+                    <p className="text-sm">Ajoutez un compteur pour suivre les consommations</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {meters.map((meter) => {
+                      const config = meterTypeConfig[meter.meterType] || meterTypeConfig.cold_water;
+                      return (
+                        <div
+                          key={meter.id}
+                          className="flex items-center justify-between rounded-lg border p-3"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${config.color}`}>
+                              {config.icon}
+                            </div>
+                            <div>
+                              <p className="font-medium">{config.label}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {meter.meterNumber ? `N° ${meter.meterNumber}` : "Sans numéro"}
+                                {meter.lastReadingValue && (
+                                  <span className="ml-2">
+                                    • Dernier relevé: {meter.lastReadingValue}
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteMeter(meter.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Formulaire d'ajout */}
+                {showAddMeterForm ? (
+                  <div className="space-y-3 rounded-lg border p-4 bg-muted/30">
+                    <div className="space-y-2">
+                      <Label>Type de compteur</Label>
+                      <Select
+                        value={newMeter.meterType}
+                        onValueChange={(value) => setNewMeter({ ...newMeter, meterType: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {METER_TYPES.filter(
+                            (t) => !meters.some((m) => m.meterType === t.value)
+                          ).map((type) => (
+                            <SelectItem key={type.value} value={type.value}>
+                              {type.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Numéro de compteur (optionnel)</Label>
+                      <Input
+                        value={newMeter.meterNumber}
+                        onChange={(e) => setNewMeter({ ...newMeter, meterNumber: e.target.value })}
+                        placeholder="Ex: 123456789"
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowAddMeterForm(false)}
+                        disabled={isAddingMeter}
+                      >
+                        Annuler
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleAddMeter}
+                        disabled={isAddingMeter}
+                      >
+                        {isAddingMeter && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Ajouter
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setShowAddMeterForm(true)}
+                    disabled={meters.length >= METER_TYPES.length}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Ajouter un compteur
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowMetersDialog(false)}>
+              Fermer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
