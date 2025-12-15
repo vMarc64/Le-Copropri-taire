@@ -502,18 +502,62 @@ export class PlatformService {
       conditions.push(eq(users.status, status));
     }
 
-    // Search across all fields: name, email, role, status, syndic name
+    // Search across all fields: name, email, role, status, syndic name, condominiums
     if (search) {
       const searchPattern = '%' + search + '%';
+      const searchLower = search.toLowerCase();
+      
+      // Map French terms to English database values for roles
+      let roleSearchPatterns: string[] = [];
+      if (searchLower.includes('gestionnaire') || searchLower.includes('manager')) {
+        roleSearchPatterns.push('manager');
+      }
+      if (searchLower.includes('copropriétaire') || searchLower.includes('propriétaire') || searchLower.includes('owner')) {
+        roleSearchPatterns.push('owner');
+      }
+      if (searchLower.includes('admin') || searchLower.includes('plateforme') || searchLower.includes('platform')) {
+        roleSearchPatterns.push('platform_admin');
+      }
+      
+      // Map French terms to English database values for status
+      let statusSearchPatterns: string[] = [];
+      if (searchLower.includes('attente') || searchLower.includes('pending')) {
+        statusSearchPatterns.push('pending');
+      }
+      if (searchLower.includes('actif') || searchLower.includes('active')) {
+        statusSearchPatterns.push('active');
+      }
+      if (searchLower.includes('suspendu') || searchLower.includes('suspended')) {
+        statusSearchPatterns.push('suspended');
+      }
+
+      // Build dynamic OR conditions
+      const searchConditions = [
+        sql`${users.firstName} ILIKE ${searchPattern}`,
+        sql`${users.lastName} ILIKE ${searchPattern}`,
+        sql`${users.email} ILIKE ${searchPattern}`,
+        sql`${tenants.name} ILIKE ${searchPattern}`,
+        // Search in condominiums names via subquery
+        sql`EXISTS (
+          SELECT 1 FROM ${ownerCondominiums} oc
+          INNER JOIN ${condominiums} c ON oc.condominium_id = c.id
+          WHERE oc.owner_id = ${users.id}
+          AND c.name ILIKE ${searchPattern}
+        )`,
+      ];
+
+      // Add role search patterns
+      for (const rolePattern of roleSearchPatterns) {
+        searchConditions.push(sql`${users.role} = ${rolePattern}`);
+      }
+      
+      // Add status search patterns
+      for (const statusPattern of statusSearchPatterns) {
+        searchConditions.push(sql`${users.status} = ${statusPattern}`);
+      }
+
       conditions.push(
-        sql`(
-          ${users.firstName} ILIKE ${searchPattern} 
-          OR ${users.lastName} ILIKE ${searchPattern} 
-          OR ${users.email} ILIKE ${searchPattern}
-          OR ${users.role} ILIKE ${searchPattern}
-          OR ${users.status} ILIKE ${searchPattern}
-          OR ${tenants.name} ILIKE ${searchPattern}
-        )`
+        sql`(${sql.join(searchConditions, sql` OR `)})`
       );
     }
 
