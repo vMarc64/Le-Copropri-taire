@@ -41,7 +41,6 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - BACKEND_URL=http://api:3002
       - API_URL=http://api:3002
       - NEXT_PUBLIC_API_URL=${API_URL}
     depends_on:
