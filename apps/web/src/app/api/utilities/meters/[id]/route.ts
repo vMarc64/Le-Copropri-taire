@@ -8,7 +8,7 @@ export async function PATCH(
 ) {
   const { id } = await params;
   const cookieStore = await cookies();
-  const token = cookieStore.get('token')?.value;
+  const token = cookieStore.get('accessToken')?.value;
 
   if (!token) {
     return NextResponse.json({ message: 'Non authentifié' }, { status: 401 });
@@ -43,7 +43,7 @@ export async function DELETE(
 ) {
   const { id } = await params;
   const cookieStore = await cookies();
-  const token = cookieStore.get('token')?.value;
+  const token = cookieStore.get('accessToken')?.value;
 
   if (!token) {
     return NextResponse.json({ message: 'Non authentifié' }, { status: 401 });

@@ -4,7 +4,7 @@ import { API_URL } from "@/lib/api-url";
 
 export async function POST(request: NextRequest) {
   const cookieStore = await cookies();
-  const token = cookieStore.get('token')?.value;
+  const token = cookieStore.get('accessToken')?.value;
 
   if (!token) {
     return NextResponse.json({ message: 'Non authentifié' }, { status: 401 });
