@@ -46,8 +46,30 @@ export interface Owner {
   hasSepaMandateActive: boolean;
 }
 
-export async function getOwners(): Promise<Owner[]> {
-  return fetchApi<Owner[]>('/owners');
+export interface OwnersResponse {
+  data: Owner[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface GetOwnersParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  condominiumId?: string;
+}
+
+export async function getOwners(params: GetOwnersParams = {}): Promise<OwnersResponse> {
+  const searchParams = new URLSearchParams();
+  if (params.page) searchParams.set('page', params.page.toString());
+  if (params.limit) searchParams.set('limit', params.limit.toString());
+  if (params.search) searchParams.set('search', params.search);
+  if (params.condominiumId) searchParams.set('condominiumId', params.condominiumId);
+  
+  const queryString = searchParams.toString();
+  return fetchApi<OwnersResponse>(`/owners${queryString ? `?${queryString}` : ''}`);
 }
 
 export async function updateOwnerCondominiums(ownerId: string, condominiumIds: string[]): Promise<{ success: boolean; count: number }> {
@@ -357,11 +379,18 @@ export interface PlatformUser {
   condominiums: PlatformUserCondominium[];
 }
 
+export interface PlatformUserStats {
+  pending: number;
+  managers: number;
+  owners: number;
+}
+
 export interface PlatformUsersResponse {
   data: PlatformUser[];
   total: number;
   page: number;
   limit: number;
+  stats?: PlatformUserStats;
 }
 
 // Keep old type for backwards compatibility

@@ -29,6 +29,12 @@ import {
 import { Search, MoreVertical, Link2, UserCheck, Users, Clock, Building2, Home } from "lucide-react";
 import { getPendingUsers, getSyndics, associateUserToSyndic, PendingUser, Syndic } from "@/lib/api";
 
+interface UserStats {
+  pending: number;
+  managers: number;
+  owners: number;
+}
+
 export default function PlatformUsersPage() {
   const [users, setUsers] = useState<PendingUser[]>([]);
   const [syndics, setSyndics] = useState<Syndic[]>([]);
@@ -38,6 +44,7 @@ export default function PlatformUsersPage() {
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState<UserStats>({ pending: 0, managers: 0, owners: 0 });
   const [page, setPage] = useState(1);
   const limit = 10;
 
@@ -60,6 +67,9 @@ export default function PlatformUsersPage() {
       });
       setUsers(response.data);
       setTotal(response.total);
+      if (response.stats) {
+        setStats(response.stats);
+      }
     } catch (err) {
       console.error("Error fetching pending users:", err);
       setError(err instanceof Error ? err.message : "Erreur lors du chargement des utilisateurs");
@@ -170,7 +180,7 @@ export default function PlatformUsersPage() {
                 <p className="text-[13px] font-medium text-muted-foreground">En attente</p>
                 <div className="flex items-baseline gap-3">
                   <span className="text-4xl font-semibold tracking-tight text-foreground">
-                    {total}
+                    {stats.pending}
                   </span>
                 </div>
               </div>
@@ -189,7 +199,7 @@ export default function PlatformUsersPage() {
                 <p className="text-[13px] font-medium text-muted-foreground">Gestionnaires</p>
                 <div className="flex items-baseline gap-3">
                   <span className="text-4xl font-semibold tracking-tight text-foreground">
-                    {users.filter(u => u.role === "manager").length}
+                    {stats.managers}
                   </span>
                 </div>
               </div>
@@ -208,7 +218,7 @@ export default function PlatformUsersPage() {
                 <p className="text-[13px] font-medium text-muted-foreground">Copropriétaires</p>
                 <div className="flex items-baseline gap-3">
                   <span className="text-4xl font-semibold tracking-tight text-foreground">
-                    {users.filter(u => u.role === "owner").length}
+                    {stats.owners}
                   </span>
                 </div>
               </div>

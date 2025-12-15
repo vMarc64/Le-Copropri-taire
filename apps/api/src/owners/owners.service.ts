@@ -1,12 +1,72 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { db } from '../database';
 import { users, lots, condominiums, sepaMandates, payments, ownerCondominiums } from '../database/schema';
-import { eq, and, sql, isNull, or, ilike, inArray } from 'drizzle-orm';
+import { eq, and, sql, isNull, or, ilike, inArray, count } from 'drizzle-orm';
+
+export interface FindAllOwnersParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  condominiumId?: string;
+}
 
 @Injectable()
 export class OwnersService {
-  async findAll(tenantId: string) {
-    // Get all users with role 'owner' for this tenant
+  async findAll(tenantId: string, params: FindAllOwnersParams = {}) {
+    const { page = 1, limit = 10, search, condominiumId } = params;
+    const offset = (page - 1) * limit;
+
+    // Build base conditions
+    const baseConditions = [eq(users.tenantId, tenantId), eq(users.role, 'owner')];
+    
+    // Add search filter
+    if (search && search.trim()) {
+      const searchPattern = `%${search.trim()}%`;
+      baseConditions.push(
+        or(
+          ilike(users.firstName, searchPattern),
+          ilike(users.lastName, searchPattern),
+          ilike(users.email, searchPattern),
+          sql`CONCAT(${users.firstName}, ' ', ${users.lastName}) ILIKE ${searchPattern}`
+        )!
+      );
+    }
+
+    // If filtering by condominium, get owner IDs first
+    let ownerIdsInCondominium: string[] | null = null;
+    if (condominiumId) {
+      // Get owner IDs from owner_condominiums table
+      const directOwners = await db
+        .select({ ownerId: ownerCondominiums.ownerId })
+        .from(ownerCondominiums)
+        .where(eq(ownerCondominiums.condominiumId, condominiumId));
+      
+      // Get owner IDs from lots table
+      const lotOwners = await db
+        .select({ ownerId: lots.ownerId })
+        .from(lots)
+        .where(and(eq(lots.condominiumId, condominiumId), sql`${lots.ownerId} IS NOT NULL`));
+      
+      const allOwnerIds = new Set([
+        ...directOwners.map(o => o.ownerId),
+        ...lotOwners.map(o => o.ownerId).filter(Boolean) as string[]
+      ]);
+      ownerIdsInCondominium = Array.from(allOwnerIds);
+      
+      if (ownerIdsInCondominium.length === 0) {
+        return { data: [], total: 0, page, limit, totalPages: 0 };
+      }
+      baseConditions.push(inArray(users.id, ownerIdsInCondominium));
+    }
+
+    // Get total count
+    const [totalResult] = await db
+      .select({ count: count() })
+      .from(users)
+      .where(and(...baseConditions));
+    const total = Number(totalResult?.count) || 0;
+
+    // Get paginated owners
     const ownersData = await db
       .select({
         id: users.id,
@@ -16,7 +76,9 @@ export class OwnersService {
         status: users.status,
       })
       .from(users)
-      .where(and(eq(users.tenantId, tenantId), eq(users.role, 'owner')));
+      .where(and(...baseConditions))
+      .limit(limit)
+      .offset(offset);
 
     // For each owner, get their lots, condominiums, balance, and SEPA mandate status
     const ownersWithDetails = await Promise.all(
@@ -88,7 +150,13 @@ export class OwnersService {
       })
     );
 
-    return ownersWithDetails;
+    return {
+      data: ownersWithDetails,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async findOne(id: string, tenantId: string) {
