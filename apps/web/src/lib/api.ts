@@ -340,6 +340,11 @@ export async function deleteManager(syndicId: string, managerId: string): Promis
 // Platform Users API (Platform Admin)
 // =============================================================================
 
+export interface PlatformUserCondominium {
+  id: string;
+  name: string;
+}
+
 export interface PlatformUser {
   id: string;
   firstName: string;
@@ -349,7 +354,7 @@ export interface PlatformUser {
   status: string;
   tenantId: string | null;
   syndicName: string | null;
-  createdAt: string;
+  condominiums: PlatformUserCondominium[];
 }
 
 export interface PlatformUsersResponse {

@@ -532,7 +532,6 @@ export class PlatformService {
         status: users.status,
         tenantId: users.tenantId,
         syndicName: tenants.name,
-        createdAt: users.createdAt,
       })
       .from(users)
       .leftJoin(tenants, eq(users.tenantId, tenants.id))
@@ -541,8 +540,33 @@ export class PlatformService {
       .limit(limit)
       .offset(offset);
 
+    // Get condominiums for each user (for owners)
+    const usersWithCondos = await Promise.all(
+      allUsers.map(async (user) => {
+        if (user.role === 'owner' && user.tenantId) {
+          const userCondos = await db
+            .select({
+              id: condominiums.id,
+              name: condominiums.name,
+            })
+            .from(ownerCondominiums)
+            .innerJoin(condominiums, eq(ownerCondominiums.condominiumId, condominiums.id))
+            .where(eq(ownerCondominiums.ownerId, user.id));
+          
+          return {
+            ...user,
+            condominiums: userCondos,
+          };
+        }
+        return {
+          ...user,
+          condominiums: [],
+        };
+      })
+    );
+
     return {
-      data: allUsers,
+      data: usersWithCondos,
       total,
       page,
       limit,

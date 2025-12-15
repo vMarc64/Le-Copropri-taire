@@ -26,18 +26,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, MoreVertical, Link2, UserCheck, Users, Clock, Building2 } from "lucide-react";
+import { Search, MoreVertical, Link2, UserCheck, Users, Clock, Building2, Home } from "lucide-react";
 import { getPendingUsers, getSyndics, associateUserToSyndic, PendingUser, Syndic } from "@/lib/api";
-
-// Format date without date-fns
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 export default function PlatformUsersPage() {
   const [users, setUsers] = useState<PendingUser[]>([]);
@@ -334,7 +324,7 @@ export default function PlatformUsersPage() {
             ) : (
               <>
                 {/* Table Header */}
-                <div className="grid min-w-[900px] grid-cols-16 gap-4 border-b border-border bg-muted/50 px-6 py-3">
+                <div className="grid min-w-[1000px] grid-cols-16 gap-4 border-b border-border bg-muted/50 px-6 py-3">
                   <div className="col-span-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Utilisateur
                   </div>
@@ -350,8 +340,8 @@ export default function PlatformUsersPage() {
                   <div className="col-span-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Syndic
                   </div>
-                  <div className="col-span-2 text-center text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Date
+                  <div className="col-span-2 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Copropriétés
                   </div>
                   <div className="col-span-1"></div>
                 </div>
@@ -361,7 +351,7 @@ export default function PlatformUsersPage() {
                   {users.map((user) => (
                     <div
                       key={user.id}
-                      className="grid min-w-[900px] grid-cols-16 gap-4 px-6 py-4 transition-colors hover:bg-muted/50 group"
+                      className="grid min-w-[1000px] grid-cols-16 gap-4 px-6 py-4 transition-colors hover:bg-muted/50 group"
                     >
                       <div className="col-span-3 flex items-center gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
@@ -381,14 +371,27 @@ export default function PlatformUsersPage() {
                         {getStatusBadge(user.status)}
                       </div>
                       <div className="col-span-3 flex items-center">
-                        <span className="text-[13px] text-muted-foreground truncate">
-                          {user.syndicName || <span className="italic text-muted-foreground/60">Non associé</span>}
-                        </span>
+                        {user.syndicName ? (
+                          <span className="text-[13px] text-foreground truncate">{user.syndicName}</span>
+                        ) : (
+                          <span className="text-[13px] italic text-muted-foreground/60">Non associé</span>
+                        )}
                       </div>
-                      <div className="col-span-2 flex items-center justify-center">
-                        <span className="text-[13px] text-muted-foreground">
-                          {formatDate(user.createdAt)}
-                        </span>
+                      <div className="col-span-2 flex items-center">
+                        {user.condominiums && user.condominiums.length > 0 ? (
+                          <div className="flex items-center gap-1">
+                            <Home className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-[13px] text-foreground truncate">
+                              {user.condominiums.length === 1 
+                                ? user.condominiums[0].name 
+                                : `${user.condominiums.length} copros`}
+                            </span>
+                          </div>
+                        ) : user.role === 'owner' && user.tenantId ? (
+                          <span className="text-[13px] italic text-amber-600">À assigner</span>
+                        ) : (
+                          <span className="text-[13px] text-muted-foreground/60">—</span>
+                        )}
                       </div>
                       <div className="col-span-1 flex items-center justify-end">
                         {!user.tenantId && user.role !== 'platform_admin' && (
