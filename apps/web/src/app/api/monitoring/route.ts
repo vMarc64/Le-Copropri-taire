@@ -4,7 +4,7 @@ import { API_URL } from "@/lib/api-url";
 
 export async function GET() {
   const cookieStore = await cookies();
-  const token = cookieStore.get("access_token")?.value;
+  const token = cookieStore.get("accessToken")?.value;
 
   if (!token) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
