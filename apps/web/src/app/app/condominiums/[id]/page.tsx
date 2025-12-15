@@ -15,8 +15,12 @@ import {
   UserPlus,
   List,
   Loader2,
+  Droplets,
+  Flame,
+  Zap,
+  ThermometerSun,
 } from "lucide-react";
-import { getCondominium, type Condominium } from "@/lib/api";
+import { getCondominium, type Condominium, type UtilityBillingType } from "@/lib/api";
 
 interface Activity {
   id: string;
@@ -25,6 +29,26 @@ interface Activity {
   details: string;
   color: string;
 }
+
+const utilityBillingLabels: Record<UtilityBillingType, string> = {
+  individual: "Compteur individuel",
+  global_metered: "Compteur global",
+  global_fixed: "Forfait AG",
+  none: "Non configuré",
+};
+
+const getUtilityBillingBadgeClass = (type: UtilityBillingType): string => {
+  switch (type) {
+    case "individual":
+      return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+    case "global_metered":
+      return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400";
+    case "global_fixed":
+      return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
+    default:
+      return "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400";
+  }
+};
 
 const quickActions = [
   {
@@ -179,6 +203,81 @@ export default function CondominiumDashboardPage({ params }: { params: Promise<{
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Utilities Summary */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">Consommations</h2>
+        <Card>
+          <CardContent className="p-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              {/* Eau froide */}
+              <div className="flex items-center gap-3 rounded-lg border p-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                  <Droplets className="h-5 w-5 text-blue-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">Eau froide</p>
+                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${getUtilityBillingBadgeClass(condominium.coldWaterBilling || "none")}`}>
+                    {utilityBillingLabels[condominium.coldWaterBilling || "none"]}
+                  </span>
+                </div>
+              </div>
+
+              {/* Eau chaude */}
+              <div className="flex items-center gap-3 rounded-lg border p-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/30">
+                  <ThermometerSun className="h-5 w-5 text-orange-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">Eau chaude</p>
+                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${getUtilityBillingBadgeClass(condominium.hotWaterBilling || "none")}`}>
+                    {utilityBillingLabels[condominium.hotWaterBilling || "none"]}
+                  </span>
+                </div>
+              </div>
+
+              {/* Chauffage */}
+              <div className="flex items-center gap-3 rounded-lg border p-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/30">
+                  <Flame className="h-5 w-5 text-red-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">Chauffage</p>
+                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${getUtilityBillingBadgeClass(condominium.heatingBilling || "none")}`}>
+                    {utilityBillingLabels[condominium.heatingBilling || "none"]}
+                  </span>
+                </div>
+              </div>
+
+              {/* Gaz */}
+              <div className="flex items-center gap-3 rounded-lg border p-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                  <Flame className="h-5 w-5 text-amber-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">Gaz</p>
+                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${getUtilityBillingBadgeClass(condominium.gasBilling || "none")}`}>
+                    {utilityBillingLabels[condominium.gasBilling || "none"]}
+                  </span>
+                </div>
+              </div>
+
+              {/* Électricité communs */}
+              <div className="flex items-center gap-3 rounded-lg border p-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-yellow-100 dark:bg-yellow-900/30">
+                  <Zap className="h-5 w-5 text-yellow-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">Élec. communs</p>
+                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${getUtilityBillingBadgeClass(condominium.electricityCommonBilling || "none")}`}>
+                    {utilityBillingLabels[condominium.electricityCommonBilling || "none"]}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Quick Actions - Grid with consistent sizing */}

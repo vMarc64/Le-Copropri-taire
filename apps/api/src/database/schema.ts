@@ -55,6 +55,13 @@ export const condominiums = pgTable('condominiums', {
   bankBic: varchar('bank_bic', { length: 11 }),
   bankName: varchar('bank_name', { length: 255 }),
   
+  // Utility billing settings: individual, global_metered, global_fixed, none
+  coldWaterBilling: varchar('cold_water_billing', { length: 20 }).notNull().default('none'),
+  hotWaterBilling: varchar('hot_water_billing', { length: 20 }).notNull().default('none'),
+  heatingBilling: varchar('heating_billing', { length: 20 }).notNull().default('none'), // Chauffage collectif
+  gasBilling: varchar('gas_billing', { length: 20 }).notNull().default('none'),
+  electricityCommonBilling: varchar('electricity_common_billing', { length: 20 }).notNull().default('none'),
+  
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

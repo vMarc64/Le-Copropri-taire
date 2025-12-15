@@ -34,6 +34,11 @@ export class CondominiumsService {
         sepaEnabled: condominiums.sepaEnabled,
         cbEnabled: condominiums.cbEnabled,
         callFrequency: condominiums.callFrequency,
+        coldWaterBilling: condominiums.coldWaterBilling,
+        hotWaterBilling: condominiums.hotWaterBilling,
+        heatingBilling: condominiums.heatingBilling,
+        gasBilling: condominiums.gasBilling,
+        electricityCommonBilling: condominiums.electricityCommonBilling,
         createdAt: condominiums.createdAt,
       })
       .from(condominiums)
@@ -516,6 +521,12 @@ export class CondominiumsService {
         bankIban: condominiums.bankIban,
         bankBic: condominiums.bankBic,
         bankName: condominiums.bankName,
+        // Utility billing
+        coldWaterBilling: condominiums.coldWaterBilling,
+        hotWaterBilling: condominiums.hotWaterBilling,
+        heatingBilling: condominiums.heatingBilling,
+        gasBilling: condominiums.gasBilling,
+        electricityCommonBilling: condominiums.electricityCommonBilling,
       })
       .from(condominiums)
       .where(and(
@@ -598,6 +609,12 @@ export class CondominiumsService {
     if (data.bankIban !== undefined) updateData.bankIban = data.bankIban;
     if (data.bankBic !== undefined) updateData.bankBic = data.bankBic;
     if (data.bankName !== undefined) updateData.bankName = data.bankName;
+    // Utility billing
+    if (data.coldWaterBilling !== undefined) updateData.coldWaterBilling = data.coldWaterBilling;
+    if (data.hotWaterBilling !== undefined) updateData.hotWaterBilling = data.hotWaterBilling;
+    if (data.heatingBilling !== undefined) updateData.heatingBilling = data.heatingBilling;
+    if (data.gasBilling !== undefined) updateData.gasBilling = data.gasBilling;
+    if (data.electricityCommonBilling !== undefined) updateData.electricityCommonBilling = data.electricityCommonBilling;
 
     const [updated] = await db
       .update(condominiums)

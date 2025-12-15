@@ -38,7 +38,13 @@ import {
   ExternalLink,
   Banknote,
   Calendar,
+  Droplets,
+  Flame,
+  Zap,
+  ThermometerSun,
 } from "lucide-react";
+
+type UtilityBillingType = "individual" | "global_metered" | "global_fixed" | "none";
 
 interface CondominiumSettings {
   id: string;
@@ -53,6 +59,11 @@ interface CondominiumSettings {
   bankIban: string | null;
   bankBic: string | null;
   bankName: string | null;
+  coldWaterBilling: UtilityBillingType;
+  hotWaterBilling: UtilityBillingType;
+  heatingBilling: UtilityBillingType;
+  gasBilling: UtilityBillingType;
+  electricityCommonBilling: UtilityBillingType;
   hasOpenBankingConnection: boolean;
   openBankingConnection: {
     id: string;
@@ -93,6 +104,11 @@ export default function SettingsPage({ params }: { params: Promise<{ id: string 
     bankIban: "",
     bankBic: "",
     bankName: "",
+    coldWaterBilling: "none" as UtilityBillingType,
+    hotWaterBilling: "none" as UtilityBillingType,
+    heatingBilling: "none" as UtilityBillingType,
+    gasBilling: "none" as UtilityBillingType,
+    electricityCommonBilling: "none" as UtilityBillingType,
   });
 
   useEffect(() => {
@@ -126,6 +142,11 @@ export default function SettingsPage({ params }: { params: Promise<{ id: string 
         bankIban: data.bankIban || "",
         bankBic: data.bankBic || "",
         bankName: data.bankName || "",
+        coldWaterBilling: data.coldWaterBilling || "none",
+        hotWaterBilling: data.hotWaterBilling || "none",
+        heatingBilling: data.heatingBilling || "none",
+        gasBilling: data.gasBilling || "none",
+        electricityCommonBilling: data.electricityCommonBilling || "none",
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Une erreur est survenue");
@@ -341,6 +362,196 @@ export default function SettingsPage({ params }: { params: Promise<{ id: string 
             <p className="text-sm text-muted-foreground">
               Définit la périodicité de génération des appels de fonds pour les copropriétaires.
             </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Consommations */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-100 dark:bg-cyan-900/30">
+              <Droplets className="h-5 w-5 text-cyan-600" />
+            </div>
+            <div>
+              <CardTitle>Consommations</CardTitle>
+              <CardDescription>Configuration de la facturation des consommations (eau, chauffage, gaz)</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="rounded-lg bg-muted/50 p-4 text-sm text-muted-foreground">
+            <p>
+              Définissez comment chaque type de consommation est facturé aux copropriétaires. 
+              Ces paramètres sont utilisés pour calculer la répartition des charges.
+            </p>
+          </div>
+
+          <div className="grid gap-6">
+            {/* Eau froide */}
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                  <Droplets className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-medium">Eau froide</p>
+                  <p className="text-sm text-muted-foreground">
+                    Facturation de la consommation d&apos;eau froide
+                  </p>
+                </div>
+              </div>
+              <Select
+                value={formData.coldWaterBilling}
+                onValueChange={(value: UtilityBillingType) => 
+                  setFormData({ ...formData, coldWaterBilling: value })
+                }
+              >
+                <SelectTrigger className="w-[220px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="individual">Compteur individuel</SelectItem>
+                  <SelectItem value="global_metered">Compteur global + répartition</SelectItem>
+                  <SelectItem value="global_fixed">Forfait AG</SelectItem>
+                  <SelectItem value="none">Non applicable</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Eau chaude */}
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/30">
+                  <ThermometerSun className="h-6 w-6 text-orange-600" />
+                </div>
+                <div>
+                  <p className="font-medium">Eau chaude</p>
+                  <p className="text-sm text-muted-foreground">
+                    Facturation de la consommation d&apos;eau chaude sanitaire
+                  </p>
+                </div>
+              </div>
+              <Select
+                value={formData.hotWaterBilling}
+                onValueChange={(value: UtilityBillingType) => 
+                  setFormData({ ...formData, hotWaterBilling: value })
+                }
+              >
+                <SelectTrigger className="w-[220px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="individual">Compteur individuel</SelectItem>
+                  <SelectItem value="global_metered">Compteur global + répartition</SelectItem>
+                  <SelectItem value="global_fixed">Forfait AG</SelectItem>
+                  <SelectItem value="none">Non applicable</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Chauffage */}
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/30">
+                  <Flame className="h-6 w-6 text-red-600" />
+                </div>
+                <div>
+                  <p className="font-medium">Chauffage collectif</p>
+                  <p className="text-sm text-muted-foreground">
+                    Facturation du chauffage collectif
+                  </p>
+                </div>
+              </div>
+              <Select
+                value={formData.heatingBilling}
+                onValueChange={(value: UtilityBillingType) => 
+                  setFormData({ ...formData, heatingBilling: value })
+                }
+              >
+                <SelectTrigger className="w-[220px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="individual">Compteur individuel</SelectItem>
+                  <SelectItem value="global_metered">Compteur global + répartition</SelectItem>
+                  <SelectItem value="global_fixed">Forfait AG</SelectItem>
+                  <SelectItem value="none">Non applicable</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Gaz */}
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                  <Flame className="h-6 w-6 text-amber-600" />
+                </div>
+                <div>
+                  <p className="font-medium">Gaz</p>
+                  <p className="text-sm text-muted-foreground">
+                    Facturation de la consommation de gaz
+                  </p>
+                </div>
+              </div>
+              <Select
+                value={formData.gasBilling}
+                onValueChange={(value: UtilityBillingType) => 
+                  setFormData({ ...formData, gasBilling: value })
+                }
+              >
+                <SelectTrigger className="w-[220px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="individual">Compteur individuel</SelectItem>
+                  <SelectItem value="global_metered">Compteur global + répartition</SelectItem>
+                  <SelectItem value="global_fixed">Forfait AG</SelectItem>
+                  <SelectItem value="none">Non applicable</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Électricité des communs */}
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-100 dark:bg-yellow-900/30">
+                  <Zap className="h-6 w-6 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="font-medium">Électricité des communs</p>
+                  <p className="text-sm text-muted-foreground">
+                    Facturation de l&apos;électricité des parties communes
+                  </p>
+                </div>
+              </div>
+              <Select
+                value={formData.electricityCommonBilling}
+                onValueChange={(value: UtilityBillingType) => 
+                  setFormData({ ...formData, electricityCommonBilling: value })
+                }
+              >
+                <SelectTrigger className="w-[220px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="global_metered">Compteur global + répartition</SelectItem>
+                  <SelectItem value="global_fixed">Forfait AG</SelectItem>
+                  <SelectItem value="none">Non applicable</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-dashed p-4 text-sm">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 mt-0.5 text-muted-foreground shrink-0" />
+              <div className="text-muted-foreground space-y-1">
+                <p><strong>Compteur individuel</strong> : chaque copropriétaire reçoit sa propre facture</p>
+                <p><strong>Compteur global + répartition</strong> : la facture globale est répartie selon les sous-compteurs ou tantièmes</p>
+                <p><strong>Forfait AG</strong> : montant fixe défini en assemblée générale</p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

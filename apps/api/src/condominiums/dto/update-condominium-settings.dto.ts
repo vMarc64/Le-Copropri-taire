@@ -1,5 +1,8 @@
 import { IsString, IsOptional, IsBoolean, IsIn, Matches } from 'class-validator';
 
+// Types for utility billing
+export type UtilityBillingType = 'individual' | 'global_metered' | 'global_fixed' | 'none';
+
 export class UpdateCondominiumSettingsDto {
   // General info
   @IsString()
@@ -53,4 +56,30 @@ export class UpdateCondominiumSettingsDto {
   @IsString()
   @IsOptional()
   bankName?: string;
+
+  // Utility billing settings
+  @IsString()
+  @IsOptional()
+  @IsIn(['individual', 'global_metered', 'global_fixed', 'none'], { message: 'Type de facturation invalide' })
+  coldWaterBilling?: UtilityBillingType;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['individual', 'global_metered', 'global_fixed', 'none'], { message: 'Type de facturation invalide' })
+  hotWaterBilling?: UtilityBillingType;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['individual', 'global_metered', 'global_fixed', 'none'], { message: 'Type de facturation invalide' })
+  heatingBilling?: UtilityBillingType;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['individual', 'global_metered', 'global_fixed', 'none'], { message: 'Type de facturation invalide' })
+  gasBilling?: UtilityBillingType;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['individual', 'global_metered', 'global_fixed', 'none'], { message: 'Type de facturation invalide' })
+  electricityCommonBilling?: UtilityBillingType;
 }

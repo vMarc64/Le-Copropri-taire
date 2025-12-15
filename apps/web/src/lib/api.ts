@@ -161,6 +161,8 @@ export async function getTransactions(accountId?: string, condominiumId?: string
 }
 
 // Condominiums API (for filters)
+export type UtilityBillingType = 'individual' | 'global_metered' | 'global_fixed' | 'none';
+
 export interface Condominium {
   id: string;
   name: string;
@@ -170,6 +172,11 @@ export interface Condominium {
   sepaEnabled: boolean;
   cbEnabled: boolean;
   callFrequency: 'monthly' | 'quarterly';
+  coldWaterBilling: UtilityBillingType;
+  hotWaterBilling: UtilityBillingType;
+  heatingBilling: UtilityBillingType;
+  gasBilling: UtilityBillingType;
+  electricityCommonBilling: UtilityBillingType;
   lots: number;
   owners: number;
   balance: number;
