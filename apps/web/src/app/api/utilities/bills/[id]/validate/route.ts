@@ -8,7 +8,7 @@ export async function POST(
 ) {
   const { id } = await params;
   const cookieStore = await cookies();
-  const token = cookieStore.get("access_token")?.value;
+  const token = cookieStore.get("accessToken")?.value;
 
   const response = await fetch(`${API_URL}/utilities/bills/${id}/validate`, {
     method: "POST",

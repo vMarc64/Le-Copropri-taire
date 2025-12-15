@@ -11,7 +11,7 @@ export async function GET(
   const type = searchParams.get("type");
   
   const cookieStore = await cookies();
-  const token = cookieStore.get("access_token")?.value;
+  const token = cookieStore.get("accessToken")?.value;
 
   const url = type 
     ? `${API_URL}/utilities/meters/condominium/${id}?type=${type}`

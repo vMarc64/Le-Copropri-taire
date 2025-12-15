@@ -4,7 +4,7 @@ import { API_URL } from "@/lib/api-url";
 
 export async function POST(request: Request) {
   const cookieStore = await cookies();
-  const token = cookieStore.get("access_token")?.value;
+  const token = cookieStore.get("accessToken")?.value;
   const body = await request.json();
 
   const response = await fetch(`${API_URL}/utilities/readings`, {
