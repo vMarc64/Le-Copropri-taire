@@ -172,8 +172,6 @@
 
 Exemples de milestones actuellement utilisés sur GitHub :
 
-- Phase 1: Setup & Infrastructure
-- Phase 7: Integrations
 - Infrastructure
 - Auth & Users
 - Bank & Payments
