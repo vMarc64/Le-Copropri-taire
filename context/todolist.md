@@ -168,4 +168,16 @@
 
 - Mettre à jour ce fichier au fur et à mesure de l'avancement
 - Priorités : ��� Haute | ��� Moyenne | ��� Basse
-- Les milestones GitHub correspondent maintenant aux sections ci-dessus
+- Les milestones GitHub correspondent maintenant aux sections ci-dessus. Vérifier la liste courante sur GitHub si elle a été modifiée.
+
+Exemples de milestones actuellement utilisés sur GitHub :
+
+- Infrastructure
+- Auth & Users
+- Bank & Payments
+- IA & Automation
+- Manager Backoffice
+- Platform Admin
+- Portail Copropriétaire
+- Portail Locataire
+- No Milestone
