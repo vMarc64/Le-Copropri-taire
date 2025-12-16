@@ -39,7 +39,18 @@ Objectif : permettre à un agent IA (ou un nouveau dev) de comprendre rapidement
 7) **todolist.md**  
    - Liste des tâches par domaine fonctionnel (Auth, Platform Admin, Manager, Portails, Bank, Documents, IA, Infrastructure)  
    - Suivi de l'avancement du projet  
-   - Correspond aux milestones GitHub  
+   - Correspond aux milestones GitHub — vérifier la liste courante sur GitHub. Exemples de milestones actuellement utilisés :
+     - Phase 1: Setup & Infrastructure
+     - Phase 7: Integrations
+     - Infrastructure
+     - Auth & Users
+     - Bank & Payments
+     - IA & Automation
+     - Manager Backoffice
+     - Platform Admin
+     - Portail Copropriétaire
+     - Portail Locataire
+     - No Milestone
    - À mettre à jour régulièrement
 
 ---
