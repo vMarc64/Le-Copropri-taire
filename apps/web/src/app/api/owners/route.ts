@@ -18,7 +18,7 @@ async function getAuthHeaders() {
 }
 
 // GET /api/owners - List all owners for current syndic
-export async function GET() {
+export async function GET(request: NextRequest) {
   const headers = await getAuthHeaders();
   
   if (!headers) {
@@ -26,7 +26,12 @@ export async function GET() {
   }
 
   try {
-    const response = await fetch(`${API_URL}/owners`, { headers });
+    // Forward query parameters to backend
+    const { searchParams } = new URL(request.url);
+    const queryString = searchParams.toString();
+    const url = `${API_URL}/owners${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await fetch(url, { headers });
     const data = await response.json();
 
     if (!response.ok) {
