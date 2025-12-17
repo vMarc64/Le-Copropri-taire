@@ -87,6 +87,11 @@ export function RegisterForm({
   const hasUppercase = /[A-Z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
   const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  
+  // Calculate password strength score (0-4)
+  const passwordStrength = [hasMinLength, hasUppercase, hasNumber, hasSpecialChar].filter(Boolean).length;
+  const strengthLabels = ["", "Faible", "Moyen", "Bon", "Fort"];
+  const strengthColors = ["", "bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-green-500"];
 
   const handleNextStep = async () => {
     const isValid = await trigger(["firstName", "lastName", "email", "phone"]);
@@ -280,6 +285,28 @@ export function RegisterForm({
                     {hasSpecialChar ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                     1 caractère spécial (!@#$%...)
                   </div>
+                  
+                  {/* Password strength bar */}
+                  {password.length > 0 && (
+                    <div className="pt-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-muted-foreground">Force du mot de passe</span>
+                        <span className={`text-xs font-medium ${passwordStrength >= 3 ? 'text-green-500' : passwordStrength >= 2 ? 'text-orange-500' : 'text-red-500'}`}>
+                          {strengthLabels[passwordStrength]}
+                        </span>
+                      </div>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4].map((level) => (
+                          <div
+                            key={level}
+                            className={`h-1.5 flex-1 rounded-full transition-colors ${
+                              level <= passwordStrength ? strengthColors[passwordStrength] : 'bg-muted'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 {errors.password && (
                   <p className="text-sm text-destructive">{errors.password.message}</p>
