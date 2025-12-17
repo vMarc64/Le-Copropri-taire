@@ -1083,7 +1083,7 @@ export default function OwnersPage() {
             return (
               <div key={owner.id} className="rounded-lg border bg-card p-4">
                 <div className="flex items-start justify-between gap-3">
-                  <Link href={owner.condominiumIds?.[0] ? `/app/condominiums/${owner.condominiumIds[0]}/owners/${owner.id}` : '#'} className="flex items-center gap-3 flex-1 min-w-0">
+                  <Link href={`/app/owners/${owner.id}`} className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
                       <span className="text-sm font-semibold text-primary">
                         {owner.firstName[0]}{owner.lastName[0]}
@@ -1104,7 +1104,7 @@ export default function OwnersPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
-                          <Link href={owner.condominiumIds?.[0] ? `/app/condominiums/${owner.condominiumIds[0]}/owners/${owner.id}` : '#'}>
+                          <Link href={`/app/owners/${owner.id}`}>
                             <Eye className="mr-2 h-4 w-4" />
                             Voir le profil
                           </Link>
@@ -1197,7 +1197,7 @@ export default function OwnersPage() {
                           </span>
                         </div>
                         <Link
-                          href={owner.condominiumIds?.[0] ? `/app/condominiums/${owner.condominiumIds[0]}/owners/${owner.id}` : '#'}
+                          href={`/app/owners/${owner.id}`}
                           className="font-medium hover:underline"
                         >
                           {owner.firstName} {owner.lastName}
@@ -1254,7 +1254,7 @@ export default function OwnersPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
-                            <Link href={owner.condominiumIds?.[0] ? `/app/condominiums/${owner.condominiumIds[0]}/owners/${owner.id}` : '#'}>
+                            <Link href={`/app/owners/${owner.id}`}>
                               <Eye className="mr-2 h-4 w-4" />
                               Voir le profil
                             </Link>
