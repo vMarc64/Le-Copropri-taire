@@ -605,31 +605,37 @@ export default function PlatformDashboard() {
                     <div />
                   </div>
                   {/* SVG Chart */}
-                  <svg className="absolute inset-0 w-full h-full overflow-visible">
+                  <svg 
+                    className="absolute inset-0 w-full h-full overflow-visible"
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                  >
                     {/* CPU Line */}
                     <polyline
                       fill="none"
                       stroke="rgb(139, 92, 246)"
-                      strokeWidth="2"
+                      strokeWidth="1.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
+                      vectorEffect="non-scaling-stroke"
                       points={metricsHistory.map((point, i) => {
-                        const x = (i / (metricsHistory.length - 1)) * 100;
+                        const x = metricsHistory.length > 1 ? (i / (metricsHistory.length - 1)) * 100 : 50;
                         const y = 100 - point.cpu;
-                        return `${x}%,${y}%`;
+                        return `${x},${y}`;
                       }).join(' ')}
                     />
                     {/* RAM Line */}
                     <polyline
                       fill="none"
                       stroke="rgb(14, 165, 233)"
-                      strokeWidth="2"
+                      strokeWidth="1.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
+                      vectorEffect="non-scaling-stroke"
                       points={metricsHistory.map((point, i) => {
-                        const x = (i / (metricsHistory.length - 1)) * 100;
+                        const x = metricsHistory.length > 1 ? (i / (metricsHistory.length - 1)) * 100 : 50;
                         const y = 100 - point.ram;
-                        return `${x}%,${y}%`;
+                        return `${x},${y}`;
                       }).join(' ')}
                     />
                   </svg>
