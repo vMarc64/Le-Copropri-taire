@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,12 +29,13 @@ interface NavItem {
   title: string;
   href: string;
   icon: LucideIcon;
+  prefetchUrl?: string; // API URL to prefetch on hover
 }
 
 const navigation: NavItem[] = [
-  { title: "Dashboard", href: "/app", icon: LayoutDashboard },
-  { title: "Copropriétés", href: "/app/condominiums", icon: Building2 },
-  { title: "Propriétaires", href: "/app/owners", icon: Users },
+  { title: "Dashboard", href: "/app", icon: LayoutDashboard, prefetchUrl: "/api/dashboard/stats" },
+  { title: "Copropriétés", href: "/app/condominiums", icon: Building2, prefetchUrl: "/api/condominiums" },
+  { title: "Propriétaires", href: "/app/owners", icon: Users, prefetchUrl: "/api/owners?page=1&limit=10" },
   { title: "Banque", href: "/app/bank", icon: Landmark },
   { title: "Documents", href: "/app/documents", icon: FileText },
 ];
@@ -45,6 +47,22 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname();
+  const prefetchedRoutes = useRef<Set<string>>(new Set());
+
+  // Prefetch data on hover
+  const handlePrefetch = useCallback((item: NavItem) => {
+    if (!item.prefetchUrl) return;
+    if (prefetchedRoutes.current.has(item.href)) return;
+    
+    prefetchedRoutes.current.add(item.href);
+    
+    // Prefetch the API data in background
+    fetch(item.prefetchUrl)
+      .catch(() => {
+        // Silently fail - it's just a prefetch
+        prefetchedRoutes.current.delete(item.href);
+      });
+  }, []);
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -100,6 +118,7 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
               const linkContent = (
                 <Link
                   href={item.href}
+                  onMouseEnter={() => handlePrefetch(item)}
                   className={cn(
                     "flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition-all duration-200",
                     isActive
