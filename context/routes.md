@@ -66,11 +66,13 @@
 - /app/condominiums/[id]/utilities/new      # Create utility bill with readings
 
 ### 3.4 Owners
-- /app/condominiums/[id]/owners
-- /app/condominiums/[id]/owners/new
-- /app/condominiums/[id]/owners/[ownerId]
-- /app/condominiums/[id]/owners/[ownerId]/balance
-- /app/condominiums/[id]/owners/[ownerId]/mandates
+- /app/owners                         # List all owners for tenant (with pagination & filters)
+- /app/owners/new                     # Create new owner
+- /app/owners/[ownerId]               # Owner detail page (all condos, lots, payments, mandates)
+- /app/owners/[ownerId]/balance       # Owner balance details
+- /app/owners/[ownerId]/mandates      # Owner SEPA mandates
+- /app/condominiums/[id]/owners       # List owners for a specific condominium
+- /app/condominiums/[id]/owners/new   # Add owner to specific condominium
 
 ### 3.5 Tenants (Locataires)
 - /app/condominiums/[id]/locataires

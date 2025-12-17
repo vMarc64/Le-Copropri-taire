@@ -595,7 +595,7 @@ export default function OwnersPage({ params }: { params: Promise<{ id: string }>
                 >
                   <TableCell className="h-12 px-4 font-medium">
                     <Link
-                      href={`/app/condominiums/${condoId}/owners/${owner.id}`}
+                      href={`/app/owners/${owner.id}`}
                       className="hover:text-primary hover:underline"
                     >
                       {owner.name}
@@ -657,7 +657,7 @@ export default function OwnersPage({ params }: { params: Promise<{ id: string }>
                       <DropdownMenuContent align="end" className="w-40">
                         <DropdownMenuItem asChild>
                           <Link
-                            href={`/app/condominiums/${condoId}/owners/${owner.id}`}
+                            href={`/app/owners/${owner.id}`}
                             className="flex items-center"
                           >
                             <Eye className="mr-2 h-4 w-4" />

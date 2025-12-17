@@ -154,18 +154,34 @@
   - View owner profile
   - Invite owner
 
-### 3.8 Owner Profile Page (Manager View)
-- Overview:
-  - Contact info
-  - Lots owned
-  - Current balance
-- Payments:
-  - Due schedule
-  - Payment history
+### 3.8b Owner Profile Page (/app/owners/[ownerId])
+> Tenant-scoped page showing all owner data across all condominiums within the tenant.
+> RGPD compliant: data automatically filtered by tenant via JWT.
+
+- Header:
+  - Owner name and email
+  - Status badge (active / pending / invited / managed)
+  - Back navigation
+- Stats cards:
+  - Total balance (all condominiums)
+  - Lots count
+  - Payments count
   - SEPA mandate status
-- Documents:
-  - Owner-related documents
-- Consumption (if enabled)
+- Condominiums section:
+  - List of all condominiums where owner has lots
+  - For each condominium:
+    - Condominium name and address
+    - Lots owned (type, quotas, floor)
+    - Link to condominium
+- Payment history:
+  - Last 20 payments across all condominiums
+  - Columns: Date, Amount, Condominium, Status
+  - Status badges (paid / pending / failed)
+- SEPA Mandates:
+  - List of all mandates
+  - Status (active / pending / revoked)
+  - Bank account (masked IBAN)
+  - Signature date
 
 ### 3.9 Documents Page (Modal / Panel)
 - Documents list

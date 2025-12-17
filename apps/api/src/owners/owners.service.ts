@@ -160,13 +160,154 @@ export class OwnersService {
   }
 
   async findOne(id: string, tenantId: string) {
-    const owner = await db
+    // Get owner basic info
+    const ownerResult = await db
       .select()
       .from(users)
       .where(and(eq(users.id, id), eq(users.tenantId, tenantId), eq(users.role, 'owner')))
       .limit(1);
 
-    return owner[0] || null;
+    const owner = ownerResult[0];
+    if (!owner) {
+      return null;
+    }
+
+    // Get lots with their condominiums
+    const ownerLots = await db
+      .select({
+        id: lots.id,
+        reference: lots.reference,
+        type: lots.type,
+        floor: lots.floor,
+        surface: lots.surface,
+        shares: lots.shares,
+        condominiumId: lots.condominiumId,
+        condominiumName: condominiums.name,
+        condominiumAddress: condominiums.address,
+        condominiumCity: condominiums.city,
+      })
+      .from(lots)
+      .leftJoin(condominiums, eq(lots.condominiumId, condominiums.id))
+      .where(eq(lots.ownerId, owner.id));
+
+    // Get direct condominium associations (via ownerCondominiums table)
+    const directCondos = await db
+      .select({
+        condominiumId: ownerCondominiums.condominiumId,
+        condominiumName: condominiums.name,
+        condominiumAddress: condominiums.address,
+        condominiumCity: condominiums.city,
+      })
+      .from(ownerCondominiums)
+      .leftJoin(condominiums, eq(ownerCondominiums.condominiumId, condominiums.id))
+      .where(eq(ownerCondominiums.ownerId, owner.id));
+
+    // Build unique condominiums list
+    const condominiumsMap = new Map();
+    ownerLots.forEach((lot) => {
+      if (lot.condominiumId && !condominiumsMap.has(lot.condominiumId)) {
+        condominiumsMap.set(lot.condominiumId, {
+          id: lot.condominiumId,
+          name: lot.condominiumName,
+          address: lot.condominiumAddress,
+          city: lot.condominiumCity,
+          lots: [],
+        });
+      }
+    });
+    directCondos.forEach((condo) => {
+      if (condo.condominiumId && !condominiumsMap.has(condo.condominiumId)) {
+        condominiumsMap.set(condo.condominiumId, {
+          id: condo.condominiumId,
+          name: condo.condominiumName,
+          address: condo.condominiumAddress,
+          city: condo.condominiumCity,
+          lots: [],
+        });
+      }
+    });
+
+    // Add lots to their respective condominiums
+    ownerLots.forEach((lot) => {
+      if (lot.condominiumId && condominiumsMap.has(lot.condominiumId)) {
+        condominiumsMap.get(lot.condominiumId).lots.push({
+          id: lot.id,
+          reference: lot.reference,
+          type: lot.type,
+          floor: lot.floor,
+          surface: lot.surface,
+          shares: lot.shares,
+        });
+      }
+    });
+
+    // Get payments history
+    const paymentsHistory = await db
+      .select({
+        id: payments.id,
+        amount: payments.amount,
+        paidAmount: payments.paidAmount,
+        status: payments.status,
+        type: payments.type,
+        description: payments.description,
+        dueDate: payments.dueDate,
+        paidAt: payments.paidAt,
+        condominiumId: payments.condominiumId,
+        condominiumName: condominiums.name,
+      })
+      .from(payments)
+      .leftJoin(condominiums, eq(payments.condominiumId, condominiums.id))
+      .where(eq(payments.ownerId, owner.id))
+      .orderBy(sql`${payments.dueDate} DESC`)
+      .limit(20);
+
+    // Get current balance
+    const balanceResult = await db
+      .select({
+        balance: sql<number>`COALESCE(SUM(${payments.amount} - COALESCE(${payments.paidAmount}, 0)), 0)`,
+      })
+      .from(payments)
+      .where(
+        and(
+          eq(payments.ownerId, owner.id),
+          sql`${payments.status} IN ('pending', 'partial', 'overdue')`
+        )
+      );
+
+    // Get SEPA mandates
+    const mandates = await db
+      .select({
+        id: sepaMandates.id,
+        status: sepaMandates.status,
+        iban: sepaMandates.iban,
+        bic: sepaMandates.bic,
+        signedAt: sepaMandates.signedAt,
+        createdAt: sepaMandates.createdAt,
+      })
+      .from(sepaMandates)
+      .where(eq(sepaMandates.ownerId, owner.id))
+      .orderBy(sql`${sepaMandates.createdAt} DESC`);
+
+    const activeMandates = mandates.filter((m) => m.status === 'active');
+
+    return {
+      id: owner.id,
+      firstName: owner.firstName,
+      lastName: owner.lastName,
+      email: owner.email,
+      status: owner.status,
+      createdAt: owner.createdAt,
+      condominiums: Array.from(condominiumsMap.values()),
+      payments: paymentsHistory,
+      balance: -(balanceResult[0]?.balance || 0),
+      mandates: mandates,
+      hasSepaMandateActive: activeMandates.length > 0,
+      stats: {
+        totalLots: ownerLots.length,
+        totalCondominiums: condominiumsMap.size,
+        pendingPayments: paymentsHistory.filter((p) => ['pending', 'partial', 'overdue'].includes(p.status)).length,
+      },
+    };
   }
 
   /**

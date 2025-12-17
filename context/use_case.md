@@ -91,6 +91,13 @@ Platform Admin (you)
 - Add / remove a tenant from a condominium
 - Assign lots to owners and tenants
 - View owners list for a condominium (with status badges: active, invited, pending)
+- View all owners for tenant (global list with pagination and filters)
+- View owner detail page:
+  - Overview (contact info, status)
+  - All condominiums and lots (across tenant, RGPD compliant)
+  - Payment history (last 20 payments)
+  - SEPA mandates (active, pending, revoked)
+  - Total balance
 
 ### 3.3 Dues & Payment Plans
 - Define monthly advance payments (acompte)
