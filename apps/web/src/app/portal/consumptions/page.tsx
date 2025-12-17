@@ -64,7 +64,16 @@ export default function ConsumptionsPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // TODO: Replace with actual API calls
+        const response = await fetch('/api/portal/consumptions');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch consumptions data');
+        }
+
+        const data = await response.json();
+        
+        // For now, consumptions feature is not implemented, so we'll show empty state
+        // The API returns { message: 'Consumptions feature not yet implemented', data: [] }
         setConsumptions(null);
         setTips([]);
       } catch (err) {

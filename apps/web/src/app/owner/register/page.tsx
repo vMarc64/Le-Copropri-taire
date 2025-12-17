@@ -14,8 +14,12 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Home, ArrowRight, Loader2, Eye, EyeOff, Check, X, ArrowLeft } from "lucide-react";
 
 const registerSchema = z.object({
-  firstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
-  lastName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
+  firstName: z.string()
+    .min(2, "Le prénom doit contenir au moins 2 caractères")
+    .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, "Le prénom ne doit contenir que des lettres"),
+  lastName: z.string()
+    .min(2, "Le nom doit contenir au moins 2 caractères")
+    .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, "Le nom ne doit contenir que des lettres"),
   email: z.string().email("Email invalide"),
   phone: z.string().min(10, "Numéro de téléphone invalide").optional().or(z.literal("")),
   password: z.string()
@@ -46,6 +50,7 @@ export default function OwnerRegisterPage() {
     watch,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    mode: "onChange",
   });
 
   const password = watch("password", "");
