@@ -58,6 +58,10 @@ interface UtilityBill {
   totalAmount: string;
   unit: string;
   invoiceNumber: string | null;
+  supplierName: string | null;
+  status: "draft" | "validated" | "distributed";
+  createdAt: string;
+}
 
 interface Condominium {
   id: string;
@@ -67,10 +71,6 @@ interface Condominium {
   heatingBilling: string;
   gasBilling: string;
   electricityCommonBilling: string;
-}
-  supplierName: string | null;
-  status: "draft" | "validated" | "distributed";
-  createdAt: string;
 }
 
 interface LotMeter {
