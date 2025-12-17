@@ -91,7 +91,7 @@ interface Owner {
 interface LotMeter {
   id: string;
   lotId: string;
-  meterType: 'cold_water' | 'hot_water' | 'heating';
+  meterType: 'cold_water' | 'hot_water' | 'heating' | 'gas';
   meterNumber: string | null;
   isDualTariff: boolean;
   isActive: boolean;
@@ -99,16 +99,28 @@ interface LotMeter {
   lastReadingDate: string | null;
 }
 
+interface Condominium {
+  id: string;
+  name: string;
+  coldWaterBilling: string;
+  hotWaterBilling: string;
+  heatingBilling: string;
+  gasBilling: string;
+  electricityCommonBilling: string;
+}
+
 const meterTypeConfig: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
   cold_water: { label: "Eau froide", icon: <Droplets className="h-4 w-4" />, color: "bg-blue-500/10 text-blue-600" },
   hot_water: { label: "Eau chaude", icon: <ThermometerSun className="h-4 w-4" />, color: "bg-orange-500/10 text-orange-600" },
   heating: { label: "Chauffage", icon: <Flame className="h-4 w-4" />, color: "bg-red-500/10 text-red-600" },
+  gas: { label: "Gaz", icon: <Flame className="h-4 w-4" />, color: "bg-amber-500/10 text-amber-600" },
 };
 
 const METER_TYPES = [
-  { value: "cold_water", label: "Eau froide" },
-  { value: "hot_water", label: "Eau chaude" },
-  { value: "heating", label: "Chauffage" },
+  { value: "cold_water", label: "Eau froide", billingField: "coldWaterBilling" },
+  { value: "hot_water", label: "Eau chaude", billingField: "hotWaterBilling" },
+  { value: "heating", label: "Chauffage", billingField: "heatingBilling" },
+  { value: "gas", label: "Gaz", billingField: "gasBilling" },
 ];
 
 const lotTypeConfig: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
@@ -141,6 +153,7 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
   const [search, setSearch] = useState("");
   const [lots, setLots] = useState<Lot[]>([]);
   const [owners, setOwners] = useState<Owner[]>([]);
+  const [condominium, setCondominium] = useState<Condominium | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -219,9 +232,39 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
     }
   };
 
+  const fetchCondominium = async () => {
+    try {
+      const response = await fetch(`/api/condominiums/${condoId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setCondominium(data);
+      }
+    } catch (err) {
+      console.error("Error fetching condominium:", err);
+    }
+  };
+
+  // Filtrer les types de compteurs selon la config de la copro (seulement global_metered)
+  const getAvailableMeterTypes = () => {
+    if (!condominium) return [];
+    
+    const billingConfig: Record<string, string> = {
+      cold_water: condominium.coldWaterBilling,
+      hot_water: condominium.hotWaterBilling,
+      heating: condominium.heatingBilling,
+      gas: condominium.gasBilling,
+    };
+
+    // Seuls les types en global_metered ont des compteurs individuels par lot
+    return METER_TYPES.filter(type => billingConfig[type.value] === 'global_metered');
+  };
+
+  const availableMeterTypes = getAvailableMeterTypes();
+
   useEffect(() => {
     fetchLots();
     fetchOwners();
+    fetchCondominium();
   }, [condoId]);
 
   const handleCreateLot = async () => {
@@ -999,10 +1042,10 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
                         onValueChange={(value) => setNewMeter({ ...newMeter, meterType: value })}
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="Sélectionner un type" />
                         </SelectTrigger>
                         <SelectContent>
-                          {METER_TYPES.filter(
+                          {availableMeterTypes.filter(
                             (t) => !meters.some((m) => m.meterType === t.value)
                           ).map((type) => (
                             <SelectItem key={type.value} value={type.value}>
@@ -1044,7 +1087,7 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
                     variant="outline"
                     className="w-full"
                     onClick={() => setShowAddMeterForm(true)}
-                    disabled={meters.length >= METER_TYPES.length}
+                    disabled={meters.length >= availableMeterTypes.length}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Ajouter un compteur

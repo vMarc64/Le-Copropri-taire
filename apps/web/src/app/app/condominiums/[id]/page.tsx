@@ -219,7 +219,7 @@ export default function CondominiumDashboardPage({ params }: { params: Promise<{
         <Card>
           <CardContent className="p-4">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              {/* Eau froide */}
+              {/* Eau froide - toujours affiché (jamais "none" selon les règles métier) */}
               <div className="flex items-center gap-3 rounded-lg border p-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
                   <Droplets className="h-5 w-5 text-blue-600" />
@@ -232,46 +232,52 @@ export default function CondominiumDashboardPage({ params }: { params: Promise<{
                 </div>
               </div>
 
-              {/* Eau chaude */}
-              <div className="flex items-center gap-3 rounded-lg border p-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/30">
-                  <ThermometerSun className="h-5 w-5 text-orange-600" />
+              {/* Eau chaude - masqué si "none" */}
+              {condominium.hotWaterBilling && condominium.hotWaterBilling !== "none" && (
+                <div className="flex items-center gap-3 rounded-lg border p-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/30">
+                    <ThermometerSun className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground">Eau chaude</p>
+                    <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${getUtilityBillingBadgeClass(condominium.hotWaterBilling)}`}>
+                      {utilityBillingLabels[condominium.hotWaterBilling]}
+                    </span>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">Eau chaude</p>
-                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${getUtilityBillingBadgeClass(condominium.hotWaterBilling || "none")}`}>
-                    {utilityBillingLabels[condominium.hotWaterBilling || "none"]}
-                  </span>
-                </div>
-              </div>
+              )}
 
-              {/* Chauffage */}
-              <div className="flex items-center gap-3 rounded-lg border p-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/30">
-                  <Flame className="h-5 w-5 text-red-600" />
+              {/* Chauffage - masqué si "none" */}
+              {condominium.heatingBilling && condominium.heatingBilling !== "none" && (
+                <div className="flex items-center gap-3 rounded-lg border p-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100 dark:bg-red-900/30">
+                    <Flame className="h-5 w-5 text-red-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground">Chauffage</p>
+                    <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${getUtilityBillingBadgeClass(condominium.heatingBilling)}`}>
+                      {utilityBillingLabels[condominium.heatingBilling]}
+                    </span>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">Chauffage</p>
-                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${getUtilityBillingBadgeClass(condominium.heatingBilling || "none")}`}>
-                    {utilityBillingLabels[condominium.heatingBilling || "none"]}
-                  </span>
-                </div>
-              </div>
+              )}
 
-              {/* Gaz */}
-              <div className="flex items-center gap-3 rounded-lg border p-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30">
-                  <Flame className="h-5 w-5 text-amber-600" />
+              {/* Gaz - masqué si "none" */}
+              {condominium.gasBilling && condominium.gasBilling !== "none" && (
+                <div className="flex items-center gap-3 rounded-lg border p-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                    <Flame className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground">Gaz</p>
+                    <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${getUtilityBillingBadgeClass(condominium.gasBilling)}`}>
+                      {utilityBillingLabels[condominium.gasBilling]}
+                    </span>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">Gaz</p>
-                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${getUtilityBillingBadgeClass(condominium.gasBilling || "none")}`}>
-                    {utilityBillingLabels[condominium.gasBilling || "none"]}
-                  </span>
-                </div>
-              </div>
+              )}
 
-              {/* Électricité communs */}
+              {/* Électricité communs - toujours affiché (toujours global_tantiemes selon les règles métier) */}
               <div className="flex items-center gap-3 rounded-lg border p-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-yellow-100 dark:bg-yellow-900/30">
                   <Zap className="h-5 w-5 text-yellow-600" />

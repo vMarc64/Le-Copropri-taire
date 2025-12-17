@@ -58,6 +58,16 @@ interface UtilityBill {
   totalAmount: string;
   unit: string;
   invoiceNumber: string | null;
+
+interface Condominium {
+  id: string;
+  name: string;
+  coldWaterBilling: string;
+  hotWaterBilling: string;
+  heatingBilling: string;
+  gasBilling: string;
+  electricityCommonBilling: string;
+}
   supplierName: string | null;
   status: "draft" | "validated" | "distributed";
   createdAt: string;
@@ -114,6 +124,7 @@ const statusConfig: Record<string, { label: string; icon: React.ReactNode; color
 export default function UtilitiesPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: condoId } = use(params);
   const [bills, setBills] = useState<UtilityBill[]>([]);
+  const [condominium, setCondominium] = useState<Condominium | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -121,7 +132,7 @@ export default function UtilitiesPage({ params }: { params: Promise<{ id: string
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [newBill, setNewBill] = useState({
-    utilityType: "cold_water",
+    utilityType: "",
     periodStart: "",
     periodEnd: "",
     globalIndexStart: "",
@@ -157,8 +168,38 @@ export default function UtilitiesPage({ params }: { params: Promise<{ id: string
     }
   };
 
+  const fetchCondominium = async () => {
+    try {
+      const response = await fetch(`/api/condominiums/${condoId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setCondominium(data);
+      }
+    } catch (err) {
+      console.error("Error fetching condominium:", err);
+    }
+  };
+
+  // Filtrer les types de consommation selon la config de la copro
+  const getAvailableUtilityTypes = () => {
+    if (!condominium) return [];
+    
+    const billingConfig: Record<string, string> = {
+      cold_water: condominium.coldWaterBilling,
+      hot_water: condominium.hotWaterBilling,
+      heating: condominium.heatingBilling,
+      gas: condominium.gasBilling,
+      electricity_common: condominium.electricityCommonBilling,
+    };
+
+    return UTILITY_TYPES.filter(type => billingConfig[type.value] && billingConfig[type.value] !== 'none');
+  };
+
+  const availableUtilityTypes = getAvailableUtilityTypes();
+
   useEffect(() => {
     fetchBills();
+    fetchCondominium();
   }, [condoId]);
 
   const handleCreateBill = async () => {
@@ -539,10 +580,10 @@ export default function UtilitiesPage({ params }: { params: Promise<{ id: string
                 onValueChange={(value) => setNewBill({ ...newBill, utilityType: value })}
               >
                 <SelectTrigger className="col-span-3">
-                  <SelectValue />
+                  <SelectValue placeholder="Sélectionner un type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {UTILITY_TYPES.map((type) => (
+                  {availableUtilityTypes.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
                       {type.label}
                     </SelectItem>
