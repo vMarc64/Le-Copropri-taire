@@ -357,7 +357,7 @@ export default function OwnerDetailPage() {
                             <p className="text-xs text-muted-foreground">
                               {lot.type}
                               {lot.surface && ` • ${lot.surface} m²`}
-                              {lot.shares && ` • ${lot.shares} tantièmes`}
+                              {lot.tantiemes && ` • ${lot.tantiemes} tantièmes`}
                             </p>
                           </div>
                         </div>

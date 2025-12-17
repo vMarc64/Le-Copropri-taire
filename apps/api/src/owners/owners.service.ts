@@ -180,7 +180,7 @@ export class OwnersService {
         type: lots.type,
         floor: lots.floor,
         surface: lots.surface,
-        shares: lots.shares,
+        tantiemes: lots.tantiemes,
         condominiumId: lots.condominiumId,
         condominiumName: condominiums.name,
         condominiumAddress: condominiums.address,
@@ -236,7 +236,7 @@ export class OwnersService {
           type: lot.type,
           floor: lot.floor,
           surface: lot.surface,
-          shares: lot.shares,
+          tantiemes: lot.tantiemes,
         });
       }
     });
