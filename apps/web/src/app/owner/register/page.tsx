@@ -50,6 +50,7 @@ export default function OwnerRegisterPage() {
     watch,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    mode: "onChange",
   });
 
   const password = watch("password", "");
