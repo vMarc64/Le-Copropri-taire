@@ -7,6 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  TableSkeleton,
+  CardSkeleton,
+  MobileCardSkeleton,
+} from "@/components/ui/table-skeleton";
 import {
   Table,
   TableBody,
@@ -751,10 +757,42 @@ export default function OwnersPage() {
     pendingMandate: owners.filter((o) => !o.hasSepaMandateActive).length,
   };
 
-  if (loading) {
+  // Initial loading - show skeleton with full page structure
+  if (loading && owners.length === 0) {
     return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="space-y-4 md:space-y-6">
+        {/* Header Skeleton */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-9 w-28" />
+        </div>
+
+        {/* Stats Cards Skeleton */}
+        <CardSkeleton count={4} />
+
+        {/* Filter Bar Skeleton */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Skeleton className="h-10 flex-1" />
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-10 w-24" />
+        </div>
+
+        {/* Table Skeleton (Desktop) */}
+        <div className="hidden md:block rounded-lg border bg-card">
+          <TableSkeleton 
+            columns={7} 
+            rows={limit}
+            columnWidths={["w-40", "w-32", "w-28", "w-24", "w-20", "w-20", "w-8"]} 
+          />
+        </div>
+
+        {/* Cards Skeleton (Mobile) */}
+        <div className="md:hidden">
+          <MobileCardSkeleton count={limit} />
+        </div>
       </div>
     );
   }
@@ -1063,8 +1101,13 @@ export default function OwnersPage() {
       </div>
 
       {/* Mobile Cards View */}
-      <div className="md:hidden space-y-3">
-        {owners.length === 0 ? (
+      <div className={`md:hidden space-y-3 transition-opacity duration-200 ${loading ? 'opacity-50 pointer-events-none' : ''}`}>
+        {loading && owners.length > 0 && (
+          <div className="absolute inset-0 flex items-center justify-center z-10">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        )}
+        {owners.length === 0 && !loading ? (
           <div className="flex flex-col items-center gap-3 py-12 text-center rounded-lg border bg-card">
             <Users className="h-10 w-10 text-muted-foreground/50" />
             <p className="text-muted-foreground text-sm">
@@ -1143,7 +1186,12 @@ export default function OwnersPage() {
       </div>
 
       {/* Desktop Owners Table */}
-      <div className="rounded-md border bg-card hidden md:block overflow-x-auto">
+      <div className={`rounded-md border bg-card hidden md:block overflow-x-auto relative transition-opacity duration-200 ${loading && owners.length > 0 ? 'opacity-50' : ''}`}>
+        {loading && owners.length > 0 && (
+          <div className="absolute inset-0 flex items-center justify-center z-10 bg-background/30">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        )}
         <Table>
           <TableHeader>
             <TableRow className="border-b bg-muted/50 hover:bg-muted/50">
