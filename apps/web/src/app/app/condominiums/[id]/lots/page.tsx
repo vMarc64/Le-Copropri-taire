@@ -245,6 +245,7 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
   };
 
   // Filtrer les types de compteurs selon la config de la copro (seulement global_metered)
+  // C'est le seul mode où la copro gère la répartition et a besoin des numéros de compteur
   const getAvailableMeterTypes = () => {
     if (!condominium) return [];
     
@@ -255,7 +256,8 @@ export default function LotsPage({ params }: { params: Promise<{ id: string }> }
       gas: condominium.gasBilling,
     };
 
-    // Seuls les types en global_metered ont des compteurs individuels par lot
+    // Seuls les types en global_metered ont des compteurs gérés par la copro
+    // individual = contrat direct proprio/fournisseur, pas notre affaire
     return METER_TYPES.filter(type => billingConfig[type.value] === 'global_metered');
   };
 
