@@ -38,7 +38,7 @@ interface OwnerLot {
   type: string;
   floor: number | null;
   surface: number | null;
-  shares: number | null;
+  tantiemes: string | null;
 }
 
 interface OwnerCondominium {
