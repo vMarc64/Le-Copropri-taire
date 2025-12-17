@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -14,10 +14,18 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Building2, ArrowRight, Loader2, ArrowLeft, Eye, EyeOff, Check, X } from "lucide-react";
 
 const registerSchema = z.object({
-  firstName: z.string().min(2, "Le prénom doit contenir au moins 2 caractères"),
-  lastName: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
+  firstName: z.string()
+    .min(2, "Le prénom doit contenir au moins 2 caractères")
+    .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, "Le prénom ne doit contenir que des lettres"),
+  lastName: z.string()
+    .min(2, "Le nom doit contenir au moins 2 caractères")
+    .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, "Le nom ne doit contenir que des lettres"),
   email: z.string().email("Email invalide"),
-  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+  phone: z.string().min(10, "Numéro de téléphone invalide").optional().or(z.literal("")),
+  password: z.string()
+    .min(8, "Le mot de passe doit contenir au moins 8 caractères")
+    .regex(/[A-Z]/, "Le mot de passe doit contenir au moins une majuscule")
+    .regex(/[0-9]/, "Le mot de passe doit contenir au moins un chiffre"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Les mots de passe ne correspondent pas",
@@ -25,36 +33,6 @@ const registerSchema = z.object({
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
-
-// Password strength calculation
-function calculatePasswordStrength(password: string): { score: number; checks: { label: string; passed: boolean }[] } {
-  const checks = [
-    { label: "Au moins 8 caractères", passed: password.length >= 8 },
-    { label: "Une lettre minuscule", passed: /[a-z]/.test(password) },
-    { label: "Une lettre majuscule", passed: /[A-Z]/.test(password) },
-    { label: "Un chiffre", passed: /\d/.test(password) },
-    { label: "Un caractère spécial", passed: /[!@#$%^&*(),.?":{}|<>]/.test(password) },
-  ];
-  
-  const score = checks.filter(c => c.passed).length;
-  return { score, checks };
-}
-
-function getStrengthColor(score: number): string {
-  if (score <= 1) return "bg-destructive";
-  if (score <= 2) return "bg-orange-500";
-  if (score <= 3) return "bg-yellow-500";
-  if (score <= 4) return "bg-primary/70";
-  return "bg-primary";
-}
-
-function getStrengthLabel(score: number): string {
-  if (score <= 1) return "Très faible";
-  if (score <= 2) return "Faible";
-  if (score <= 3) return "Moyen";
-  if (score <= 4) return "Fort";
-  return "Très fort";
-}
 
 export default function ManagerRegisterPage() {
   const router = useRouter();
@@ -76,10 +54,13 @@ export default function ManagerRegisterPage() {
   });
 
   const password = watch("password") || "";
-  const passwordStrength = useMemo(() => calculatePasswordStrength(password), [password]);
+  
+  const hasMinLength = password.length >= 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
 
   const handleNextStep = async () => {
-    const isValid = await trigger(["firstName", "lastName", "email"]);
+    const isValid = await trigger(["firstName", "lastName", "email", "phone"]);
     if (isValid) {
       setStep(2);
     }
@@ -98,6 +79,7 @@ export default function ManagerRegisterPage() {
           password: data.password,
           firstName: data.firstName,
           lastName: data.lastName,
+          phone: data.phone || undefined,
           userType: "manager",
         }),
       });
@@ -190,7 +172,7 @@ export default function ManagerRegisterPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="firstName" className="text-sm font-medium">
-                        Prénom
+                        Prénom *
                       </Label>
                       <Input
                         id="firstName"
@@ -205,7 +187,7 @@ export default function ManagerRegisterPage() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="lastName" className="text-sm font-medium">
-                        Nom
+                        Nom *
                       </Label>
                       <Input
                         id="lastName"
@@ -222,7 +204,7 @@ export default function ManagerRegisterPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-sm font-medium">
-                      Adresse email professionnelle
+                      Adresse email professionnelle *
                     </Label>
                     <Input
                       id="email"
@@ -235,6 +217,20 @@ export default function ManagerRegisterPage() {
                     {errors.email && (
                       <p className="text-sm text-destructive">{errors.email.message}</p>
                     )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-sm font-medium">
+                      Téléphone <span className="text-muted-foreground font-normal">(optionnel)</span>
+                    </Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="01 23 45 67 89"
+                      className="h-11"
+                      {...register("phone")}
+                      disabled={isLoading}
+                    />
                   </div>
 
                   <Button 
@@ -252,7 +248,7 @@ export default function ManagerRegisterPage() {
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="password" className="text-sm font-medium">
-                      Mot de passe
+                      Mot de passe *
                     </Label>
                     <div className="relative">
                       <Input
@@ -271,47 +267,20 @@ export default function ManagerRegisterPage() {
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
-                    
-                    {/* Password strength indicator */}
-                    {password && (
-                      <div className="space-y-2 pt-2">
-                        <div className="flex gap-1">
-                          {[1, 2, 3, 4, 5].map((i) => (
-                            <div
-                              key={i}
-                              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                                i <= passwordStrength.score
-                                  ? getStrengthColor(passwordStrength.score)
-                                  : 'bg-muted'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Force : <span className="font-medium">{getStrengthLabel(passwordStrength.score)}</span>
-                        </p>
-                        
-                        {/* Password requirements */}
-                        <div className="grid grid-cols-1 gap-1 pt-1">
-                          {passwordStrength.checks.map((check, i) => (
-                            <div
-                              key={i}
-                              className={`flex items-center gap-2 text-xs ${
-                                check.passed ? 'text-primary' : 'text-muted-foreground'
-                              }`}
-                            >
-                              {check.passed ? (
-                                <Check className="h-3 w-3" />
-                              ) : (
-                                <X className="h-3 w-3" />
-                              )}
-                              {check.label}
-                            </div>
-                          ))}
-                        </div>
+                    <div className="space-y-1 pt-1">
+                      <div className={`flex items-center gap-2 text-xs transition-colors ${hasMinLength ? 'text-green-500' : 'text-muted-foreground'}`}>
+                        {hasMinLength ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                        Min. 8 caractères
                       </div>
-                    )}
-                    
+                      <div className={`flex items-center gap-2 text-xs transition-colors ${hasUppercase ? 'text-green-500' : 'text-muted-foreground'}`}>
+                        {hasUppercase ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                        1 majuscule
+                      </div>
+                      <div className={`flex items-center gap-2 text-xs transition-colors ${hasNumber ? 'text-green-500' : 'text-muted-foreground'}`}>
+                        {hasNumber ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                        1 chiffre
+                      </div>
+                    </div>
                     {errors.password && (
                       <p className="text-sm text-destructive">{errors.password.message}</p>
                     )}
@@ -319,7 +288,7 @@ export default function ManagerRegisterPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                      Confirmer le mot de passe
+                      Confirmer le mot de passe *
                     </Label>
                     <div className="relative">
                       <Input
