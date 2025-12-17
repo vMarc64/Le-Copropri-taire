@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { CacheModule } from './cache';
 import { QueueModule } from './queue';
 import { AuthModule, JwtAuthGuard, RolesGuard, PermissionsGuard } from './auth';
 import { TenantModule, TenantGuard } from './tenant';
@@ -25,6 +26,7 @@ import { MonitoringModule } from './monitoring';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    CacheModule,
     QueueModule,
     AuthModule,
     TenantModule,

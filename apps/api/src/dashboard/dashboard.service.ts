@@ -2,10 +2,27 @@ import { Injectable } from '@nestjs/common';
 import { db } from '../database/client';
 import { condominiums, payments, lots, users } from '../database/schema';
 import { eq, and, lt, count, sum, sql } from 'drizzle-orm';
+import { CacheService } from '../cache';
+
+// Cache TTL in seconds
+const STATS_CACHE_TTL = 60; // 1 minute for dashboard stats
+const CONDOS_CACHE_TTL = 60; // 1 minute for condominiums list
 
 @Injectable()
 export class DashboardService {
+  constructor(private readonly cache: CacheService) {}
+
   async getStats(tenantId: string) {
+    const cacheKey = CacheService.buildKey('dashboard', tenantId, 'stats');
+    
+    return this.cache.getOrCompute(
+      cacheKey,
+      () => this.computeStats(tenantId),
+      STATS_CACHE_TTL,
+    );
+  }
+
+  private async computeStats(tenantId: string) {
     // Get late payments count
     const [latePaymentsResult] = await db
       .select({ count: count() })
@@ -44,6 +61,16 @@ export class DashboardService {
   }
 
   async getCondominiumsWithUnpaid(tenantId: string) {
+    const cacheKey = CacheService.buildKey('dashboard', tenantId, 'condominiums-unpaid');
+    
+    return this.cache.getOrCompute(
+      cacheKey,
+      () => this.computeCondominiumsWithUnpaid(tenantId),
+      CONDOS_CACHE_TTL,
+    );
+  }
+
+  private async computeCondominiumsWithUnpaid(tenantId: string) {
     // Get all condominiums for the tenant
     const condos = await db
       .select({
@@ -107,5 +134,13 @@ export class DashboardService {
 
     // Return all condominiums (filtering done on frontend)
     return condosWithUnpaid;
+  }
+
+  /**
+   * Invalidate all dashboard cache for a tenant
+   * Call this when payments, owners, or condominiums change
+   */
+  invalidateCache(tenantId: string): void {
+    this.cache.invalidatePattern(`dashboard:${tenantId}:*`);
   }
 }
