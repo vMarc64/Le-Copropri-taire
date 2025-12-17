@@ -660,6 +660,7 @@ export default function OwnersPage() {
   const { 
     getFromCache, 
     setCache, 
+    prefetch,
     prefetchAdjacent, 
     invalidateCachePattern 
   } = usePrefetch<OwnersResponse>({ cacheTTL: 30000 });
@@ -779,14 +780,16 @@ export default function OwnersPage() {
     if (prefetchedOwners.current.has(ownerId)) return;
     prefetchedOwners.current.add(ownerId);
     
-    // Prefetch the owner detail data
-    fetch(`/api/owners/${ownerId}`)
-      .then(res => res.json())
-      .catch(() => {
-        // Silently fail - it's just a prefetch
-        prefetchedOwners.current.delete(ownerId);
-      });
-  }, []);
+    const cacheKey = `owner-detail-${ownerId}`;
+    
+    // Prefetch the owner detail data and store in global cache
+    prefetch(cacheKey, () => 
+      fetch(`/api/owners/${ownerId}`).then(res => res.json())
+    ).catch(() => {
+      // Silently fail - it's just a prefetch
+      prefetchedOwners.current.delete(ownerId);
+    });
+  }, [prefetch]);
 
   const handleSearchOrphans = async () => {
     if (!orphanSearchQuery.trim() || orphanSearchQuery.trim().length < 2) return;

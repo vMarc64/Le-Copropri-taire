@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useCallback, useEffect } from "react";
+import { useCallback } from "react";
 
-interface CacheEntry<T> {
-  data: T;
+interface CacheEntry {
+  data: unknown;
   timestamp: number;
 }
 
@@ -14,8 +14,39 @@ interface UsePrefetchOptions {
   enabled?: boolean;
 }
 
+// Global cache shared across all components
+const globalCache = new Map<string, CacheEntry>();
+const pendingRequests = new Map<string, Promise<unknown>>();
+
+/**
+ * Get data from global cache (can be used outside of React components)
+ */
+export function getGlobalCache<T>(key: string, cacheTTL = 30000): T | null {
+  const entry = globalCache.get(key);
+  if (!entry) return null;
+  
+  const isExpired = Date.now() - entry.timestamp > cacheTTL;
+  if (isExpired) {
+    globalCache.delete(key);
+    return null;
+  }
+  
+  return entry.data as T;
+}
+
+/**
+ * Set data in global cache (can be used outside of React components)
+ */
+export function setGlobalCache<T>(key: string, data: T): void {
+  globalCache.set(key, {
+    data,
+    timestamp: Date.now(),
+  });
+}
+
 /**
  * Hook for prefetching and caching data for adjacent pages
+ * Uses a global cache shared across all components
  * 
  * @example
  * const { getFromCache, prefetch, invalidateCache } = usePrefetch<Owner[]>();
@@ -34,33 +65,19 @@ interface UsePrefetchOptions {
  */
 export function usePrefetch<T>(options: UsePrefetchOptions = {}) {
   const { cacheTTL = 30000, enabled = true } = options;
-  const cache = useRef<Map<string, CacheEntry<T>>>(new Map());
-  const pendingRequests = useRef<Map<string, Promise<T>>>(new Map());
 
   /**
    * Get data from cache if valid
    */
   const getFromCache = useCallback((key: string): T | null => {
-    const entry = cache.current.get(key);
-    if (!entry) return null;
-    
-    const isExpired = Date.now() - entry.timestamp > cacheTTL;
-    if (isExpired) {
-      cache.current.delete(key);
-      return null;
-    }
-    
-    return entry.data;
+    return getGlobalCache<T>(key, cacheTTL);
   }, [cacheTTL]);
 
   /**
    * Store data in cache
    */
   const setCache = useCallback((key: string, data: T) => {
-    cache.current.set(key, {
-      data,
-      timestamp: Date.now(),
-    });
+    setGlobalCache(key, data);
   }, []);
 
   /**
@@ -73,24 +90,24 @@ export function usePrefetch<T>(options: UsePrefetchOptions = {}) {
     if (!enabled) return;
     
     // Already in cache and valid
-    if (getFromCache(key)) return;
+    if (getGlobalCache(key, cacheTTL)) return;
     
     // Already being fetched
-    if (pendingRequests.current.has(key)) return;
+    if (pendingRequests.has(key)) return;
     
     try {
       const promise = fetcher();
-      pendingRequests.current.set(key, promise);
+      pendingRequests.set(key, promise);
       
       const data = await promise;
-      setCache(key, data);
+      setGlobalCache(key, data);
     } catch (error) {
       // Silently fail for prefetch - it's not critical
       console.debug(`Prefetch failed for ${key}:`, error);
     } finally {
-      pendingRequests.current.delete(key);
+      pendingRequests.delete(key);
     }
-  }, [enabled, getFromCache, setCache]);
+  }, [enabled, cacheTTL]);
 
   /**
    * Prefetch multiple pages around the current page
@@ -127,7 +144,7 @@ export function usePrefetch<T>(options: UsePrefetchOptions = {}) {
    * Invalidate specific cache entry
    */
   const invalidateCache = useCallback((key: string) => {
-    cache.current.delete(key);
+    globalCache.delete(key);
   }, []);
 
   /**
@@ -135,9 +152,9 @@ export function usePrefetch<T>(options: UsePrefetchOptions = {}) {
    */
   const invalidateCachePattern = useCallback((pattern: string | RegExp) => {
     const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern;
-    for (const key of cache.current.keys()) {
+    for (const key of globalCache.keys()) {
       if (regex.test(key)) {
-        cache.current.delete(key);
+        globalCache.delete(key);
       }
     }
   }, []);
@@ -146,16 +163,16 @@ export function usePrefetch<T>(options: UsePrefetchOptions = {}) {
    * Clear all cache
    */
   const clearCache = useCallback(() => {
-    cache.current.clear();
+    globalCache.clear();
   }, []);
 
   /**
    * Get cache stats for debugging
    */
   const getCacheStats = useCallback(() => ({
-    size: cache.current.size,
-    keys: Array.from(cache.current.keys()),
-    pending: Array.from(pendingRequests.current.keys()),
+    size: globalCache.size,
+    keys: Array.from(globalCache.keys()),
+    pending: Array.from(pendingRequests.keys()),
   }), []);
 
   return {

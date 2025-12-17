@@ -31,6 +31,7 @@ import {
   FileText,
   ChevronRight,
 } from "lucide-react";
+import { getGlobalCache, setGlobalCache } from "@/hooks/use-prefetch";
 
 interface OwnerLot {
   id: string;
@@ -161,6 +162,16 @@ export default function OwnerDetailPage() {
 
   useEffect(() => {
     const fetchOwner = async () => {
+      const cacheKey = `owner-detail-${ownerId}`;
+      
+      // Check cache first (from prefetch)
+      const cached = getGlobalCache<OwnerDetails>(cacheKey);
+      if (cached) {
+        setOwner(cached);
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         const response = await fetch(`/api/owners/${ownerId}`);
@@ -173,6 +184,8 @@ export default function OwnerDetailPage() {
           return;
         }
         const data = await response.json();
+        // Store in cache for future navigation
+        setGlobalCache(cacheKey, data);
         setOwner(data);
       } catch (err) {
         setError("Erreur de connexion");
