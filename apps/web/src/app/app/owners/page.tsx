@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, forwardRef } from "react";
+import { useState, useEffect, forwardRef, useCallback } from "react";
 import Link from "next/link";
 import { TableVirtuoso, Virtuoso } from "react-virtuoso";
 import { Button } from "@/components/ui/button";
@@ -91,6 +91,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getOwners, getCondominiums, updateOwnerCondominiums, getAvailableLotsForOwner, updateOwnerLots, type Owner, type Condominium, type AvailableLot, type GetOwnersParams } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { usePrefetch, buildCacheKey } from "@/hooks/use-prefetch";
+
+// Type for cached owners response
+interface OwnersResponse {
+  data: Owner[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
 
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; bgColor: string; textColor: string; icon: React.ReactNode }> = {
@@ -646,6 +656,35 @@ export default function OwnersPage() {
     email: "",
   });
 
+  // Prefetch hook for caching adjacent pages
+  const { 
+    getFromCache, 
+    setCache, 
+    prefetchAdjacent, 
+    invalidateCachePattern 
+  } = usePrefetch<OwnersResponse>({ cacheTTL: 30000 });
+
+  // Build cache key based on current filters
+  const buildOwnersCacheKey = useCallback((pageNum: number) => {
+    return buildCacheKey('owners', {
+      page: pageNum,
+      limit,
+      search: debouncedSearch || undefined,
+      condominiumId: selectedCondominiumId === "all" ? undefined : selectedCondominiumId,
+    });
+  }, [limit, debouncedSearch, selectedCondominiumId]);
+
+  // Fetch function that can be used for both current page and prefetch
+  const fetchOwnersPage = useCallback(async (pageNum: number): Promise<OwnersResponse> => {
+    const params: GetOwnersParams = {
+      page: pageNum,
+      limit,
+      search: debouncedSearch || undefined,
+      condominiumId: selectedCondominiumId === "all" ? undefined : selectedCondominiumId,
+    };
+    return getOwners(params);
+  }, [limit, debouncedSearch, selectedCondominiumId]);
+
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -662,22 +701,59 @@ export default function OwnersPage() {
 
   const fetchData = async () => {
     try {
+      const cacheKey = buildOwnersCacheKey(page);
+      const cached = getFromCache(cacheKey);
+      
+      // If we have cached data, use it immediately (no loading state)
+      if (cached) {
+        setOwners(cached.data);
+        setTotal(cached.total);
+        setTotalPages(cached.totalPages);
+        
+        // Still fetch condominiums if not loaded
+        if (condominiums.length === 0) {
+          const condosData = await getCondominiums();
+          setCondominiums(condosData);
+        }
+        
+        setLoading(false);
+        setError(null);
+        
+        // Prefetch adjacent pages in background
+        prefetchAdjacent(
+          page,
+          cached.totalPages,
+          buildOwnersCacheKey,
+          fetchOwnersPage
+        );
+        return;
+      }
+      
+      // No cache - fetch with loading state
       setLoading(true);
-      const params: GetOwnersParams = {
-        page,
-        limit,
-        search: debouncedSearch || undefined,
-        condominiumId: selectedCondominiumId === "all" ? undefined : selectedCondominiumId,
-      };
       const [ownersResponse, condosData] = await Promise.all([
-        getOwners(params),
-        getCondominiums(),
+        fetchOwnersPage(page),
+        condominiums.length === 0 ? getCondominiums() : Promise.resolve(condominiums),
       ]);
+      
+      // Cache the response
+      setCache(cacheKey, ownersResponse);
+      
       setOwners(ownersResponse.data);
       setTotal(ownersResponse.total);
       setTotalPages(ownersResponse.totalPages);
-      setCondominiums(condosData);
+      if (condominiums.length === 0) {
+        setCondominiums(condosData);
+      }
       setError(null);
+      
+      // Prefetch adjacent pages in background after data is loaded
+      prefetchAdjacent(
+        page,
+        ownersResponse.totalPages,
+        buildOwnersCacheKey,
+        fetchOwnersPage
+      );
     } catch (err) {
       setError("Erreur lors du chargement des données");
       console.error(err);
@@ -689,6 +765,12 @@ export default function OwnersPage() {
   useEffect(() => {
     fetchData();
   }, [page, limit, debouncedSearch, selectedCondominiumId]);
+
+  // Invalidate cache when data is modified
+  const handleDataChange = useCallback(() => {
+    invalidateCachePattern(/^owners/);
+    fetchData();
+  }, [invalidateCachePattern]);
 
   const handleSearchOrphans = async () => {
     if (!orphanSearchQuery.trim() || orphanSearchQuery.trim().length < 2) return;
@@ -719,7 +801,7 @@ export default function OwnersPage() {
         setIsModalOpen(false);
         setOrphanSearchQuery("");
         setOrphanResults([]);
-        fetchData();
+        handleDataChange();
       }
     } catch (error) {
       console.error("Erreur lors de l'association:", error);
@@ -742,7 +824,7 @@ export default function OwnersPage() {
       if (response.ok) {
         setIsModalOpen(false);
         setNewOwnerForm({ firstName: "", lastName: "", email: "" });
-        fetchData();
+        handleDataChange();
       }
     } catch (error) {
       console.error("Erreur lors de la création:", error);
@@ -1314,14 +1396,14 @@ export default function OwnersPage() {
                     <CondominiumSelector
                       owner={owner}
                       allCondominiums={condominiums}
-                      onUpdate={fetchData}
+                      onUpdate={handleDataChange}
                     />
                   </td>
                   <td className="p-2 align-middle hidden xl:table-cell">
                     <LotSelector
                       owner={owner}
                       ownerCondominiums={condominiums.filter(c => owner.condominiumIds?.includes(c.id))}
-                      onUpdate={fetchData}
+                      onUpdate={handleDataChange}
                     />
                   </td>
                   <td className="p-2 align-middle text-right">
