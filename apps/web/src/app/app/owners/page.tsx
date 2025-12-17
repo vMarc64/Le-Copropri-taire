@@ -91,7 +91,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getOwners, getCondominiums, updateOwnerCondominiums, getAvailableLotsForOwner, updateOwnerLots, type Owner, type Condominium, type AvailableLot, type GetOwnersParams } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { usePrefetch, buildCacheKey } from "@/hooks/use-prefetch";
+import { 
+  prefetchOwner, 
+  invalidateCachePattern, 
+  getFromCache, 
+  setInCache, 
+  buildCacheKey,
+  prefetch as cachePrefetch,
+} from "@/lib/cache";
 
 // Type for cached owners response
 interface OwnersResponse {
@@ -656,15 +663,6 @@ export default function OwnersPage() {
     email: "",
   });
 
-  // Prefetch hook for caching adjacent pages
-  const { 
-    getFromCache, 
-    setCache, 
-    prefetch,
-    prefetchAdjacent, 
-    invalidateCachePattern 
-  } = usePrefetch<OwnersResponse>({ cacheTTL: 30000 });
-
   // Build cache key based on current filters
   const buildOwnersCacheKey = useCallback((pageNum: number) => {
     return buildCacheKey('owners', {
@@ -700,10 +698,28 @@ export default function OwnersPage() {
     setPage(1);
   }, [selectedCondominiumId, limit]);
 
+  // Prefetch adjacent pages in background
+  const prefetchAdjacentPages = useCallback((currentPage: number, totalPagesCount: number) => {
+    // Previous page
+    if (currentPage > 1) {
+      const prevKey = buildOwnersCacheKey(currentPage - 1);
+      cachePrefetch(`/api/owners?${prevKey.split('?')[1] || ''}`, { 
+        cacheKey: prevKey 
+      });
+    }
+    // Next page
+    if (currentPage < totalPagesCount) {
+      const nextKey = buildOwnersCacheKey(currentPage + 1);
+      cachePrefetch(`/api/owners?${nextKey.split('?')[1] || ''}`, { 
+        cacheKey: nextKey 
+      });
+    }
+  }, [buildOwnersCacheKey]);
+
   const fetchData = async () => {
     try {
       const cacheKey = buildOwnersCacheKey(page);
-      const cached = getFromCache(cacheKey);
+      const cached = getFromCache<OwnersResponse>(cacheKey);
       
       // If we have cached data, use it immediately (no loading state)
       if (cached) {
@@ -721,12 +737,7 @@ export default function OwnersPage() {
         setError(null);
         
         // Prefetch adjacent pages in background
-        prefetchAdjacent(
-          page,
-          cached.totalPages,
-          buildOwnersCacheKey,
-          fetchOwnersPage
-        );
+        prefetchAdjacentPages(page, cached.totalPages);
         return;
       }
       
@@ -738,7 +749,7 @@ export default function OwnersPage() {
       ]);
       
       // Cache the response
-      setCache(cacheKey, ownersResponse);
+      setInCache(cacheKey, ownersResponse);
       
       setOwners(ownersResponse.data);
       setTotal(ownersResponse.total);
@@ -749,12 +760,7 @@ export default function OwnersPage() {
       setError(null);
       
       // Prefetch adjacent pages in background after data is loaded
-      prefetchAdjacent(
-        page,
-        ownersResponse.totalPages,
-        buildOwnersCacheKey,
-        fetchOwnersPage
-      );
+      prefetchAdjacentPages(page, ownersResponse.totalPages);
     } catch (err) {
       setError("Erreur lors du chargement des données");
       console.error(err);
@@ -771,25 +777,12 @@ export default function OwnersPage() {
   const handleDataChange = useCallback(() => {
     invalidateCachePattern(/^owners/);
     fetchData();
-  }, [invalidateCachePattern]);
+  }, []);
 
-  // Prefetch owner detail page on hover
-  const prefetchedOwners = useRef<Set<string>>(new Set());
-  const prefetchOwnerDetail = useCallback((ownerId: string) => {
-    // Only prefetch once per owner
-    if (prefetchedOwners.current.has(ownerId)) return;
-    prefetchedOwners.current.add(ownerId);
-    
-    const cacheKey = `owner-detail-${ownerId}`;
-    
-    // Prefetch the owner detail data and store in global cache
-    prefetch(cacheKey, () => 
-      fetch(`/api/owners/${ownerId}`).then(res => res.json())
-    ).catch(() => {
-      // Silently fail - it's just a prefetch
-      prefetchedOwners.current.delete(ownerId);
-    });
-  }, [prefetch]);
+  // Prefetch owner detail page on hover - uses global cache service
+  const prefetchOwnerDetailOnHover = useCallback((ownerId: string) => {
+    prefetchOwner(ownerId);
+  }, []);
 
   const handleSearchOrphans = async () => {
     if (!orphanSearchQuery.trim() || orphanSearchQuery.trim().length < 2) return;
@@ -1229,7 +1222,7 @@ export default function OwnersPage() {
               <div 
                 key={owner.id} 
                 className="rounded-lg border bg-card p-4"
-                onMouseEnter={() => prefetchOwnerDetail(owner.id)}
+                onMouseEnter={() => prefetchOwnerDetailOnHover(owner.id)}
               >
                 <div className="flex items-start justify-between gap-3">
                   <Link href={`/app/owners/${owner.id}`} className="flex items-center gap-3 flex-1 min-w-0">
@@ -1342,7 +1335,7 @@ export default function OwnersPage() {
                   <TableRow 
                     key={owner.id}
                     className="group border-b transition-colors hover:bg-muted/50"
-                    onMouseEnter={() => prefetchOwnerDetail(owner.id)}
+                    onMouseEnter={() => prefetchOwnerDetailOnHover(owner.id)}
                   >
                     <TableCell>
                       <div className="flex items-center gap-3">

@@ -31,7 +31,7 @@ import {
   FileText,
   ChevronRight,
 } from "lucide-react";
-import { getGlobalCache, setGlobalCache } from "@/hooks/use-prefetch";
+import { cachedFetch } from "@/lib/cache";
 
 interface OwnerLot {
   id: string;
@@ -162,33 +162,20 @@ export default function OwnerDetailPage() {
 
   useEffect(() => {
     const fetchOwner = async () => {
-      const cacheKey = `owner-detail-${ownerId}`;
-      
-      // Check cache first (from prefetch)
-      const cached = getGlobalCache<OwnerDetails>(cacheKey);
-      if (cached) {
-        setOwner(cached);
-        setLoading(false);
-        return;
-      }
-
       try {
         setLoading(true);
-        const response = await fetch(`/api/owners/${ownerId}`);
-        if (!response.ok) {
-          if (response.status === 404) {
-            setError("Propriétaire non trouvé");
-          } else {
-            setError("Erreur lors du chargement");
-          }
-          return;
-        }
-        const data = await response.json();
-        // Store in cache for future navigation
-        setGlobalCache(cacheKey, data);
+        // Uses global cache - if prefetched on hover, returns instantly
+        const data = await cachedFetch<OwnerDetails>(
+          `/api/owners/${ownerId}`,
+          { cacheKey: `owner-${ownerId}` }
+        );
         setOwner(data);
       } catch (err) {
-        setError("Erreur de connexion");
+        if (err instanceof Error && err.message.includes('404')) {
+          setError("Propriétaire non trouvé");
+        } else {
+          setError("Erreur lors du chargement");
+        }
         console.error(err);
       } finally {
         setLoading(false);

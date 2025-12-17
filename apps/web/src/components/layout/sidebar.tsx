@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { prefetch } from "@/lib/cache";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -49,19 +50,15 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const prefetchedRoutes = useRef<Set<string>>(new Set());
 
-  // Prefetch data on hover
+  // Prefetch data on hover - uses global cache
   const handlePrefetch = useCallback((item: NavItem) => {
     if (!item.prefetchUrl) return;
     if (prefetchedRoutes.current.has(item.href)) return;
     
     prefetchedRoutes.current.add(item.href);
     
-    // Prefetch the API data in background
-    fetch(item.prefetchUrl)
-      .catch(() => {
-        // Silently fail - it's just a prefetch
-        prefetchedRoutes.current.delete(item.href);
-      });
+    // Prefetch the API data and store in global cache
+    prefetch(item.prefetchUrl);
   }, []);
 
   return (
