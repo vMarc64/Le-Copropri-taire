@@ -24,7 +24,8 @@ const registerSchema = z.object({
   password: z.string()
     .min(8, "Le mot de passe doit contenir au moins 8 caractères")
     .regex(/[A-Z]/, "Le mot de passe doit contenir au moins une majuscule")
-    .regex(/[0-9]/, "Le mot de passe doit contenir au moins un chiffre"),
+    .regex(/[0-9]/, "Le mot de passe doit contenir au moins un chiffre")
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, "Le mot de passe doit contenir au moins un caractère spécial"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Les mots de passe ne correspondent pas",
@@ -85,6 +86,7 @@ export function RegisterForm({
   const hasMinLength = password.length >= 8;
   const hasUppercase = /[A-Z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
   const handleNextStep = async () => {
     const isValid = await trigger(["firstName", "lastName", "email", "phone"]);
@@ -273,6 +275,10 @@ export function RegisterForm({
                   <div className={`flex items-center gap-2 text-xs transition-colors ${hasNumber ? 'text-green-500' : 'text-muted-foreground'}`}>
                     {hasNumber ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                     1 chiffre
+                  </div>
+                  <div className={`flex items-center gap-2 text-xs transition-colors ${hasSpecialChar ? 'text-green-500' : 'text-muted-foreground'}`}>
+                    {hasSpecialChar ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                    1 caractère spécial (!@#$%...)
                   </div>
                 </div>
                 {errors.password && (
