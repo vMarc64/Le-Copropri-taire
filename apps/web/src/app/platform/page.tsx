@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,6 +58,8 @@ export default function PlatformDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
   const [metricsLoading, setMetricsLoading] = useState(true);
+  const [metricsHistory, setMetricsHistory] = useState<Array<{ time: Date; cpu: number; ram: number }>>([]);
+  const MAX_HISTORY_POINTS = 60; // 5 minutes of data at 5s intervals
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -95,6 +97,13 @@ export default function PlatformDashboard() {
       if (response.ok) {
         const data = await response.json();
         setMetrics(data);
+        // Store in history
+        setMetricsHistory(prev => {
+          const newPoint = { time: new Date(), cpu: data.cpu.usage, ram: data.memory.usage };
+          const updated = [...prev, newPoint];
+          // Keep only last MAX_HISTORY_POINTS
+          return updated.slice(-MAX_HISTORY_POINTS);
+        });
       }
     } catch (err) {
       console.error("Error fetching metrics:", err);
@@ -107,8 +116,8 @@ export default function PlatformDashboard() {
     fetchData();
     fetchMetrics();
     
-    // Refresh metrics every 30 seconds
-    const interval = setInterval(fetchMetrics, 30000);
+    // Refresh metrics every 5 seconds
+    const interval = setInterval(fetchMetrics, 5000);
     return () => clearInterval(interval);
   }, [fetchMetrics]);
 
@@ -560,6 +569,78 @@ export default function PlatformDashboard() {
               )}
             </div>
           </div>
+
+          {/* Metrics Chart */}
+          {metricsHistory.length > 1 && (
+            <div className="bg-background p-5 border-t border-border/50">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-muted-foreground">Historique (5 dernières minutes)</span>
+                </div>
+                <div className="flex items-center gap-4 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-violet-500" />
+                    <span className="text-muted-foreground">CPU</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-sky-500" />
+                    <span className="text-muted-foreground">RAM</span>
+                  </div>
+                </div>
+              </div>
+              <div className="relative h-32">
+                {/* Y-axis labels */}
+                <div className="absolute left-0 top-0 bottom-0 w-8 flex flex-col justify-between text-[10px] text-muted-foreground">
+                  <span>100%</span>
+                  <span>50%</span>
+                  <span>0%</span>
+                </div>
+                {/* Chart area */}
+                <div className="ml-10 h-full relative border-l border-b border-border/50">
+                  {/* Grid lines */}
+                  <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                    <div className="border-t border-dashed border-border/30" />
+                    <div className="border-t border-dashed border-border/30" />
+                    <div />
+                  </div>
+                  {/* SVG Chart */}
+                  <svg className="absolute inset-0 w-full h-full overflow-visible">
+                    {/* CPU Line */}
+                    <polyline
+                      fill="none"
+                      stroke="rgb(139, 92, 246)"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      points={metricsHistory.map((point, i) => {
+                        const x = (i / (metricsHistory.length - 1)) * 100;
+                        const y = 100 - point.cpu;
+                        return `${x}%,${y}%`;
+                      }).join(' ')}
+                    />
+                    {/* RAM Line */}
+                    <polyline
+                      fill="none"
+                      stroke="rgb(14, 165, 233)"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      points={metricsHistory.map((point, i) => {
+                        const x = (i / (metricsHistory.length - 1)) * 100;
+                        const y = 100 - point.ram;
+                        return `${x}%,${y}%`;
+                      }).join(' ')}
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div className="ml-10 flex justify-between mt-1 text-[10px] text-muted-foreground">
+                <span>-5 min</span>
+                <span>maintenant</span>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
