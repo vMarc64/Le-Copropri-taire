@@ -1,10 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { db } from '../database';
-import { bankAccounts, bankTransactions, condominiums, powensConnections } from '../database/schema';
+import { bankAccounts, bankTransactions, condominiums, powensConnections, reconciliations } from '../database/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
 @Injectable()
 export class BankService {
+  private readonly logger = new Logger(BankService.name);
+  private readonly n8nWebhookUrl: string;
+
+  constructor(private configService: ConfigService) {
+    this.n8nWebhookUrl = this.configService.get<string>('N8N_WEBHOOK_URL', '');
+  }
+
   async findAllAccounts(tenantId: string, condominiumId?: string) {
     let whereClause = eq(bankAccounts.tenantId, tenantId);
     
@@ -283,7 +291,7 @@ export class BankService {
 
           if (existing.length === 0) {
             // Insert new transaction
-            await db.insert(bankTransactions).values({
+            const [newTransaction] = await db.insert(bankTransactions).values({
               tenantId,
               bankAccountId: account.id,
               powensTransactionId: tx.id,
@@ -300,7 +308,26 @@ export class BankService {
               direction: tx.value >= 0 ? 'credit' : 'debit',
               isComing: tx.coming || false,
               reconciliationStatus: 'unmatched',
+            }).returning();
+
+            // Create reconciliation queue entry
+            await db.insert(reconciliations).values({
+              tenantId,
+              bankTransactionId: newTransaction.id,
+              status: 'pending',
+              queueStatus: 'pending',
+              matchType: 'auto',
             });
+
+            // Trigger N8N webhook for AI matching
+            await this.triggerN8NMatching({
+              transactionId: newTransaction.id,
+              condominiumId,
+              amount: tx.value,
+              label: tx.simplified_wording || tx.original_wording,
+              date: tx.date,
+            });
+
             totalNewTransactions++;
           }
         }
@@ -333,5 +360,46 @@ export class BankService {
       newTransactions: totalNewTransactions,
       message: `Synchronisation terminée. ${totalNewTransactions} nouvelles transactions.`,
     };
+  }
+
+  /**
+   * Trigger N8N webhook for AI-based transaction matching
+   */
+  private async triggerN8NMatching(data: {
+    transactionId: string;
+    condominiumId: string;
+    amount: number;
+    label: string;
+    date: string;
+  }): Promise<void> {
+    if (!this.n8nWebhookUrl) {
+      this.logger.debug('N8N webhook URL not configured, skipping trigger');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${this.n8nWebhookUrl}/match-transaction`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          transaction_id: data.transactionId,
+          condominium_id: data.condominiumId,
+          amount: data.amount,
+          label: data.label,
+          date: data.date,
+        }),
+      });
+
+      if (!response.ok) {
+        this.logger.warn(`N8N webhook returned ${response.status}: ${response.statusText}`);
+      } else {
+        this.logger.debug(`N8N webhook triggered for transaction ${data.transactionId}`);
+      }
+    } catch (error) {
+      // Don't fail the sync if N8N webhook fails
+      this.logger.error(`Failed to trigger N8N webhook: ${error}`);
+    }
   }
 }
