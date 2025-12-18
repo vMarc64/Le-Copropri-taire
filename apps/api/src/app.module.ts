@@ -20,6 +20,7 @@ import { PortalModule } from './portal';
 import { UtilitiesModule } from './utilities';
 import { MonitoringModule } from './monitoring';
 import { InvoicesModule } from './invoices';
+import { FundCallsModule } from './fund-calls';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { InvoicesModule } from './invoices';
     UtilitiesModule,
     MonitoringModule,
     InvoicesModule,
+    FundCallsModule,
   ],
   controllers: [AppController],
   providers: [
