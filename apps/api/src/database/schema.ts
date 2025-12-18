@@ -284,7 +284,7 @@ export const paymentSchedules = pgTable('payment_schedules', {
 });
 
 // ============================================================================
-// PAYMENTS (Appels de fonds / Paiements)
+// PAYMENTS (Paiements reçus des propriétaires)
 // ============================================================================
 
 export const payments = pgTable('payments', {
@@ -294,34 +294,166 @@ export const payments = pgTable('payments', {
   ownerId: uuid('owner_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   lotId: uuid('lot_id').references(() => lots.id, { onDelete: 'set null' }),
   scheduleId: uuid('schedule_id').references(() => paymentSchedules.id, { onDelete: 'set null' }),
+  fundCallItemId: uuid('fund_call_item_id').references(() => fundCallItems.id, { onDelete: 'set null' }), // Lien vers l'appel de fonds
   type: varchar('type', { length: 50 }).notNull(), // regular, adjustment, exceptional
   description: varchar('description', { length: 255 }),
   amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
-  dueDate: date('due_date').notNull(),
+  dueDate: date('due_date'),
+  receivedAt: date('received_at'), // Date de réception du paiement
   paidAmount: decimal('paid_amount', { precision: 10, scale: 2 }).default('0'),
   paidAt: timestamp('paid_at'),
   status: varchar('status', { length: 50 }).notNull().default('pending'), // pending, paid, partial, overdue, cancelled
   paymentMethod: varchar('payment_method', { length: 50 }), // sepa, card, transfer, check, cash
   stripePaymentIntentId: varchar('stripe_payment_intent_id', { length: 255 }),
+  reference: varchar('reference', { length: 100 }), // Référence du paiement (chèque, virement)
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 // ============================================================================
-// RECONCILIATIONS (Rapprochements bancaires)
+// FUND CALLS (Appels de fonds globaux)
+// ============================================================================
+
+export const fundCalls = pgTable('fund_calls', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  condominiumId: uuid('condominium_id').notNull().references(() => condominiums.id, { onDelete: 'cascade' }),
+  
+  // Identification
+  reference: varchar('reference', { length: 100 }).notNull(), // Ex: "AF-2025-Q1"
+  title: varchar('title', { length: 255 }).notNull(), // "Appel de fonds 1er trimestre 2025"
+  
+  // Type
+  type: varchar('type', { length: 20 }).notNull(), // 'regular' (trimestriel), 'exceptional' (travaux)
+  
+  // Période
+  periodStart: date('period_start').notNull(),
+  periodEnd: date('period_end').notNull(),
+  dueDate: date('due_date').notNull(),
+  
+  // Montant total
+  totalAmount: decimal('total_amount', { precision: 12, scale: 2 }).notNull(),
+  
+  // Statut: draft, sent, partial, completed, cancelled
+  status: varchar('status', { length: 20 }).notNull().default('draft'),
+  
+  // Document généré (PDF)
+  documentId: uuid('document_id').references(() => documents.id, { onDelete: 'set null' }),
+  
+  // Dates d'envoi
+  sentAt: timestamp('sent_at'),
+  
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// ============================================================================
+// FUND CALL ITEMS (Détail par propriétaire)
+// ============================================================================
+
+export const fundCallItems = pgTable('fund_call_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  fundCallId: uuid('fund_call_id').notNull().references(() => fundCalls.id, { onDelete: 'cascade' }),
+  ownerCondominiumId: uuid('owner_condominium_id').notNull().references(() => ownerCondominiums.id, { onDelete: 'cascade' }),
+  
+  // Calcul basé sur tantièmes
+  tantiemes: decimal('tantiemes', { precision: 10, scale: 3 }).notNull(),
+  amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),
+  
+  // Statut paiement
+  paidAmount: decimal('paid_amount', { precision: 12, scale: 2 }).notNull().default('0'),
+  status: varchar('status', { length: 20 }).notNull().default('pending'), // pending, partial, paid, overdue
+  
+  // Notifications
+  notificationSentAt: timestamp('notification_sent_at'),
+  reminderCount: integer('reminder_count').notNull().default(0),
+  lastReminderAt: timestamp('last_reminder_at'),
+  
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// ============================================================================
+// INVOICES (Factures fournisseurs hors consommation)
+// ============================================================================
+
+export const invoices = pgTable('invoices', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  condominiumId: uuid('condominium_id').notNull().references(() => condominiums.id, { onDelete: 'cascade' }),
+  
+  // Identification
+  invoiceNumber: varchar('invoice_number', { length: 100 }),
+  supplierName: varchar('supplier_name', { length: 255 }).notNull(),
+  supplierReference: varchar('supplier_reference', { length: 100 }),
+  
+  // Montants
+  amountHt: decimal('amount_ht', { precision: 12, scale: 2 }),
+  amountTtc: decimal('amount_ttc', { precision: 12, scale: 2 }).notNull(),
+  vatAmount: decimal('vat_amount', { precision: 12, scale: 2 }),
+  
+  // Dates
+  issueDate: date('issue_date').notNull(),
+  dueDate: date('due_date'),
+  periodStart: date('period_start'),
+  periodEnd: date('period_end'),
+  
+  // Catégorie: insurance, maintenance, works, fees, cleaning, gardening, elevator, other
+  category: varchar('category', { length: 50 }).notNull(),
+  description: text('description'),
+  
+  // Statut: pending, paid, partial, cancelled
+  status: varchar('status', { length: 20 }).notNull().default('pending'),
+  paidAt: timestamp('paid_at'),
+  
+  // Document lié (PDF facture)
+  documentId: uuid('document_id').references(() => documents.id, { onDelete: 'set null' }),
+  
+  // Métadonnées OCR/IA
+  extractedData: jsonb('extracted_data'), // Données extraites automatiquement
+  confidenceScore: integer('confidence_score'), // Score de confiance extraction
+  
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// ============================================================================
+// RECONCILIATIONS (Rapprochements bancaires - étendu)
 // ============================================================================
 
 export const reconciliations = pgTable('reconciliations', {
   id: uuid('id').primaryKey().defaultRandom(),
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
   bankTransactionId: uuid('bank_transaction_id').notNull().references(() => bankTransactions.id, { onDelete: 'cascade' }),
-  paymentId: uuid('payment_id').notNull().references(() => payments.id, { onDelete: 'cascade' }),
+  
+  // Cible du rapprochement (une seule doit être non-nulle quand validé)
+  targetType: varchar('target_type', { length: 30 }), // 'payment', 'invoice', 'utility_bill', 'fund_call_item'
+  paymentId: uuid('payment_id').references(() => payments.id, { onDelete: 'cascade' }),
+  invoiceId: uuid('invoice_id').references(() => invoices.id, { onDelete: 'cascade' }),
+  utilityBillId: uuid('utility_bill_id').references(() => utilityBills.id, { onDelete: 'cascade' }),
+  fundCallItemId: uuid('fund_call_item_id').references(() => fundCallItems.id, { onDelete: 'cascade' }),
+  
+  // Type de matching
   matchType: varchar('match_type', { length: 50 }).notNull(), // auto, manual, ai_suggested
-  confidence: decimal('confidence', { precision: 5, scale: 2 }), // AI confidence score 0-100
-  status: varchar('status', { length: 50 }).notNull().default('pending'), // pending, confirmed, rejected
+  
+  // Statut global: pending (file d'attente), confirmed, rejected
+  status: varchar('status', { length: 50 }).notNull().default('pending'),
+  
+  // File d'attente IA
+  queueStatus: varchar('queue_status', { length: 20 }).notNull().default('pending'), // pending, suggested, validated, rejected, ignored
+  
+  // Suggestion IA (avant validation)
+  suggestedTargetType: varchar('suggested_target_type', { length: 30 }),
+  suggestedTargetId: uuid('suggested_target_id'),
+  confidenceScore: integer('confidence_score'), // Score 0-100
+  matchingDetails: jsonb('matching_details'), // Détails du scoring { amount: 40, label: 30, ... }
+  
+  // Validation
   matchedById: uuid('matched_by_id').references(() => users.id, { onDelete: 'set null' }),
   matchedAt: timestamp('matched_at'),
   notes: text('notes'),
+  
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -342,6 +474,9 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   paymentSchedules: many(paymentSchedules),
   payments: many(payments),
   reconciliations: many(reconciliations),
+  fundCalls: many(fundCalls),
+  fundCallItems: many(fundCallItems),
+  invoices: many(invoices),
 }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -369,6 +504,9 @@ export const condominiumsRelations = relations(condominiums, ({ one, many }) => 
   sepaMandates: many(sepaMandates),
   paymentSchedules: many(paymentSchedules),
   payments: many(payments),
+  fundCalls: many(fundCalls),
+  invoices: many(invoices),
+  utilityBills: many(utilityBills),
 }));
 
 export const lotsRelations = relations(lots, ({ one, many }) => ({
@@ -392,6 +530,23 @@ export const lotsRelations = relations(lots, ({ one, many }) => ({
   }),
   paymentSchedules: many(paymentSchedules),
   payments: many(payments),
+  meters: many(lotMeters),
+}));
+
+export const ownerCondominiumsRelations = relations(ownerCondominiums, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [ownerCondominiums.tenantId],
+    references: [tenants.id],
+  }),
+  owner: one(users, {
+    fields: [ownerCondominiums.ownerId],
+    references: [users.id],
+  }),
+  condominium: one(condominiums, {
+    fields: [ownerCondominiums.condominiumId],
+    references: [condominiums.id],
+  }),
+  fundCallItems: many(fundCallItems),
 }));
 
 export const documentsRelations = relations(documents, ({ one }) => ({
@@ -522,10 +677,79 @@ export const reconciliationsRelations = relations(reconciliations, ({ one }) => 
     fields: [reconciliations.paymentId],
     references: [payments.id],
   }),
+  invoice: one(invoices, {
+    fields: [reconciliations.invoiceId],
+    references: [invoices.id],
+  }),
+  utilityBill: one(utilityBills, {
+    fields: [reconciliations.utilityBillId],
+    references: [utilityBills.id],
+  }),
+  fundCallItem: one(fundCallItems, {
+    fields: [reconciliations.fundCallItemId],
+    references: [fundCallItems.id],
+  }),
   matchedBy: one(users, {
     fields: [reconciliations.matchedById],
     references: [users.id],
   }),
+}));
+
+// ============================================================================
+// RELATIONS - Fund Calls
+// ============================================================================
+
+export const fundCallsRelations = relations(fundCalls, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [fundCalls.tenantId],
+    references: [tenants.id],
+  }),
+  condominium: one(condominiums, {
+    fields: [fundCalls.condominiumId],
+    references: [condominiums.id],
+  }),
+  document: one(documents, {
+    fields: [fundCalls.documentId],
+    references: [documents.id],
+  }),
+  items: many(fundCallItems),
+}));
+
+export const fundCallItemsRelations = relations(fundCallItems, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [fundCallItems.tenantId],
+    references: [tenants.id],
+  }),
+  fundCall: one(fundCalls, {
+    fields: [fundCallItems.fundCallId],
+    references: [fundCalls.id],
+  }),
+  ownerCondominium: one(ownerCondominiums, {
+    fields: [fundCallItems.ownerCondominiumId],
+    references: [ownerCondominiums.id],
+  }),
+  payments: many(payments),
+  reconciliations: many(reconciliations),
+}));
+
+// ============================================================================
+// RELATIONS - Invoices
+// ============================================================================
+
+export const invoicesRelations = relations(invoices, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [invoices.tenantId],
+    references: [tenants.id],
+  }),
+  condominium: one(condominiums, {
+    fields: [invoices.condominiumId],
+    references: [condominiums.id],
+  }),
+  document: one(documents, {
+    fields: [invoices.documentId],
+    references: [documents.id],
+  }),
+  reconciliations: many(reconciliations),
 }));
 
 // ============================================================================

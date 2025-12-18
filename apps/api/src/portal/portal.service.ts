@@ -177,7 +177,7 @@ export class PortalService {
       nextPayment = {
         id: np.id,
         amount: Number(np.amount),
-        dueDate: np.dueDate,
+        dueDate: np.dueDate || new Date().toISOString().split('T')[0],
         description: np.description || 'Appel de charges',
         condominiumName: condo?.name || '',
       };
@@ -204,7 +204,7 @@ export class PortalService {
 
     const recentPayments = recentPaymentsResult.map(p => ({
       id: p.id,
-      date: p.paidAt?.toISOString() || p.dueDate,
+      date: p.paidAt?.toISOString() || p.dueDate || new Date().toISOString().split('T')[0],
       label: p.description || 'Appel de charges',
       amount: Number(p.amount),
       status: p.status,
