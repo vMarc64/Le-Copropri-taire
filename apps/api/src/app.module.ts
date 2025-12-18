@@ -22,6 +22,7 @@ import { MonitoringModule } from './monitoring';
 import { InvoicesModule } from './invoices';
 import { FundCallsModule } from './fund-calls';
 import { ReconciliationModule } from './reconciliation';
+import { PaymentsModule } from './payments';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { ReconciliationModule } from './reconciliation';
     InvoicesModule,
     FundCallsModule,
     ReconciliationModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [
