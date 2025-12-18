@@ -19,6 +19,7 @@ import { PlatformModule } from './platform';
 import { PortalModule } from './portal';
 import { UtilitiesModule } from './utilities';
 import { MonitoringModule } from './monitoring';
+import { InvoicesModule } from './invoices';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { MonitoringModule } from './monitoring';
     PortalModule,
     UtilitiesModule,
     MonitoringModule,
+    InvoicesModule,
   ],
   controllers: [AppController],
   providers: [
